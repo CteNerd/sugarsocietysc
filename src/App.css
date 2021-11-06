@@ -15,7 +15,7 @@
 }
 
 .App-header {
-  min-height: 100vh;
+  /* min-height: 100vh; */
   display: block;
   flex-direction: column;
   align-items: center;
@@ -30,7 +30,7 @@
 }
 
 .main-nav-container {
-  background-color: rgb(0, 0, 0, 0.2);
+  background-color: rgb(255, 255, 255, 0.6);
   width: 100vw;
   position: fixed;
 }
@@ -49,11 +49,41 @@
 
 .App-body-container {
   text-align: -webkit-center;
+  height: 100vh;
+  background-image: url("https://wellcall-app-cdk.s3.amazonaws.com/winter-sugarcookies.jpg");
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
 }
 
 .App-body {
   width: 60vw;
-  padding: 20px;
+  padding-top: 45vh;
+  /* position: fixed; */
+}
+
+.page-content-container {
+  background-color: rgb(255, 255, 255, 0.6);
+  padding: 10px;
+}
+
+h1, h2, p {
+  font-weight: 300;
+}
+
+p {
+  font-size: 20px;
+}
+
+button {
+  background-color: #000;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 300;
+}
+
+button:hover {
+  cursor: pointer;
 }
 
 .App-link {

@@ -42,36 +42,31 @@ function App() {
               </div>
             </nav>
           </div>
-          <img
-            src={
-              "https://wellcall-app-cdk.s3.amazonaws.com/winter-sugarcookies.jpg"
-            }
-            className="App-logo"
-            alt="logo"
-          />
         </header>
         <body className="App-body-container">
           <div className="App-body">
-            <Switch>
-              <Route path="/our-story">
-                <OurStory />
-              </Route>
-              <Route path="/specials">
-                <Specials />
-              </Route>
-              <Route path="/our-cookies">
-                <OurCookies />
-              </Route>
-              <Route path="/order-inquiry">
-                <OrderInquiry />
-              </Route>
-              <Route path="/contact">
-                <Contact />
-              </Route>
-              <Route path="/">
-                <Home />
-              </Route>
-            </Switch>
+            <div className="page-content-container">
+              <Switch>
+                <Route path="/our-story">
+                  <OurStory />
+                </Route>
+                <Route path="/specials">
+                  <Specials />
+                </Route>
+                <Route path="/our-cookies">
+                  <OurCookies />
+                </Route>
+                <Route path="/order-inquiry">
+                  <OrderInquiry />
+                </Route>
+                <Route path="/contact">
+                  <Contact />
+                </Route>
+                <Route path="/">
+                  <Home />
+                </Route>
+              </Switch>
+            </div>
           </div>
         </body>
         <footer>
