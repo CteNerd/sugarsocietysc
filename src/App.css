@@ -45,9 +45,13 @@
   padding: 20px 40px;
 }
 
+.App-body-container {
+  text-align: -webkit-center;
+}
+
 .App-body {
   width: 60vw;
-  /* height: 100vh; */
+  padding: 20px;
 }
 
 .App-link {

@@ -1,4 +1,5 @@
 import React from "react";
+import { FacebookOutlined, InstagramOutlined } from '@ant-design/icons';
 import "./App.css";
 
 function App() {
@@ -10,11 +11,11 @@ function App() {
             <div key="home" className="menu-item">
               Home
             </div>
-            <div key="specials" className="menu-item">
-              Specials
-            </div>
             <div key="story" className="menu-item">
               Our Story
+            </div>
+            <div key="specials" className="menu-item">
+              Specials
             </div>
             <div key="home" className="menu-item">
               <img className="nav-logo" src="https://wellcall-app-cdk.s3.amazonaws.com/sugar-society-sugar-cookies.png" />
@@ -38,13 +39,23 @@ function App() {
           alt="logo"
         />
       </header>
-      <body className="App-body">
+      <body className="App-body-container">
+        <div className="App-body">
         <p>Website Coming Soon!!!</p>
+        </div>
+      </body>
+      <footer>
         <a className="App-link" href="mailto:ashuah.tomlin@sugarsocietysc.com">
           Contact Us Now
         </a>
-      </body>
-      <footer>
+        <a href="https://www.facebook.com/Sugar-Society-Sugar-Cookies-105693268589749" target="_blank" >
+
+        <FacebookOutlined />
+        </a>
+        <a href="https://www.instagram.com/sugarsocietysc/" target="_blank" >
+
+        <InstagramOutlined />
+        </a>
         <a className="App-link" href="tel:+1254-313-3972">
           Call Us Now
         </a>
