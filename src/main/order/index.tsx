@@ -1,5 +1,7 @@
 import React from "react";
 
 export default function OrderInquiry() {
-  return <div></div>;
+  return <div>
+      Order via Email
+  </div>;
 }

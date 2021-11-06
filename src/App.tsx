@@ -1,11 +1,11 @@
 import React from "react";
 import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
 import Home from "./main/home";
-import OurStory from "./main/home";
-import Specials from "./main/home";
-import OurCookies from "./main/home";
-import OrderInquiry from "./main/home";
-import Contact from "./main/home";
+import OurStory from "./main/story";
+import Specials from "./main/specials";
+import OurCookies from "./main/cookies";
+import OrderInquiry from "./main/order";
+import Contact from "./main/contact";
 import { FacebookOutlined, InstagramOutlined } from "@ant-design/icons";
 import "./App.css";
 
@@ -17,13 +17,13 @@ function App() {
           <div className="main-nav-container">
             <nav className="main-nav">
               <div key="home" className="menu-item">
-                Home
+                <a href="/">Home</a>
               </div>
               <div key="story" className="menu-item">
-                Our Story
+                <a href="/our-story">Our Story</a>
               </div>
               <div key="specials" className="menu-item">
-                Specials
+                <a href="/specials">Specials</a>
               </div>
               <div key="home" className="menu-item">
                 <img
@@ -32,13 +32,13 @@ function App() {
                 />
               </div>
               <div key="cookies" className="menu-item">
-                Our Cookies
+                <a href="/our-cookies">Our Cookies</a>
               </div>
               <div key="order" className="menu-item">
-                Order Inquiry
+                <a href="/order-inquiry">Order Inquiry</a>
               </div>
               <div key="contact" className="menu-item">
-                Contact Us
+                <a href="/contact">Contact Us</a>
               </div>
             </nav>
           </div>
