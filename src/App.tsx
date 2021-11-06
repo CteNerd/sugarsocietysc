@@ -1,22 +1,25 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
+        <img src={'https://wellcall-app-cdk.s3.amazonaws.com/sugar-society-sugar-cookies.png'} className="App-logo" alt="logo" />
         <p>
-          Edit <code>src/App.tsx</code> and save to reload.
+          Website Coming Soon!!!
         </p>
         <a
           className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="mailto:ashuah.tomlin@sugarsocietysc.com"
         >
-          Learn React
+          Contact Us Now
+        </a>
+        <a
+          className="App-link"
+          href="tel:+1254-313-3972"
+        >
+          Call Us Now
         </a>
       </header>
     </div>
