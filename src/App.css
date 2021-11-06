@@ -58,7 +58,7 @@
 
 .App-body {
   width: 60vw;
-  padding-top: 45vh;
+  padding: 45vh 0vh 10vh 0vh;
   /* position: fixed; */
 }
 
@@ -98,5 +98,27 @@ button:hover {
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+footer {
+  background-color: #fff;
+  width: 100vw;
+  bottom: 0;
+  position: fixed;
+  padding: 20px;
+}
+
+@media only screen and (max-width: 600px) {
+
+  .App-body {
+    width: 60vw;
+    padding: 15vh 0vh 10vh 0vh;
+    /* position: fixed; */
+  }
+
+  .specials-img {
+    padding-left: 0%;
+    width: 200px;
   }
 }
