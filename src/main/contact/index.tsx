@@ -10,13 +10,12 @@ export default function Contact() {
           Rosharon, Texas, and offer services to the greater Houston for local
           pick up or delivery. Please contact us with any pricing or cookie
           designs that are not featured on our website. If you are ready to
-          place an order, please head over to the {<a href="/order-inquiry" >Order Now</a>} page and complete
-          the order form.
+          place an order, please head over to the{" "}
+          {<a href="/order-inquiry">Order Now</a>} page and complete the order
+          form.
         </p>
       </div>
-      <div className="contact-us-form-container">
-
-      </div>
+      <div className="contact-us-form-container"></div>
     </div>
   );
 }
