@@ -110,11 +110,9 @@ footer {
 }
 
 @media only screen and (max-width: 600px) {
-
   .App-body {
     width: 60vw;
     padding: 15vh 0vh 10vh 0vh;
-    /* position: fixed; */
   }
 
   .specials-img {

@@ -1,5 +1,5 @@
 import React from "react";
-import './specials.css'
+import "./specials.css";
 
 export default function Specials() {
   return (
@@ -7,7 +7,10 @@ export default function Specials() {
       <div>
         <h1>Looking for the specials?</h1>
         <div className="specials-header">
-          <img className="specials-img" src="https://wellcall-app-cdk.s3.amazonaws.com/thank-you-scrabble.jpg" />
+          <img
+            className="specials-img"
+            src="https://wellcall-app-cdk.s3.amazonaws.com/thank-you-scrabble.jpg"
+          />
           <p className="specials-context">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
             eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
