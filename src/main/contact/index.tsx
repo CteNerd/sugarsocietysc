@@ -1,4 +1,5 @@
 import React from "react";
+import './contact.css'
 
 export default function Contact() {
   return (
@@ -15,7 +16,9 @@ export default function Contact() {
           form.
         </p>
       </div>
-      <div className="contact-us-form-container"></div>
+      <div className="contact-us-form-container">
+      <iframe className="contact-us-form" src="https://cdn.forms-content.sg-form.com/3225ef5a-3eb2-11ec-bf9a-76b27561ebce"/>
+      </div>
     </div>
   );
 }

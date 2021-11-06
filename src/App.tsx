@@ -72,7 +72,7 @@ function App() {
         <footer>
           <a
             className="App-link"
-            href="mailto:ashuah.tomlin@sugarsocietysc.com"
+            href="/contact"
           >
             Contact Us Now
           </a>
