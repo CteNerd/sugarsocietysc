@@ -109,6 +109,32 @@ footer {
   padding: 20px;
 }
 
+.col-33 {
+  width: 33%;
+  display: inline-block;
+}
+
+.App-header .menu-btn {
+  vertical-align: middle;
+  float: left;
+  padding: 1vh;
+  min-height: 10vh;
+}
+
+.menu-btn:hover {
+  cursor: pointer;
+}
+
+.App-header .menu-line:hover {
+  cursor: pointer;
+}
+.App-header .menu-line {
+  width: 35px;
+  height: 5px;
+  background-color: #000;
+  margin: 6px 0;
+}
+
 @media only screen and (max-width: 600px) {
   .App-body {
     width: 60vw;
