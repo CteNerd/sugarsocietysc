@@ -1,5 +1,9 @@
 .App {
   text-align: center;
+  background-image: url("https://wellcall-app-cdk.s3.amazonaws.com/winter-sugarcookies.jpg");
+  background-repeat: round;
+  background-attachment: fixed;
+  background-size: cover;
 }
 
 .App-logo {
@@ -51,10 +55,6 @@
   text-align: -webkit-center;
   /* height: 100vh; */
   padding-bottom: 100px;
-  background-image: url("https://wellcall-app-cdk.s3.amazonaws.com/winter-sugarcookies.jpg");
-  background-repeat: round;
-  background-attachment: fixed;
-  background-size: cover;
 }
 
 .App-body {
@@ -147,7 +147,7 @@ footer {
     padding: 15vh 0vh 10vh 0vh;
   }
 
-  .App-body-container {
+  .App {
     background-repeat: repeat-y;
     background-image: url("https://wellcall-app-cdk.s3.amazonaws.com/Sugar-Cookies-8.jpg");
   }
