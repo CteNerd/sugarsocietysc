@@ -49,9 +49,10 @@
 
 .App-body-container {
   text-align: -webkit-center;
-  height: 100vh;
+  /* height: 100vh; */
+  padding-bottom: 100px;
   background-image: url("https://wellcall-app-cdk.s3.amazonaws.com/winter-sugarcookies.jpg");
-  background-repeat: no-repeat;
+  background-repeat: round;
   background-attachment: fixed;
   background-size: cover;
 }
@@ -135,14 +136,29 @@ footer {
   margin: 6px 0;
 }
 
+.social-link {
+  padding: 5px;
+  font-size: 20px;
+}
+
 @media only screen and (max-width: 600px) {
   .App-body {
     width: 60vw;
     padding: 15vh 0vh 10vh 0vh;
   }
 
+  .App-body-container {
+    background-repeat: repeat-y;
+    background-image: url("https://wellcall-app-cdk.s3.amazonaws.com/Sugar-Cookies-8.jpg");
+  }
+
   .specials-img {
     padding-left: 0%;
     width: 200px;
+  }
+
+  .footer-link-container {
+    display: block;
+    padding: 3px;
   }
 }

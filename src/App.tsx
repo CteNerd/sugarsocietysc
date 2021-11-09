@@ -11,7 +11,7 @@ import "./App.css";
 import SideNav from "./main/sideNav/sideNav";
 
 function App() {
-  const breakpoint = window.matchMedia('(max-width: 1279px)');
+  const breakpoint = window.matchMedia("(max-width: 1279px)");
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -33,7 +33,7 @@ function App() {
           <div className="menu-line"></div>
           <div className="menu-line"></div>
         </div>
-        )
+      );
     } else {
       return (
         <nav className="main-nav">
@@ -62,7 +62,7 @@ function App() {
             <a href="/contact">Contact Us</a>
           </div>
         </nav>
-      )
+      );
     }
   }
   return (
@@ -74,7 +74,7 @@ function App() {
             <Navigation />
           </div>
         </header>
-        <body className="App-body-container">
+        <body className="App-body-container" >
           <div className="App-body">
             <div className="page-content-container">
               <Switch>
@@ -94,31 +94,40 @@ function App() {
                   <Contact />
                 </Route>
                 <Route path="/">
-                  <Home />
+                  <Home isMobile />
                 </Route>
               </Switch>
             </div>
           </div>
         </body>
         <footer>
-          <a
-            className="App-link"
-            href="/contact"
-          >
-            Contact Us Now
-          </a>
-          <a
-            href="https://www.facebook.com/Sugar-Society-Sugar-Cookies-105693268589749"
-            target="_blank"
-          >
-            <FacebookOutlined />
-          </a>
-          <a href="https://www.instagram.com/sugarsocietysc/" target="_blank">
-            <InstagramOutlined />
-          </a>
-          <a className="App-link" href="tel:+1254-313-3972">
-            Call Us Now
-          </a>
+          <div className="footer-link-container">
+            <a className="footer-link" href="/contact">
+              Contact Us Now
+            </a>
+          </div>
+          <div className="footer-link-container">
+            <a
+              className="social-link"
+              href="https://www.facebook.com/Sugar-Society-Sugar-Cookies-105693268589749"
+              target="_blank"
+            >
+              <FacebookOutlined />
+            </a>
+
+            <a
+              className="social-link"
+              href="https://www.instagram.com/sugarsocietysc/"
+              target="_blank"
+            >
+              <InstagramOutlined />
+            </a>
+          </div>
+          <div className="footer-link-container">
+            <a className="footer-link" href="tel:+1254-313-3972">
+              Call Us Now
+            </a>
+          </div>
         </footer>
       </div>
     </Router>

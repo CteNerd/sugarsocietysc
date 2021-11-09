@@ -27,7 +27,6 @@ import {
 import "./sideNav.css";
 
 export default function SideNav() {
-
   const [showEventsDropdown, setShowEventsDropdown] = useState(false);
   const [showTeamDropdown, setShowTeamDropdown] = useState(false);
   const [showTicketDropdown, setShowTicketDropdown] = useState(false);
@@ -36,7 +35,6 @@ export default function SideNav() {
   const [canAddEvents, setCanAddEvents] = useState(false);
   const [canViewEventDetails, setCanViewEventDetails] = useState(false);
   const [isMemberOfOrg, setIsMemberOfOrg] = useState(false);
-
 
   function closeNav() {
     if (document.getElementById("mySidenav"))
@@ -52,9 +50,7 @@ export default function SideNav() {
       <a href="/tix-holder-registration">
         <UserOutlined /> Join We'll Call Tix Yourself
       </a>
-      <a href="/login">
-        Login
-      </a>
+      <a href="/login">Login</a>
     </>
   );
 
