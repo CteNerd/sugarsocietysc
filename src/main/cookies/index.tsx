@@ -1,8 +1,54 @@
 import React, { useState } from "react";
+import { Carousel } from "antd";
 import "./cookies.css";
 
 export default function OurCookies() {
   const [modalOpen, setModalOpen] = useState(false);
+
+  function onChange(a: any, b: any, c: any) {
+    console.log(a, b, c);
+  }
+
+  const contentStyle = {
+    height: "160px",
+    color: "#fff",
+    lineHeight: "160px",
+    textAlign: "center",
+    background: "#364d79",
+  };
+
+  var slideIndex = 0;
+
+  if (document.getElementsByClassName("mySlides")) {
+    showSlides();
+  }
+
+  function showSlides() {
+    var i;
+    var slides = Array.from(
+      document.getElementsByClassName(
+        "mySlides"
+      ) as HTMLCollectionOf<HTMLElement>
+    );
+
+    if (slides.length > 0) {
+      var dots = document.getElementsByClassName("dot");
+      for (i = 0; i < slides.length; i++) {
+        slides[i].style.display = "none";
+      }
+      slideIndex++;
+      if (slideIndex > slides.length) {
+        slideIndex = 1;
+      }
+      for (i = 0; i < dots.length; i++) {
+        dots[i].className = dots[i].className.replace(" active", "");
+      }
+      slides[slideIndex - 1].style.display = "block";
+      dots[slideIndex - 1].className += " active";
+      setTimeout(showSlides, 6500); // Change image every 2 seconds
+    }
+  }
+
   return (
     <div>
       <h1>Our Cookies</h1>
@@ -49,8 +95,47 @@ export default function OurCookies() {
       </div>
       <div id="myModal" className={modalOpen ? "modal-opened" : "modal-closed"}>
         <div className="modal-content">
-          <span className="close" onClick={() => setModalOpen(false)}>&times;</span>
-          <p>Some text in the Modal..</p>
+          <div className="slideshow-container">
+            <div className="mySlides fade">
+              <div className="numbertext">1 / 3</div>
+              <img
+                src="https://wellcall-app-cdk.s3.amazonaws.com/2677637c-e921-4999-933e-b5d1270ab579.jpg"
+                style={{ width: "100%" }}
+              />
+              <div className="text">Caption Text</div>
+            </div>
+
+            <div className="mySlides fade">
+              <div className="numbertext">2 / 3</div>
+              <img
+                src="https://wellcall-app-cdk.s3.amazonaws.com/2677637c-e921-4999-933e-b5d1270ab579.jpg"
+                style={{ width: "100%" }}
+              />
+              <div className="text">Caption Two</div>
+            </div>
+
+            <div className="mySlides fade">
+              <div className="numbertext">3 / 3</div>
+              <img
+                src="https://wellcall-app-cdk.s3.amazonaws.com/371a31ef-1692-4911-a9c2-6d38f822c8a9.jpg"
+                style={{ width: "100%" }}
+              />
+              <div className="text">Caption Three</div>
+            </div>
+          </div>
+          <br />
+
+          <div style={{ textAlign: "center" }}>
+            <span className="dot"></span>
+            <span className="dot"></span>
+            <span className="dot"></span>
+          </div>
+          <div>
+            <button className="modal-btn" onClick={() => setModalOpen(false)}>Close</button>
+            <a href="/order-inquiry">
+            <button className="modal-btn" onClick={() => setModalOpen(false)}>Purchase</button>
+            </a>
+          </div>
         </div>
       </div>
     </div>
