@@ -2,7 +2,7 @@ import { LoadingOutlined } from "@ant-design/icons";
 import React from "react";
 
 interface HomeProps {
-  isMobile: boolean
+  isMobile: boolean;
 }
 
 export default function Home(props: HomeProps) {

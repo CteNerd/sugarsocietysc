@@ -1,16 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import "./cookies.css";
 
 export default function OurCookies() {
+  const [modalOpen, setModalOpen] = useState(false);
   return (
     <div>
       <h1>Our Cookies</h1>
-      <h2>
-      Mmm Mmm Good... Say Less...
-      </h2>
+      <h2>Mmm Mmm Good... Say Less...</h2>
       <div className="row">
         <div className="column">
-          <div className="card">
+          <div className="card" onClick={() => setModalOpen(true)}>
             <a
               href={
                 "https://wellcall-app-cdk.s3.amazonaws.com/winter-sugarcookies.jpg"
@@ -26,7 +25,7 @@ export default function OurCookies() {
               <p>{"Just need a glass of milk and a tray just for Santa"}</p>
             </a>
           </div>
-          <div className="card">
+          <div className="card" onClick={() => setModalOpen(true)}>
             <a
               href={
                 "https://wellcall-app-cdk.s3.amazonaws.com/winter-sugarcookies.jpg"
@@ -39,9 +38,19 @@ export default function OurCookies() {
                 className={"card-img"}
               />
               <h3>{"Birthday Cookies"}</h3>
-              <p>{"Making life a little sweeter for that special someone in your life"}</p>
+              <p>
+                {
+                  "Making life a little sweeter for that special someone in your life"
+                }
+              </p>
             </a>
           </div>
+        </div>
+      </div>
+      <div id="myModal" className={modalOpen ? "modal-opened" : "modal-closed"}>
+        <div className="modal-content">
+          <span className="close" onClick={() => setModalOpen(false)}>&times;</span>
+          <p>Some text in the Modal..</p>
         </div>
       </div>
     </div>

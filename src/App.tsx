@@ -74,7 +74,7 @@ function App() {
             <Navigation />
           </div>
         </header>
-        <body className="App-body-container" >
+        <body className="App-body-container">
           <div className="App-body">
             <div className="page-content-container">
               <Switch>
