@@ -13,7 +13,7 @@ app.get('/express_backend', (req, res) => { //Line 9
 app.post('/api/send', (req, res) => {
     sgMail.setApiKey('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');
     const msg = {
-      to: 'rtomlin62@gmail.com.com',
+      to: 'rtomlin62@gmail.com',
       from: 'admin@sugarsocietysc.com', // Use the email address or domain you verified above
       subject: 'Sending with Twilio SendGrid is Fun',
       text: 'and easy to do anywhere, even with Node.js',

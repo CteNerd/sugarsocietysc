@@ -6,7 +6,7 @@ import Specials from "./main/specials";
 import OurCookies from "./main/cookies";
 import OrderInquiry from "./main/order";
 import Contact from "./main/contact";
-import { FacebookOutlined, InstagramOutlined } from "@ant-design/icons";
+import { FacebookOutlined, GoogleOutlined, InstagramOutlined } from "@ant-design/icons";
 import "./App.css";
 import SideNav from "./main/sideNav/sideNav";
 
@@ -47,10 +47,12 @@ function App() {
             <a href="/specials">Specials</a>
           </div>
           <div key="logo" className="menu-item col-3">
+            <a href="/">
             <img
               className="nav-logo"
               src="https://wellcall-app-cdk.s3.amazonaws.com/sugar-society-sugar-cookies.png"
             />
+            </a>
           </div>
           <div key="cookies" className="menu-item col-1">
             <a href="/our-cookies">Our Cookies</a>
@@ -121,6 +123,13 @@ function App() {
               target="_blank"
             >
               <InstagramOutlined />
+            </a>
+            <a
+              className="social-link"
+              href="https://g.page/r/CdDfLKquRwTPEAo"
+              target="_blank"
+            >
+              <GoogleOutlined />
             </a>
           </div>
           <div className="footer-link-container">
