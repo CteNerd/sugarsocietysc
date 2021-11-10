@@ -62,9 +62,21 @@ export default function OurCookies() {
                 }
                 className={"card-img"}
               />
+              <h3>{"Work Cookies"}</h3>
+              <p>{"For those you can't wait to see on Monday"}</p>
+          </div>
+          <div className="card" onClick={() => setModalOpen(true)}>
+              <img
+                src={
+                  "https://wellcall-app-cdk.s3.amazonaws.com/Sugar-Cookies-8.jpg"
+                }
+                className={"card-img"}
+              />
               <h3>{"Christmas Cookies"}</h3>
               <p>{"Just need a glass of milk and a tray just for Santa"}</p>
           </div>
+        </div>
+        <div className="column">
           <div className="card" onClick={() => setModalOpen(true)}>
               <img
                 src={

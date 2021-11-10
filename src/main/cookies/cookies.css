@@ -18,6 +18,7 @@
 .column {
   float: left;
   width: 25%;
+  margin: 0px 10px;
 }
 
 /* Remove extra left and right margins, due to padding */
@@ -37,7 +38,8 @@
   .column {
     width: 100%;
     display: block;
-    margin-bottom: 20px;
+    margin: 20px 0px;
+    padding: 0px 0px;
   }
 
   .App {
