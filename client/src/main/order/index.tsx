@@ -38,6 +38,12 @@ function TrySending() {
   console.log('we tried');
 }
 
+React.useEffect(() => {
+  fetch("/express_backend")
+    .then((res) => res.json())
+    .then((data) => console.log(data.message));
+}, []);
+
 const handleOnSubmit = async (e:any) => {
   console.log('handleOnSubmit')
   e.preventDefault()
@@ -47,7 +53,7 @@ const handleOnSubmit = async (e:any) => {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      email: 'admin@sugarsocietysc.com',
+      email: 'rtomlin62@gmail.com',
       message: 'something nice'
     })
   })
