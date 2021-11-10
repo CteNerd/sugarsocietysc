@@ -19,27 +19,33 @@ app.post('/api/send', (req, res) => {
       text: 'and easy to do anywhere, even with Node.js',
       html: '<strong>and easy to do anywhere, even with Node.js</strong>',
     };
-    //ES6
-    sgMail
-      .send(msg)
-      .then(() => {}, error => {
-        console.error(error);
+    // //ES6
+    // sgMail
+    //   .send(msg)
+    //   .then(() => {}, error => {
+    //     console.error(error);
     
-        if (error.response) {
-          console.error(error.response.body)
-        }
-      });
+    //     if (error.response) {
+    //       console.error(error.response.body)
+    //       res.send({ express: error.response.body }); //Line 10
+    //     }
+    //     res.send({ express: 'YOUR EXPRESS BACKEND IS CONNECTED TO REACT' }); //Line 10
+    //   });
     //ES8
     (async () => {
       try {
+        console.log('sendgrid is trying')
         await sgMail.send(msg);
       } catch (error) {
         console.error(error);
     
         if (error.response) {
           console.error(error.response.body)
+          res.send({ express: error.response.body }); //Line 10
         }
       }
+      console.log('sendgrid tried')
+      res.send({ express: 'YOUR EXPRESS BACKEND IS CONNECTED TO REACT' }); //Line 10
     })();
   });
   
