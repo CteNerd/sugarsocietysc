@@ -51,6 +51,9 @@
   font-size: 20px;
   font-weight: 300;
 }
+.menu-item a {
+  color: #000;
+}
 
 .App-body-container {
   text-align: -webkit-center;

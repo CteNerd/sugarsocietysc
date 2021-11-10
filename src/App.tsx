@@ -37,28 +37,28 @@ function App() {
     } else {
       return (
         <nav className="main-nav">
-          <div key="home" className="menu-item">
+          <div key="home" className="menu-item col-1">
             <a href="/">Home</a>
           </div>
-          <div key="story" className="menu-item">
+          <div key="story" className="menu-item col-1">
             <a href="/our-story">Our Story</a>
           </div>
-          <div key="specials" className="menu-item">
+          <div key="specials" className="menu-item col-1">
             <a href="/specials">Specials</a>
           </div>
-          <div key="home" className="menu-item">
+          <div key="home" className="menu-item col-3">
             <img
               className="nav-logo"
               src="https://wellcall-app-cdk.s3.amazonaws.com/sugar-society-sugar-cookies.png"
             />
           </div>
-          <div key="cookies" className="menu-item">
+          <div key="cookies" className="menu-item col-1">
             <a href="/our-cookies">Our Cookies</a>
           </div>
-          <div key="order" className="menu-item">
+          <div key="order" className="menu-item col-1">
             <a href="/order-inquiry">Order Inquiry</a>
           </div>
-          <div key="contact" className="menu-item">
+          <div key="contact" className="menu-item col-1">
             <a href="/contact">Contact Us</a>
           </div>
         </nav>
@@ -85,7 +85,7 @@ function App() {
                   <Specials />
                 </Route>
                 <Route path="/our-cookies">
-                  <OurCookies isMobile />
+                  <OurCookies isMobile={isMobile} />
                 </Route>
                 <Route path="/order-inquiry">
                   <OrderInquiry />
