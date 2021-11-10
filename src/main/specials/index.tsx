@@ -1,16 +1,22 @@
 import React from "react";
 import "./specials.css";
 
-export default function Specials() {
+interface Props {
+  isMobile: boolean;
+}
+
+export default function Specials(props: Props) {
   return (
     <div>
       <div>
         <h1>Looking for the specials?</h1>
         <div className="specials-header">
-          <img
-            className="specials-img"
-            src="https://wellcall-app-cdk.s3.amazonaws.com/thank-you-scrabble.jpg"
-          />
+          <div className={props.isMobile ? "col-12" : "col-4"}>
+            <img
+              className="specials-img"
+              src="https://wellcall-app-cdk.s3.amazonaws.com/thank-you-scrabble.jpg"
+            />
+          </div>
           <p className="specials-context">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
             eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "./cookies.css";
 
 interface Props {
-  isMobile: boolean
+  isMobile: boolean;
 }
 
 export default function OurCookies(props: Props) {
@@ -47,40 +47,40 @@ export default function OurCookies(props: Props) {
       <div className="row">
         <div className={props.isMobile ? "col-12" : "col-4"}>
           <div className="card" onClick={() => setModalOpen(true)}>
-              <img
-                src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/Tech+Logo+No+Padding.png"
-                }
-                className={"card-img"}
-              />
-              <h3>{"Work Cookies"}</h3>
-              <p>{"For those you can't wait to see on Monday"}</p>
+            <img
+              src={
+                "https://wellcall-app-cdk.s3.amazonaws.com/Tech+Logo+No+Padding.png"
+              }
+              className={"card-img"}
+            />
+            <h3>{"Work Cookies"}</h3>
+            <p>{"For those you can't wait to see on Monday"}</p>
           </div>
           <div className="card" onClick={() => setModalOpen(true)}>
-              <img
-                src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/Sugar-Cookies-8.jpg"
-                }
-                className={"card-img"}
-              />
-              <h3>{"Christmas Cookies"}</h3>
-              <p>{"Just need a glass of milk and a tray just for Santa"}</p>
+            <img
+              src={
+                "https://wellcall-app-cdk.s3.amazonaws.com/Sugar-Cookies-8.jpg"
+              }
+              className={"card-img"}
+            />
+            <h3>{"Christmas Cookies"}</h3>
+            <p>{"Just need a glass of milk and a tray just for Santa"}</p>
           </div>
         </div>
         <div className={props.isMobile ? "col-12" : "col-4"}>
           <div className="card" onClick={() => setModalOpen(true)}>
-              <img
-                src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/Tech+Logo+No+Padding.png"
-                }
-                className={"card-img"}
-              />
-              <h3>{"Birthday Cookies"}</h3>
-              <p>
-                {
-                  "Making life a little sweeter for that special someone in your life"
-                }
-              </p>
+            <img
+              src={
+                "https://wellcall-app-cdk.s3.amazonaws.com/Tech+Logo+No+Padding.png"
+              }
+              className={"card-img"}
+            />
+            <h3>{"Birthday Cookies"}</h3>
+            <p>
+              {
+                "Making life a little sweeter for that special someone in your life"
+              }
+            </p>
           </div>
         </div>
       </div>
@@ -122,9 +122,13 @@ export default function OurCookies(props: Props) {
             <span className="dot"></span>
           </div>
           <div>
-            <button className="modal-btn" onClick={() => setModalOpen(false)}>Close</button>
+            <button className="modal-btn" onClick={() => setModalOpen(false)}>
+              Close
+            </button>
             <a href="/order-inquiry">
-            <button className="modal-btn" onClick={() => setModalOpen(false)}>Purchase</button>
+              <button className="modal-btn" onClick={() => setModalOpen(false)}>
+                Purchase
+              </button>
             </a>
           </div>
         </div>

@@ -82,7 +82,7 @@ function App() {
                   <OurStory />
                 </Route>
                 <Route path="/specials">
-                  <Specials />
+                  <Specials isMobile={isMobile} />
                 </Route>
                 <Route path="/our-cookies">
                   <OurCookies isMobile={isMobile} />
