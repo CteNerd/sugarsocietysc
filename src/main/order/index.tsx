@@ -8,7 +8,7 @@ function TrySending() {
   console.log('we are trying');
   const msg = {
     to: 'admin@sugarsocietysc.com',
-    from: 'no-reply@sugarsocietysc.com', // Use the email address or domain you verified above
+    from: 'admin@sugarsocietysc.com', // Use the email address or domain you verified above
     subject: 'Sending with Twilio SendGrid is Fun',
     text: 'and easy to do anywhere, even with Node.js',
     html: '<strong>and easy to do anywhere, even with Node.js</strong>',
