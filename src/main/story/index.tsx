@@ -3,7 +3,7 @@ import React from "react";
 export default function OurStory() {
   return (
     <div>
-      Once Upon A Time...
+      <h1>Once Upon A Time...</h1>
       <div>
         <p>
           Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do

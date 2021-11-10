@@ -3,7 +3,7 @@ import React from "react";
 export default function OrderInquiry() {
   return (
     <div>
-      Order via Email
+      <h1>Order via Email</h1>
       <div>
         <p>
           Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
