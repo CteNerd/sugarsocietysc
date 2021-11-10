@@ -1,7 +1,11 @@
 import React, { useState } from "react";
 import "./cookies.css";
 
-export default function OurCookies() {
+interface Props {
+  isMobile: boolean
+}
+
+export default function OurCookies(props: Props) {
   const [modalOpen, setModalOpen] = useState(false);
 
   var slideIndex = 0;
@@ -41,7 +45,7 @@ export default function OurCookies() {
       <h1>Our Cookies</h1>
       <h2>Mmm Mmm Good... Say Less...</h2>
       <div className="row">
-        <div className="column">
+        <div className={props.isMobile ? "col-12" : "col-4"}>
           <div className="card" onClick={() => setModalOpen(true)}>
               <img
                 src={
@@ -63,7 +67,7 @@ export default function OurCookies() {
               <p>{"Just need a glass of milk and a tray just for Santa"}</p>
           </div>
         </div>
-        <div className="column">
+        <div className={props.isMobile ? "col-12" : "col-4"}>
           <div className="card" onClick={() => setModalOpen(true)}>
               <img
                 src={

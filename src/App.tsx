@@ -85,7 +85,7 @@ function App() {
                   <Specials />
                 </Route>
                 <Route path="/our-cookies">
-                  <OurCookies />
+                  <OurCookies isMobile />
                 </Route>
                 <Route path="/order-inquiry">
                   <OrderInquiry />
