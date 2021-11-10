@@ -4,6 +4,7 @@
   background-repeat: round;
   background-attachment: fixed;
   background-size: cover;
+  min-height: 100vh;
 }
 
 .App-logo {
