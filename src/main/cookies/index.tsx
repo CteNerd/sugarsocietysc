@@ -1,21 +1,8 @@
 import React, { useState } from "react";
-import { Carousel } from "antd";
 import "./cookies.css";
 
 export default function OurCookies() {
   const [modalOpen, setModalOpen] = useState(false);
-
-  function onChange(a: any, b: any, c: any) {
-    console.log(a, b, c);
-  }
-
-  const contentStyle = {
-    height: "160px",
-    color: "#fff",
-    lineHeight: "160px",
-    textAlign: "center",
-    background: "#364d79",
-  };
 
   var slideIndex = 0;
 
