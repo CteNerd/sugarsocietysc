@@ -76,6 +76,9 @@ const handleOnSubmit = async (e:any) => {
           culpa qui officia deserunt mollit anim id est laborum.
         </p>
       </div>
+      <div>
+        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSfe5AKc73RvRJwtDWmBo--o62GLJ_xmyHh0ZTmxQ_PxMDFpJg/viewform?embedded=true" width="640" height="1242" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
+      </div>
     </div>
   );
 }
