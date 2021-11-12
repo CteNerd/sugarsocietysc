@@ -6,7 +6,11 @@ import Specials from "./main/specials";
 import OurCookies from "./main/cookies";
 import OrderInquiry from "./main/order";
 import Contact from "./main/contact";
-import { FacebookOutlined, GoogleOutlined, InstagramOutlined } from "@ant-design/icons";
+import {
+  FacebookOutlined,
+  GoogleOutlined,
+  InstagramOutlined,
+} from "@ant-design/icons";
 import "./App.css";
 import SideNav from "./main/sideNav/sideNav";
 
@@ -48,10 +52,10 @@ function App() {
           </div>
           <div key="logo" className="menu-item col-3">
             <a href="/">
-            <img
-              className="nav-logo"
-              src="https://wellcall-app-cdk.s3.amazonaws.com/sugar-society-sugar-cookies.png"
-            />
+              <img
+                className="nav-logo"
+                src="https://wellcall-app-cdk.s3.amazonaws.com/sugar-society-sugar-cookies.png"
+              />
             </a>
           </div>
           <div key="cookies" className="menu-item col-1">
