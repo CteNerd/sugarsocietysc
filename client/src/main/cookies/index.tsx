@@ -1,5 +1,6 @@
 import { Collapse } from "antd";
 import React, { useState } from "react";
+import Cookies from './cookies.json'
 import "./cookies.css";
 
 interface Props {
@@ -10,6 +11,7 @@ const { Panel } = Collapse;
 export default function OurCookies(props: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [openPanel, setOpenPanel] = useState("");
+  const [selectedCookie, setSelectedCookie] = useState("");
 
   var slideIndex = 0;
 
@@ -70,7 +72,7 @@ export default function OurCookies(props: Props) {
       >
         <div className="row">
           <div className={props.isMobile ? "col-12" : "col-4"}>
-            <div className="card" onClick={() => setModalOpen(true)}>
+            <div className="card" key='santa' onClick={(e) => {setModalOpen(true); setSelectedCookie('santa')}}>
               <img
                 src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/Santa+Trio.JPG"
@@ -80,7 +82,7 @@ export default function OurCookies(props: Props) {
               <h3>{"Santa Cookies"}</h3>
               <p>{"For those you can't wait to see on Monday"}</p>
             </div>
-            <div className="card" onClick={() => setModalOpen(true)}>
+            <div className="card" onClick={() => {setModalOpen(true); setSelectedCookie('tree')}}>
               <img
                 src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/Tree+Group.JPG"
@@ -90,7 +92,7 @@ export default function OurCookies(props: Props) {
               <h3>{"Christmas Tree Cookies"}</h3>
               <p>{"Just need a glass of milk and a tray just for Santa"}</p>
             </div>
-            <div className="card" onClick={() => setModalOpen(true)}>
+            <div className="card" onClick={() => {setModalOpen(true); setSelectedCookie('phrase')}}>
               <img
                 src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/Joy.JPG"
@@ -100,7 +102,7 @@ export default function OurCookies(props: Props) {
               <h3>{"Christmas Phrase Cookies"}</h3>
               <p>{"Just need a glass of milk and a tray just for Santa"}</p>
             </div>
-            <div className="card" onClick={() => setModalOpen(true)}>
+            <div className="card" onClick={() => {setModalOpen(true); setSelectedCookie('ornament')}}>
               <img
                 src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/Stringed+Lights.JPG"
@@ -112,7 +114,7 @@ export default function OurCookies(props: Props) {
             </div>
           </div>
           <div className={props.isMobile ? "col-12" : "col-4"}>
-            <div className="card" onClick={() => setModalOpen(true)}>
+            <div className="card" onClick={() => {setModalOpen(true); setSelectedCookie('snowman')}}>
               <img
                 src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/Mini+Frosty.JPG"
@@ -126,7 +128,7 @@ export default function OurCookies(props: Props) {
                 }
               </p>
             </div>
-            <div className="card" onClick={() => setModalOpen(true)}>
+            <div className="card" onClick={() => {setModalOpen(true); setSelectedCookie('stocking')}}>
               <img
                 src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/Stocking.JPG"
@@ -140,7 +142,7 @@ export default function OurCookies(props: Props) {
                 }
               </p>
             </div>
-            <div className="card" onClick={() => setModalOpen(true)}>
+            <div className="card" onClick={() => {setModalOpen(true); setSelectedCookie('reindeer')}}>
               <img
                 src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/Rudolph2.JPG"
@@ -154,7 +156,7 @@ export default function OurCookies(props: Props) {
                 }
               </p>
             </div>
-            <div className="card" onClick={() => setModalOpen(true)}>
+            <div className="card" onClick={() => {setModalOpen(true); setSelectedCookie('hollyberry')}}>
               <img
                 src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/Holly+Berry1.JPG"
@@ -170,7 +172,7 @@ export default function OurCookies(props: Props) {
             </div>
           </div>
           <div className={props.isMobile ? "col-12" : "col-4"}>
-            <div className="card" onClick={() => setModalOpen(true)}>
+            <div className="card" onClick={() => {setModalOpen(true); setSelectedCookie('gingerbread')}}>
               <img
                 src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/Ginger+Family.JPG"
@@ -184,7 +186,7 @@ export default function OurCookies(props: Props) {
                 }
               </p>
             </div>
-            <div className="card" onClick={() => setModalOpen(true)}>
+            <div className="card" onClick={() => {setModalOpen(true); setSelectedCookie('candycane')}}>
               <img
                 src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/Candy+Cane+Lane.JPG"
@@ -198,7 +200,7 @@ export default function OurCookies(props: Props) {
                 }
               </p>
             </div>
-            <div className="card" onClick={() => setModalOpen(true)}>
+            <div className="card" onClick={() => {setModalOpen(true); setSelectedCookie('star')}}>
               <img
                 src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/Star+Trio.JPG"
@@ -248,39 +250,34 @@ export default function OurCookies(props: Props) {
       <div id="myModal" className={modalOpen ? "modal-opened" : "modal-closed"}>
         <div className="modal-content">
           <div className="slideshow-container">
-            <div className="mySlides fade">
-              <div className="numbertext">1 / 3</div>
-              <img
-                src="https://wellcall-app-cdk.s3.amazonaws.com/2677637c-e921-4999-933e-b5d1270ab579.jpg"
-                style={{ width: "100%" }}
-              />
-              <div className="text">Caption Text</div>
-            </div>
-
-            <div className="mySlides fade">
-              <div className="numbertext">2 / 3</div>
-              <img
-                src="https://wellcall-app-cdk.s3.amazonaws.com/2677637c-e921-4999-933e-b5d1270ab579.jpg"
-                style={{ width: "100%" }}
-              />
-              <div className="text">Caption Two</div>
-            </div>
-
-            <div className="mySlides fade">
-              <div className="numbertext">3 / 3</div>
-              <img
-                src="https://wellcall-app-cdk.s3.amazonaws.com/371a31ef-1692-4911-a9c2-6d38f822c8a9.jpg"
-                style={{ width: "100%" }}
-              />
-              <div className="text">Caption Three</div>
-            </div>
+            {
+              Cookies
+              .filter((cookie) => cookie.type === selectedCookie)
+              .map((cookie, index) => {
+                return (
+                  <div className="mySlides fade" key={index}>
+                    <div className="numbertext">{index}</div>
+                    <img
+                      src={cookie.url}
+                      style={{ width: "100%" }}
+                    />
+                    <div className="text">Caption {index}</div>
+                  </div>)
+              })
+            }
           </div>
           <br />
 
           <div style={{ textAlign: "center" }}>
-            <span className="dot"></span>
-            <span className="dot"></span>
-            <span className="dot"></span>
+          {
+              Cookies
+              .filter((cookie) => cookie.type === selectedCookie)
+              .map(() => {
+                return (
+                  <span className="dot"></span>
+                  )
+              })
+            }
           </div>
           <div>
             <button className="modal-btn" onClick={() => setModalOpen(false)}>
