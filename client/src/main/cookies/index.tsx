@@ -1,6 +1,6 @@
 import { Collapse } from "antd";
 import React, { useState } from "react";
-import Cookies from './cookies.json'
+import Cookies from "./cookies.json";
 import "./cookies.css";
 
 interface Props {
@@ -47,7 +47,7 @@ export default function OurCookies(props: Props) {
 
   function onAccordionSelection(key: string) {
     if (key === openPanel) {
-      setOpenPanel('');
+      setOpenPanel("");
       return;
     }
 
@@ -72,37 +72,56 @@ export default function OurCookies(props: Props) {
       >
         <div className="row">
           <div className={props.isMobile ? "col-12" : "col-4"}>
-            <div className="card" key='santa' onClick={(e) => {setModalOpen(true); setSelectedCookie('santa')}}>
+            <div
+              className="card"
+              key="santa"
+              onClick={(e) => {
+                setModalOpen(true);
+                setSelectedCookie("santa");
+              }}
+            >
               <img
-                src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/Santa+Trio.JPG"
-                }
+                src={"https://wellcall-app-cdk.s3.amazonaws.com/Santa+Trio.JPG"}
                 className={"card-img"}
               />
               <h3>{"Santa Cookies"}</h3>
               <p>{"For those you can't wait to see on Monday"}</p>
             </div>
-            <div className="card" onClick={() => {setModalOpen(true); setSelectedCookie('tree')}}>
+            <div
+              className="card"
+              onClick={() => {
+                setModalOpen(true);
+                setSelectedCookie("tree");
+              }}
+            >
               <img
-                src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/Tree+Group.JPG"
-                }
+                src={"https://wellcall-app-cdk.s3.amazonaws.com/Tree+Group.JPG"}
                 className={"card-img"}
               />
               <h3>{"Christmas Tree Cookies"}</h3>
               <p>{"Just need a glass of milk and a tray just for Santa"}</p>
             </div>
-            <div className="card" onClick={() => {setModalOpen(true); setSelectedCookie('phrase')}}>
+            <div
+              className="card"
+              onClick={() => {
+                setModalOpen(true);
+                setSelectedCookie("phrase");
+              }}
+            >
               <img
-                src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/Joy.JPG"
-                }
+                src={"https://wellcall-app-cdk.s3.amazonaws.com/Joy.JPG"}
                 className={"card-img"}
               />
               <h3>{"Christmas Phrase Cookies"}</h3>
               <p>{"Just need a glass of milk and a tray just for Santa"}</p>
             </div>
-            <div className="card" onClick={() => {setModalOpen(true); setSelectedCookie('ornament')}}>
+            <div
+              className="card"
+              onClick={() => {
+                setModalOpen(true);
+                setSelectedCookie("ornament");
+              }}
+            >
               <img
                 src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/Stringed+Lights.JPG"
@@ -114,7 +133,13 @@ export default function OurCookies(props: Props) {
             </div>
           </div>
           <div className={props.isMobile ? "col-12" : "col-4"}>
-            <div className="card" onClick={() => {setModalOpen(true); setSelectedCookie('snowman')}}>
+            <div
+              className="card"
+              onClick={() => {
+                setModalOpen(true);
+                setSelectedCookie("snowman");
+              }}
+            >
               <img
                 src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/Mini+Frosty.JPG"
@@ -128,11 +153,15 @@ export default function OurCookies(props: Props) {
                 }
               </p>
             </div>
-            <div className="card" onClick={() => {setModalOpen(true); setSelectedCookie('stocking')}}>
+            <div
+              className="card"
+              onClick={() => {
+                setModalOpen(true);
+                setSelectedCookie("stocking");
+              }}
+            >
               <img
-                src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/Stocking.JPG"
-                }
+                src={"https://wellcall-app-cdk.s3.amazonaws.com/Stocking.JPG"}
                 className={"card-img"}
               />
               <h3>{"Christmas Stocking Cookies"}</h3>
@@ -142,11 +171,15 @@ export default function OurCookies(props: Props) {
                 }
               </p>
             </div>
-            <div className="card" onClick={() => {setModalOpen(true); setSelectedCookie('reindeer')}}>
+            <div
+              className="card"
+              onClick={() => {
+                setModalOpen(true);
+                setSelectedCookie("reindeer");
+              }}
+            >
               <img
-                src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/Rudolph2.JPG"
-                }
+                src={"https://wellcall-app-cdk.s3.amazonaws.com/Rudolph2.JPG"}
                 className={"card-img"}
               />
               <h3>{"Reindeer Cookies"}</h3>
@@ -156,7 +189,13 @@ export default function OurCookies(props: Props) {
                 }
               </p>
             </div>
-            <div className="card" onClick={() => {setModalOpen(true); setSelectedCookie('hollyberry')}}>
+            <div
+              className="card"
+              onClick={() => {
+                setModalOpen(true);
+                setSelectedCookie("hollyberry");
+              }}
+            >
               <img
                 src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/Holly+Berry1.JPG"
@@ -172,7 +211,13 @@ export default function OurCookies(props: Props) {
             </div>
           </div>
           <div className={props.isMobile ? "col-12" : "col-4"}>
-            <div className="card" onClick={() => {setModalOpen(true); setSelectedCookie('gingerbread')}}>
+            <div
+              className="card"
+              onClick={() => {
+                setModalOpen(true);
+                setSelectedCookie("gingerbread");
+              }}
+            >
               <img
                 src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/Ginger+Family.JPG"
@@ -186,7 +231,13 @@ export default function OurCookies(props: Props) {
                 }
               </p>
             </div>
-            <div className="card" onClick={() => {setModalOpen(true); setSelectedCookie('candycane')}}>
+            <div
+              className="card"
+              onClick={() => {
+                setModalOpen(true);
+                setSelectedCookie("candycane");
+              }}
+            >
               <img
                 src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/Candy+Cane+Lane.JPG"
@@ -200,11 +251,15 @@ export default function OurCookies(props: Props) {
                 }
               </p>
             </div>
-            <div className="card" onClick={() => {setModalOpen(true); setSelectedCookie('star')}}>
+            <div
+              className="card"
+              onClick={() => {
+                setModalOpen(true);
+                setSelectedCookie("star");
+              }}
+            >
               <img
-                src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/Star+Trio.JPG"
-                }
+                src={"https://wellcall-app-cdk.s3.amazonaws.com/Star+Trio.JPG"}
                 className={"card-img"}
               />
               <h3>{"Christmas Star Cookies"}</h3>
@@ -250,34 +305,26 @@ export default function OurCookies(props: Props) {
       <div id="myModal" className={modalOpen ? "modal-opened" : "modal-closed"}>
         <div className="modal-content">
           <div className="slideshow-container">
-            {
-              Cookies
-              .filter((cookie) => cookie.type === selectedCookie)
-              .map((cookie, index) => {
+            {Cookies.filter((cookie) => cookie.type === selectedCookie).map(
+              (cookie, index) => {
                 return (
                   <div className="mySlides fade" key={index}>
                     <div className="numbertext">{index}</div>
-                    <img
-                      src={cookie.url}
-                      style={{ width: "100%" }}
-                    />
+                    <img src={cookie.url} style={{ width: "100%" }} />
                     <div className="text">Caption {index}</div>
-                  </div>)
-              })
-            }
+                  </div>
+                );
+              }
+            )}
           </div>
           <br />
 
           <div style={{ textAlign: "center" }}>
-          {
-              Cookies
-              .filter((cookie) => cookie.type === selectedCookie)
-              .map(() => {
-                return (
-                  <span className="dot"></span>
-                  )
-              })
-            }
+            {Cookies.filter((cookie) => cookie.type === selectedCookie).map(
+              () => {
+                return <span className="dot"></span>;
+              }
+            )}
           </div>
           <div>
             <button className="modal-btn" onClick={() => setModalOpen(false)}>
