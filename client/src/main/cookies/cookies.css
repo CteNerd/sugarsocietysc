@@ -220,4 +220,19 @@ img {
   .text {
     font-size: 11px;
   }
+  
+  .modal-content {
+    width: 100%;
+  }
+}
+
+/* On smaller screens, decrease text size */
+@media only screen and (max-width: 900px) {
+  .text {
+    font-size: 11px;
+  }
+  
+  .modal-content {
+    width: 100%;
+  }
 }
