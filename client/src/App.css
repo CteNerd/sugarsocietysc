@@ -1,6 +1,6 @@
 .App {
   text-align: center;
-  background-image: url("https://wellcall-app-cdk.s3.amazonaws.com/winter-sugarcookies.jpg");
+  background-image: url("https://wellcall-app-cdk.s3.amazonaws.com/Landscape3.JPG");
   background-repeat: round;
   background-attachment: fixed;
   background-size: cover;
@@ -153,7 +153,7 @@ footer {
 
   .App {
     background-repeat: repeat-y;
-    background-image: url("https://wellcall-app-cdk.s3.amazonaws.com/Sugar-Cookies-8.jpg");
+    background-image: url("https://wellcall-app-cdk.s3.amazonaws.com/Portrait+Zoom1.JPG");
   }
 
   .footer-link-container {
