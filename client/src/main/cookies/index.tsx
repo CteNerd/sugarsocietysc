@@ -1,12 +1,15 @@
+import { Collapse } from "antd";
 import React, { useState } from "react";
 import "./cookies.css";
 
 interface Props {
   isMobile: boolean;
 }
+const { Panel } = Collapse;
 
 export default function OurCookies(props: Props) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [openPanel, setOpenPanel] = useState("");
 
   var slideIndex = 0;
 
@@ -40,49 +43,101 @@ export default function OurCookies(props: Props) {
     }
   }
 
+  function onAccordionSelection(key: string) {
+    if (key === openPanel) {
+      setOpenPanel('');
+      return;
+    }
+
+    setOpenPanel(key);
+  }
+
   return (
     <div>
       <h1>Our Cookies</h1>
       <h2>Mmm Mmm Good... Say Less...</h2>
-      <div className="row">
-        <div className={props.isMobile ? "col-12" : "col-4"}>
-          <div className="card" onClick={() => setModalOpen(true)}>
-            <img
-              src={
-                "https://wellcall-app-cdk.s3.amazonaws.com/Tech+Logo+No+Padding.png"
-              }
-              className={"card-img"}
-            />
-            <h3>{"Work Cookies"}</h3>
-            <p>{"For those you can't wait to see on Monday"}</p>
+      <button
+        className="accordion"
+        onClick={() => {
+          onAccordionSelection("christmas");
+        }}
+      >
+        Christmas
+      </button>
+      <div
+        className="panel"
+        style={{ display: openPanel === "christmas" ? "block" : "none" }}
+      >
+        <div className="row">
+          <div className={props.isMobile ? "col-12" : "col-4"}>
+            <div className="card" onClick={() => setModalOpen(true)}>
+              <img
+                src={
+                  "https://wellcall-app-cdk.s3.amazonaws.com/Tech+Logo+No+Padding.png"
+                }
+                className={"card-img"}
+              />
+              <h3>{"Work Cookies"}</h3>
+              <p>{"For those you can't wait to see on Monday"}</p>
+            </div>
+            <div className="card" onClick={() => setModalOpen(true)}>
+              <img
+                src={
+                  "https://wellcall-app-cdk.s3.amazonaws.com/Sugar-Cookies-8.jpg"
+                }
+                className={"card-img"}
+              />
+              <h3>{"Christmas Cookies"}</h3>
+              <p>{"Just need a glass of milk and a tray just for Santa"}</p>
+            </div>
           </div>
-          <div className="card" onClick={() => setModalOpen(true)}>
-            <img
-              src={
-                "https://wellcall-app-cdk.s3.amazonaws.com/Sugar-Cookies-8.jpg"
-              }
-              className={"card-img"}
-            />
-            <h3>{"Christmas Cookies"}</h3>
-            <p>{"Just need a glass of milk and a tray just for Santa"}</p>
+          <div className={props.isMobile ? "col-12" : "col-4"}>
+            <div className="card" onClick={() => setModalOpen(true)}>
+              <img
+                src={
+                  "https://wellcall-app-cdk.s3.amazonaws.com/Tech+Logo+No+Padding.png"
+                }
+                className={"card-img"}
+              />
+              <h3>{"Birthday Cookies"}</h3>
+              <p>
+                {
+                  "Making life a little sweeter for that special someone in your life"
+                }
+              </p>
+            </div>
           </div>
         </div>
-        <div className={props.isMobile ? "col-12" : "col-4"}>
-          <div className="card" onClick={() => setModalOpen(true)}>
-            <img
-              src={
-                "https://wellcall-app-cdk.s3.amazonaws.com/Tech+Logo+No+Padding.png"
-              }
-              className={"card-img"}
-            />
-            <h3>{"Birthday Cookies"}</h3>
-            <p>
-              {
-                "Making life a little sweeter for that special someone in your life"
-              }
-            </p>
-          </div>
-        </div>
+      </div>
+
+      <button
+        className="accordion"
+        onClick={() => {
+          onAccordionSelection("birthday");
+        }}
+      >
+        Birthday
+      </button>
+      <div
+        className="panel"
+        style={{ display: openPanel === "birthday" ? "block" : "none" }}
+      >
+        <p>Coming Soon...</p>
+      </div>
+
+      <button
+        className="accordion"
+        onClick={() => {
+          onAccordionSelection("work");
+        }}
+      >
+        Work
+      </button>
+      <div
+        className="panel"
+        style={{ display: openPanel === "work" ? "block" : "none" }}
+      >
+        <p>Coming Soon...</p>
       </div>
       <div id="myModal" className={modalOpen ? "modal-opened" : "modal-closed"}>
         <div className="modal-content">
