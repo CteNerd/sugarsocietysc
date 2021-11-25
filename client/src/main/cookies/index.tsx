@@ -73,21 +73,41 @@ export default function OurCookies(props: Props) {
             <div className="card" onClick={() => setModalOpen(true)}>
               <img
                 src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/Tech+Logo+No+Padding.png"
+                  "https://wellcall-app-cdk.s3.amazonaws.com/Santa+Trio.JPG"
                 }
                 className={"card-img"}
               />
-              <h3>{"Work Cookies"}</h3>
+              <h3>{"Santa Cookies"}</h3>
               <p>{"For those you can't wait to see on Monday"}</p>
             </div>
             <div className="card" onClick={() => setModalOpen(true)}>
               <img
                 src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/Sugar-Cookies-8.jpg"
+                  "https://wellcall-app-cdk.s3.amazonaws.com/Tree+Group.JPG"
                 }
                 className={"card-img"}
               />
-              <h3>{"Christmas Cookies"}</h3>
+              <h3>{"Christmas Tree Cookies"}</h3>
+              <p>{"Just need a glass of milk and a tray just for Santa"}</p>
+            </div>
+            <div className="card" onClick={() => setModalOpen(true)}>
+              <img
+                src={
+                  "https://wellcall-app-cdk.s3.amazonaws.com/Joy.JPG"
+                }
+                className={"card-img"}
+              />
+              <h3>{"Christmas Phrase Cookies"}</h3>
+              <p>{"Just need a glass of milk and a tray just for Santa"}</p>
+            </div>
+            <div className="card" onClick={() => setModalOpen(true)}>
+              <img
+                src={
+                  "https://wellcall-app-cdk.s3.amazonaws.com/Stringed+Lights.JPG"
+                }
+                className={"card-img"}
+              />
+              <h3>{"Christmas Ornament Cookies"}</h3>
               <p>{"Just need a glass of milk and a tray just for Santa"}</p>
             </div>
           </div>
@@ -95,11 +115,97 @@ export default function OurCookies(props: Props) {
             <div className="card" onClick={() => setModalOpen(true)}>
               <img
                 src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/Tech+Logo+No+Padding.png"
+                  "https://wellcall-app-cdk.s3.amazonaws.com/Mini+Frosty.JPG"
                 }
                 className={"card-img"}
               />
-              <h3>{"Birthday Cookies"}</h3>
+              <h3>{"Snowman Cookies"}</h3>
+              <p>
+                {
+                  "Making life a little sweeter for that special someone in your life"
+                }
+              </p>
+            </div>
+            <div className="card" onClick={() => setModalOpen(true)}>
+              <img
+                src={
+                  "https://wellcall-app-cdk.s3.amazonaws.com/Stocking.JPG"
+                }
+                className={"card-img"}
+              />
+              <h3>{"Christmas Stocking Cookies"}</h3>
+              <p>
+                {
+                  "Making life a little sweeter for that special someone in your life"
+                }
+              </p>
+            </div>
+            <div className="card" onClick={() => setModalOpen(true)}>
+              <img
+                src={
+                  "https://wellcall-app-cdk.s3.amazonaws.com/Rudolph2.JPG"
+                }
+                className={"card-img"}
+              />
+              <h3>{"Reindeer Cookies"}</h3>
+              <p>
+                {
+                  "Making life a little sweeter for that special someone in your life"
+                }
+              </p>
+            </div>
+            <div className="card" onClick={() => setModalOpen(true)}>
+              <img
+                src={
+                  "https://wellcall-app-cdk.s3.amazonaws.com/Holly+Berry1.JPG"
+                }
+                className={"card-img"}
+              />
+              <h3>{"Holly Berry Cookies"}</h3>
+              <p>
+                {
+                  "Making life a little sweeter for that special someone in your life"
+                }
+              </p>
+            </div>
+          </div>
+          <div className={props.isMobile ? "col-12" : "col-4"}>
+            <div className="card" onClick={() => setModalOpen(true)}>
+              <img
+                src={
+                  "https://wellcall-app-cdk.s3.amazonaws.com/Ginger+Family.JPG"
+                }
+                className={"card-img"}
+              />
+              <h3>{"Gingerbread Cookies"}</h3>
+              <p>
+                {
+                  "Making life a little sweeter for that special someone in your life"
+                }
+              </p>
+            </div>
+            <div className="card" onClick={() => setModalOpen(true)}>
+              <img
+                src={
+                  "https://wellcall-app-cdk.s3.amazonaws.com/Candy+Cane+Lane.JPG"
+                }
+                className={"card-img"}
+              />
+              <h3>{"Candy Cane Cookies"}</h3>
+              <p>
+                {
+                  "Making life a little sweeter for that special someone in your life"
+                }
+              </p>
+            </div>
+            <div className="card" onClick={() => setModalOpen(true)}>
+              <img
+                src={
+                  "https://wellcall-app-cdk.s3.amazonaws.com/Star+Trio.JPG"
+                }
+                className={"card-img"}
+              />
+              <h3>{"Christmas Star Cookies"}</h3>
               <p>
                 {
                   "Making life a little sweeter for that special someone in your life"
