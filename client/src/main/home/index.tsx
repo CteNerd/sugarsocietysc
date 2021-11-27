@@ -18,16 +18,6 @@ export default function Home(props: HomeProps) {
           located in Rosharon, TX and providing our amazing cookies and customer
           service to the greater Houston area.
         </p>
-        <div>
-          <h2>Got Questions? Contact Us</h2>
-          <p>
-            We can be reached anytime via the contact form which will email us
-            immediately.
-          </p>
-        </div>
-        <a href="/contact">
-          <button>Contact Form</button>
-        </a>
       </div>
     </div>
   );
