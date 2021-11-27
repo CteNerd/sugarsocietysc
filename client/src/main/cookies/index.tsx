@@ -122,7 +122,6 @@ export default function OurCookies(props: Props) {
                 className={"card-img"}
               />
               <h3>{"Santa Cookies"}</h3>
-              <p>{"For those you can't wait to see on Monday"}</p>
             </div>
             <div
               className="card"
@@ -136,7 +135,6 @@ export default function OurCookies(props: Props) {
                 className={"card-img"}
               />
               <h3>{"Christmas Tree Cookies"}</h3>
-              <p>{"Just need a glass of milk and a tray just for Santa"}</p>
             </div>
             <div
               className="card"
@@ -150,7 +148,6 @@ export default function OurCookies(props: Props) {
                 className={"card-img"}
               />
               <h3>{"Christmas Phrase Cookies"}</h3>
-              <p>{"Just need a glass of milk and a tray just for Santa"}</p>
             </div>
             <div
               className="card"
@@ -166,7 +163,6 @@ export default function OurCookies(props: Props) {
                 className={"card-img"}
               />
               <h3>{"Christmas Ornament Cookies"}</h3>
-              <p>{"Just need a glass of milk and a tray just for Santa"}</p>
             </div>
           </div>
           <div className={props.isMobile ? "col-12" : "col-4"}>
@@ -184,11 +180,6 @@ export default function OurCookies(props: Props) {
                 className={"card-img"}
               />
               <h3>{"Snowman Cookies"}</h3>
-              <p>
-                {
-                  "Making life a little sweeter for that special someone in your life"
-                }
-              </p>
             </div>
             <div
               className="card"
@@ -202,11 +193,6 @@ export default function OurCookies(props: Props) {
                 className={"card-img"}
               />
               <h3>{"Christmas Stocking Cookies"}</h3>
-              <p>
-                {
-                  "Making life a little sweeter for that special someone in your life"
-                }
-              </p>
             </div>
             <div
               className="card"
@@ -220,11 +206,6 @@ export default function OurCookies(props: Props) {
                 className={"card-img"}
               />
               <h3>{"Reindeer Cookies"}</h3>
-              <p>
-                {
-                  "Making life a little sweeter for that special someone in your life"
-                }
-              </p>
             </div>
             <div
               className="card"
@@ -240,11 +221,6 @@ export default function OurCookies(props: Props) {
                 className={"card-img"}
               />
               <h3>{"Holly Berry Cookies"}</h3>
-              <p>
-                {
-                  "Making life a little sweeter for that special someone in your life"
-                }
-              </p>
             </div>
           </div>
           <div className={props.isMobile ? "col-12" : "col-4"}>
@@ -262,11 +238,6 @@ export default function OurCookies(props: Props) {
                 className={"card-img"}
               />
               <h3>{"Gingerbread Cookies"}</h3>
-              <p>
-                {
-                  "Making life a little sweeter for that special someone in your life"
-                }
-              </p>
             </div>
             <div
               className="card"
@@ -282,11 +253,6 @@ export default function OurCookies(props: Props) {
                 className={"card-img"}
               />
               <h3>{"Candy Cane Cookies"}</h3>
-              <p>
-                {
-                  "Making life a little sweeter for that special someone in your life"
-                }
-              </p>
             </div>
             <div
               className="card"
@@ -300,11 +266,6 @@ export default function OurCookies(props: Props) {
                 className={"card-img"}
               />
               <h3>{"Christmas Star Cookies"}</h3>
-              <p>
-                {
-                  "Making life a little sweeter for that special someone in your life"
-                }
-              </p>
             </div>
           </div>
         </div>
@@ -331,7 +292,7 @@ export default function OurCookies(props: Props) {
           onAccordionSelection("work");
         }}
       >
-        Work
+        Corporate
       </button>
       <div
         className="panel"
