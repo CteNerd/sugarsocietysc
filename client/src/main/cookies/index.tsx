@@ -1,6 +1,7 @@
 import { Collapse } from "antd";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Cookies from "./cookies.json";
+import CookiesMobile from "./cookies-mobile.json";
 import "./cookies.css";
 
 interface Props {
@@ -12,6 +13,12 @@ export default function OurCookies(props: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [openPanel, setOpenPanel] = useState("");
   const [selectedCookie, setSelectedCookie] = useState("");
+  const breakpoint = window.matchMedia("(max-width: 1279px)");
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(breakpoint.matches);
+  }, []);
 
   var slideIndex = 0;
 
@@ -52,6 +59,47 @@ export default function OurCookies(props: Props) {
     }
 
     setOpenPanel(key);
+  }
+
+  function ModalContent() {
+    const cookiesToDisplay = isMobile ? CookiesMobile : Cookies;
+
+    return (
+      <div className="modal-content">
+        <div className="slideshow-container">
+          {cookiesToDisplay
+            .filter((cookie) => cookie.type === selectedCookie)
+            .map((cookie, index) => {
+              return (
+                <div className="mySlides fade" key={index}>
+                  <div className="numbertext">{index}</div>
+                  <img src={cookie.url} style={{ width: "100%" }} />
+                  <div className="text">Caption {index}</div>
+                </div>
+              );
+            })}
+        </div>
+        <br />
+
+        <div style={{ textAlign: "center" }}>
+          {cookiesToDisplay
+            .filter((cookie) => cookie.type === selectedCookie)
+            .map(() => {
+              return <span className="dot"></span>;
+            })}
+        </div>
+        <div>
+          <button className="modal-btn" onClick={() => setModalOpen(false)}>
+            Close
+          </button>
+          <a href="/order-inquiry">
+            <button className="modal-btn" onClick={() => setModalOpen(false)}>
+              Purchase
+            </button>
+          </a>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -303,40 +351,7 @@ export default function OurCookies(props: Props) {
         <p>Coming Soon...</p>
       </div>
       <div id="myModal" className={modalOpen ? "modal-opened" : "modal-closed"}>
-        <div className="modal-content">
-          <div className="slideshow-container">
-            {Cookies.filter((cookie) => cookie.type === selectedCookie).map(
-              (cookie, index) => {
-                return (
-                  <div className="mySlides fade" key={index}>
-                    <div className="numbertext">{index}</div>
-                    <img src={cookie.url} style={{ width: "100%" }} />
-                    <div className="text">Caption {index}</div>
-                  </div>
-                );
-              }
-            )}
-          </div>
-          <br />
-
-          <div style={{ textAlign: "center" }}>
-            {Cookies.filter((cookie) => cookie.type === selectedCookie).map(
-              () => {
-                return <span className="dot"></span>;
-              }
-            )}
-          </div>
-          <div>
-            <button className="modal-btn" onClick={() => setModalOpen(false)}>
-              Close
-            </button>
-            <a href="/order-inquiry">
-              <button className="modal-btn" onClick={() => setModalOpen(false)}>
-                Purchase
-              </button>
-            </a>
-          </div>
-        </div>
+        <ModalContent />
       </div>
     </div>
   );
