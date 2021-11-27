@@ -1,24 +1,15 @@
-import { Collapse } from "antd";
 import React, { useEffect, useState } from "react";
 import Cookies from "./cookies.json";
-import CookiesMobile from "./cookies-mobile.json";
 import "./cookies.css";
 
 interface Props {
   isMobile: boolean;
 }
-const { Panel } = Collapse;
 
 export default function OurCookies(props: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [openPanel, setOpenPanel] = useState("");
   const [selectedCookie, setSelectedCookie] = useState("");
-  const breakpoint = window.matchMedia("(max-width: 1279px)");
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    setIsMobile(breakpoint.matches);
-  }, []);
 
   var slideIndex = 0;
 
@@ -35,7 +26,7 @@ export default function OurCookies(props: Props) {
     );
 
     if (slides.length > 0) {
-      var dots = document.getElementsByClassName("dot");
+      // var dots = document.getElementsByClassName("dot");
       for (i = 0; i < slides.length; i++) {
         slides[i].style.display = "none";
       }
@@ -43,12 +34,12 @@ export default function OurCookies(props: Props) {
       if (slideIndex > slides.length) {
         slideIndex = 1;
       }
-      for (i = 0; i < dots.length; i++) {
-        dots[i].className = dots[i].className.replace(" active", "");
-      }
+      // for (i = 0; i < dots.length; i++) {
+      //   dots[i].className = dots[i].className.replace(" active", "");
+      // }
       slides[slideIndex - 1].style.display = "block";
-      dots[slideIndex - 1].className += " active";
-      setTimeout(showSlides, 6500); // Change image every 2 seconds
+      /// dots[slideIndex - 1].className += " active";
+      setTimeout(showSlides, 6500); // Change image every 6.5 seconds
     }
   }
 
@@ -62,32 +53,31 @@ export default function OurCookies(props: Props) {
   }
 
   function ModalContent() {
-    const cookiesToDisplay = isMobile ? CookiesMobile : Cookies;
 
     return (
       <div className="modal-content">
         <div className="slideshow-container">
-          {cookiesToDisplay
+          {Cookies
             .filter((cookie) => cookie.type === selectedCookie)
             .map((cookie, index) => {
               return (
                 <div className="mySlides fade" key={index}>
-                  <div className="numbertext">{index}</div>
-                  <img src={cookie.url} style={{ width: "100%" }} />
-                  <div className="text">Caption {index}</div>
+                  <div className="numbertext">{index + 1}</div>
+                  <img src={props.isMobile ? cookie.mobileUrl : cookie.url} style={{ width: "100%" }} />
+                  <div className="text">{cookie.caption}</div>
                 </div>
               );
             })}
         </div>
         <br />
 
-        <div style={{ textAlign: "center" }}>
+        {/* <div style={{ textAlign: "center" }}>
           {cookiesToDisplay
             .filter((cookie) => cookie.type === selectedCookie)
             .map(() => {
               return <span className="dot"></span>;
             })}
-        </div>
+        </div> */}
         <div>
           <button className="modal-btn" onClick={() => setModalOpen(false)}>
             Close

@@ -1,138 +1,206 @@
 [
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Santa1.JPG",
-    "type": "santa"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Santa1-mobile.jpg",
+    "type": "santa",
+    "caption": "White Bewjewled Santa"
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Santa1.2.JPG",
-    "type": "santa"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Santa1.2-mobile.jpg",
+    "type": "santa",
+    "caption": "White Bewjewled Santa"
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Santa2.JPG",
-    "type": "santa"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Santa2-mobile.jpg",
+    "type": "santa",
+    "caption": "Silver Bejewled Santa"
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Santa3.JPG",
-    "type": "santa"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Santa3-mobile.jpg",
+    "type": "santa",
+    "caption": "Santa w/ Pearl Beard"
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Mini+Frosty.JPG",
-    "type": "snowman"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Mini+Frosty.JPG",
+    "type": "snowman",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Behind+The+Sceens7.JPG",
-    "type": "snowman"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Behind+The+Sceens7.JPG",
+    "type": "snowman",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Behind+the+sceens8.JPG",
-    "type": "snowman"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Behind+the+sceens8.JPG",
+    "type": "snowman",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Ginger+Duo-+White.JPG",
-    "type": "gingerbread"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Ginger+Duo-+White.JPG",
+    "type": "gingerbread",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Ginger+Family.JPG",
-    "type": "gingerbread"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Ginger+Family.JPG",
+    "type": "gingerbread",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Ginger+Family+2.JPG",
-    "type": "gingerbread"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Ginger+Family+2.JPG",
+    "type": "gingerbread",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Ginger+Mini+Trio.JPG",
-    "type": "gingerbread"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Ginger+Mini+Trio.JPG",
+    "type": "gingerbread",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Ginger+Trio-+Traditional.JPG",
-    "type": "gingerbread"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Ginger+Trio-+Traditional.JPG",
+    "type": "gingerbread",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Gingerbread1.JPG",
-    "type": "gingerbread"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Gingerbread1.JPG",
+    "type": "gingerbread",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Gingerbread2.JPG",
-    "type": "gingerbread"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Gingerbread2.JPG",
+    "type": "gingerbread",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Classic+Tree.JPG",
-    "type": "tree"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Classic+Tree.JPG",
+    "type": "tree",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Evergreen.JPG",
-    "type": "tree"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Evergreen.JPG",
+    "type": "tree",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Oh+Christmas+Tree.JPG",
-    "type": "tree"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Oh+Christmas+Tree.JPG",
+    "type": "tree",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Pine+Tree.JPG",
-    "type": "tree"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Pine+Tree.JPG",
+    "type": "tree",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Spruce+Tree.JPG",
-    "type": "tree"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Spruce+Tree.JPG",
+    "type": "tree",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Spruce2.JPG",
-    "type": "tree"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Spruce2.JPG",
+    "type": "tree",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Tree+Group.JPG",
-    "type": "tree"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Tree+Group.JPG",
+    "type": "tree",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Tree+Mini+Trio.JPG",
-    "type": "tree"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Tree+Mini+Trio.JPG",
+    "type": "tree",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Stocking.JPG",
-    "type": "stocking"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Stocking.JPG",
+    "type": "stocking",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Candy+Cane.JPG",
-    "type": "candycane"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Candy+Cane.JPG",
+    "type": "candycane",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Candy+Cane+Lane.JPG",
-    "type": "candycane"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Candy+Cane+Lane.JPG",
+    "type": "candycane",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Joy.JPG",
-    "type": "phrase"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Joy.JPG",
+    "type": "phrase",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Rudolph1.JPG",
-    "type": "reindeer"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Rudolph1.JPG",
+    "type": "reindeer",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Rudolph2.JPG",
-    "type": "reindeer"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Rudolph2.JPG",
+    "type": "reindeer",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Shine+Bright.JPG",
-    "type": "star"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Shine+Bright.JPG",
+    "type": "star",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Wishing+Star.JPG",
-    "type": "star"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Wishing+Star.JPG",
+    "type": "star",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Stringed_Lights.jpg",
-    "type": "ornament"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Stringed_Lights.jpg",
+    "type": "ornament",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Holly+Berry1.JPG",
-    "type": "hollyberry"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Holly+Berry1.JPG",
+    "type": "hollyberry",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Holly+Berry2.JPG",
-    "type": "hollyberry"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Holly+Berry2.JPG",
+    "type": "hollyberry",
+    "caption": ""
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Holly+Berry1.JPG",
-    "type": "hollyberry"
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Holly+Berry1.JPG",
+    "type": "hollyberry",
+    "caption": ""
   }
 ]
