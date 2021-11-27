@@ -20,7 +20,7 @@
     "type": "snowman"
   },
   {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/Behind+the+sceens8.JPG",
+    "url": "https://wellcall-app-cdk.s3.amazonaws.com/Behind+The+Sceens7.JPG",
     "type": "snowman"
   },
   {
@@ -120,8 +120,8 @@
     "type": "star"
   },
   {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/Stringed+Lights.JPG",
-    "type": "onament"
+    "url": "https://wellcall-app-cdk.s3.amazonaws.com/Stringed_Lights-mobile.jpg",
+    "type": "ornament"
   },
   {
     "url": "https://wellcall-app-cdk.s3.amazonaws.com/Holly+Berry1.JPG",
@@ -132,7 +132,7 @@
     "type": "hollyberry"
   },
   {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/Holly Berry1.JPG",
+    "url": "https://wellcall-app-cdk.s3.amazonaws.com/Holly+Berry1.JPG",
     "type": "hollyberry"
   }
 ]
