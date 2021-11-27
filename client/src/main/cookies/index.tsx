@@ -95,7 +95,6 @@ export default function OurCookies(props: Props) {
   return (
     <div>
       <h1>Our Cookies</h1>
-      <h2>Mmm Mmm Good... Say Less...</h2>
       <button
         className="accordion"
         onClick={() => {
