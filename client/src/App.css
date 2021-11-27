@@ -70,6 +70,7 @@
 .page-content-container {
   background-color: rgb(255, 255, 255, 0.6);
   padding: 10px;
+  min-height: 90vh;
 }
 
 h1,

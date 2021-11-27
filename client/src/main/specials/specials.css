@@ -1,11 +1,9 @@
 .specials-img {
   float: left;
-  padding-left: 30px;
   width: 100%;
+  padding: 40px;
 }
 
 @media only screen and (max-width: 600px) {
-  .specials-img {
-    padding-left: 0%;
-  }
+  
 }
