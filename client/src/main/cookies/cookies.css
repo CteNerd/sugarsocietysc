@@ -3,6 +3,11 @@
   background: #ececec;
 }
 
+.cookie-thumbnail {
+  width: 30%;
+  padding: 5px;
+}
+
 .card {
   max-height: 100%;
   z-index: 0;
@@ -112,7 +117,7 @@
 
 .modal-btn:disabled {
   background-color: red;
-  cursor:wait;
+  cursor: wait;
 }
 
 /* The Close Button */

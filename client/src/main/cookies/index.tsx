@@ -13,18 +13,18 @@ export default function OurCookies(props: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [openPanel, setOpenPanel] = useState("");
   const [selectedCookie, setSelectedCookie] = useState("");
+  const [modalCookie, setModalCookie] = useState<any>();
 
   useEffect(() => {
     showSlides(1);
   }, []);
 
-
   // Next/previous controls
-  function plusSlides(n:number) {
-    showSlides(slideIndex += n);
+  function plusSlides(n: number) {
+    showSlides((slideIndex += n));
   }
 
-  function showSlides(n:number) {
+  function showSlides(n: number) {
     var i;
     var slides = Array.from(
       document.getElementsByClassName(
@@ -33,15 +33,19 @@ export default function OurCookies(props: Props) {
     );
 
     if (n) {
-      if (n > slides.length) {slideIndex = 1} 
-      if (n < 1) {slideIndex = slides.length}
+      if (n > slides.length) {
+        slideIndex = 1;
+      }
+      if (n < 1) {
+        slideIndex = slides.length;
+      }
+    }
+
+    for (i = 0; i < slides.length; i++) {
+      slides[i].style.display = "none";
     }
 
     if (slides.length > 0) {
-      for (i = 0; i < slides.length; i++) {
-        slides[i].style.display = "none";
-      }
-      
       slides[slideIndex - 1].style.display = "block";
     }
   }
@@ -56,32 +60,36 @@ export default function OurCookies(props: Props) {
   }
 
   function ModalContent() {
-    let cookiesToShow = Cookies.filter((cookie) => cookie.type === selectedCookie);
+    let cookiesToShow = Cookies.filter(
+      (cookie) => cookie.type === selectedCookie
+    );
 
     return (
       <div className="modal-content">
         <div className="slideshow-container">
-          {cookiesToShow.map((cookie, index) => {
-              return (
-                <div className="mySlides fade" key={index}>
-                  <div className="numbertext">{cookie.caption}</div>
-              <img
-                src={cookie.mobileUrl}
-                style={{width:'100%'}}
-              />
-              <div className="text">{cookie.size}</div>
-                </div>
-              );
-            })}
+              <div>
+                <div className="numbertext">{modalCookie !== undefined ? modalCookie.caption : ''}</div>
+                <img src={modalCookie !== undefined ? modalCookie.mobileUrl : ''} style={{ width: "100%" }} />
+                <div className="text">{modalCookie !== undefined ? modalCookie.size : ''}</div>
+              </div>
         </div>
         <br />
         <div>
-          <button className="modal-btn" onClick={() => plusSlides(1)}>
-            Next
-          </button>
+
+        {cookiesToShow.map((cookie) => {
+            return (
+              <img key={cookie.mobileUrl} onClick={() => {setModalCookie(cookie);}} className='cookie-thumbnail' src={cookie.mobileUrl}/>
+            );
+          })}
         </div>
         <div>
-          <button className="modal-btn" onClick={() => {setModalOpen(false);}}>
+          <button
+            className="modal-btn"
+            onClick={() => {
+              setModalOpen(false);
+              setModalCookie(undefined);
+            }}
+          >
             Close
           </button>
           <a href="/order-inquiry">
