@@ -9,18 +9,22 @@ interface Props {
 }
 
 export default function OurCookies(props: Props) {
+  var slideIndex = 1;
   const [modalOpen, setModalOpen] = useState(false);
   const [openPanel, setOpenPanel] = useState("");
   const [selectedCookie, setSelectedCookie] = useState("");
 
-  var slideIndex = 0;
-  var timer: any = null;
+  useEffect(() => {
+    showSlides(1);
+  }, []);
 
-  if (document.getElementsByClassName("mySlides")) {
-    showSlides();
+
+  // Next/previous controls
+  function plusSlides(n:number) {
+    showSlides(slideIndex += n);
   }
 
-  function showSlides() {
+  function showSlides(n:number) {
     var i;
     var slides = Array.from(
       document.getElementsByClassName(
@@ -28,21 +32,17 @@ export default function OurCookies(props: Props) {
       ) as HTMLCollectionOf<HTMLElement>
     );
 
+    if (n) {
+      if (n > slides.length) {slideIndex = 1} 
+      if (n < 1) {slideIndex = slides.length}
+    }
+
     if (slides.length > 0) {
-      // var dots = document.getElementsByClassName("dot");
       for (i = 0; i < slides.length; i++) {
         slides[i].style.display = "none";
       }
-      slideIndex++;
-      if (slideIndex > slides.length) {
-        slideIndex = 1;
-      }
-      // for (i = 0; i < dots.length; i++) {
-      //   dots[i].className = dots[i].className.replace(" active", "");
-      // }
+      
       slides[slideIndex - 1].style.display = "block";
-      /// dots[slideIndex - 1].className += " active";
-      timer = setTimeout(showSlides, 2000); // Change image every 6.5 seconds
     }
   }
 
@@ -56,14 +56,12 @@ export default function OurCookies(props: Props) {
   }
 
   function ModalContent() {
-    if (modalOpen && openPanel) {
+    let cookiesToShow = Cookies.filter((cookie) => cookie.type === selectedCookie);
 
     return (
       <div className="modal-content">
         <div className="slideshow-container">
-          {Cookies
-            .filter((cookie) => cookie.type === selectedCookie)
-            .map((cookie, index) => {
+          {cookiesToShow.map((cookie, index) => {
               return (
                 <div className="mySlides fade" key={index}>
                   <div className="numbertext">{cookie.caption}</div>
@@ -77,14 +75,11 @@ export default function OurCookies(props: Props) {
             })}
         </div>
         <br />
-
-        {/* <div style={{ textAlign: "center" }}>
-          {cookiesToDisplay
-            .filter((cookie) => cookie.type === selectedCookie)
-            .map(() => {
-              return <span className="dot"></span>;
-            })}
-        </div> */}
+        <div>
+          <button className="modal-btn" onClick={() => plusSlides(1)}>
+            Next
+          </button>
+        </div>
         <div>
           <button className="modal-btn" onClick={() => {setModalOpen(false);}}>
             Close
@@ -97,11 +92,6 @@ export default function OurCookies(props: Props) {
         </div>
       </div>
     );
-    } else {
-      return (
-        <div></div>
-      )
-    }
   }
 
   return (

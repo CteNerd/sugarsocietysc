@@ -110,6 +110,11 @@
   width: 40%; /* Could be more or less, depending on screen size */
 }
 
+.modal-btn:disabled {
+  background-color: red;
+  cursor:wait;
+}
+
 /* The Close Button */
 .close {
   color: #aaa;
