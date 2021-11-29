@@ -5,9 +5,7 @@ export default function OurStory() {
     <div>
       <h1>Once Upon A Time...</h1>
       <div>
-        <p>
-          Coming Soon...
-        </p>
+        <p>Coming Soon...</p>
       </div>
     </div>
   );

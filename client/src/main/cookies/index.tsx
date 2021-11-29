@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import Cookies from "./cookies.json";
 import "./cookies.css";
+import { Carousel } from "antd";
+import { clearTimeout } from "timers";
 
 interface Props {
   isMobile: boolean;
@@ -12,6 +14,7 @@ export default function OurCookies(props: Props) {
   const [selectedCookie, setSelectedCookie] = useState("");
 
   var slideIndex = 0;
+  var timer: any = null;
 
   if (document.getElementsByClassName("mySlides")) {
     showSlides();
@@ -39,7 +42,7 @@ export default function OurCookies(props: Props) {
       // }
       slides[slideIndex - 1].style.display = "block";
       /// dots[slideIndex - 1].className += " active";
-      setTimeout(showSlides, 6500); // Change image every 6.5 seconds
+      timer = setTimeout(showSlides, 2000); // Change image every 6.5 seconds
     }
   }
 
@@ -53,6 +56,9 @@ export default function OurCookies(props: Props) {
   }
 
   function ModalContent() {
+    if (modalOpen && openPanel) {
+      console.log('load modal');
+
 
     return (
       <div className="modal-content">
@@ -63,7 +69,10 @@ export default function OurCookies(props: Props) {
               return (
                 <div className="mySlides fade" key={index}>
                   <div className="numbertext">{index + 1}</div>
-                  <img src={props.isMobile ? cookie.mobileUrl : cookie.url} style={{ width: "100%" }} />
+              <img
+                src={cookie.mobileUrl}
+                style={{width:'100%'}}
+              />
                   <div className="text">{cookie.caption}</div>
                 </div>
               );
@@ -79,7 +88,7 @@ export default function OurCookies(props: Props) {
             })}
         </div> */}
         <div>
-          <button className="modal-btn" onClick={() => setModalOpen(false)}>
+          <button className="modal-btn" onClick={() => {setModalOpen(false);}}>
             Close
           </button>
           <a href="/order-inquiry">
@@ -90,6 +99,11 @@ export default function OurCookies(props: Props) {
         </div>
       </div>
     );
+    } else {
+      return (
+        <div></div>
+      )
+    }
   }
 
   return (
