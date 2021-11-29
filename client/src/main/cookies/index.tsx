@@ -57,8 +57,6 @@ export default function OurCookies(props: Props) {
 
   function ModalContent() {
     if (modalOpen && openPanel) {
-      console.log('load modal');
-
 
     return (
       <div className="modal-content">
@@ -68,12 +66,12 @@ export default function OurCookies(props: Props) {
             .map((cookie, index) => {
               return (
                 <div className="mySlides fade" key={index}>
-                  <div className="numbertext">{index + 1}</div>
+                  <div className="numbertext">{cookie.caption}</div>
               <img
                 src={cookie.mobileUrl}
                 style={{width:'100%'}}
               />
-                  <div className="text">{cookie.caption}</div>
+              <div className="text">{cookie.size}</div>
                 </div>
               );
             })}
