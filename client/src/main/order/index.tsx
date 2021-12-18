@@ -13,8 +13,11 @@ export default function OrderInquiry() {
           below. Once your order is received, we will contact you to go over
           details for the order.
         </p>
-        <a href="https://forms.gle/CRWM3HZjvuvrjADR6" target="_blank">
-          <button>Order Now</button>
+        <a href="https://wellcall-app-cdk.s3.amazonaws.com/Christmas+Order+Form+PDF.pdf" target="_blank">
+          <button>Christmas Order Form</button>
+        </a>
+        <a href="https://wellcall-app-cdk.s3.amazonaws.com/Order+Form+PDF.pdf" target="_blank">
+          <button>Order Form</button>
         </a>
       </div>
     </div>
