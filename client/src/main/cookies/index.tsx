@@ -67,18 +67,31 @@ export default function OurCookies(props: Props) {
     return (
       <div className="modal-content">
         <div className="slideshow-container">
-              <div>
-                <div className="numbertext">{modalCookie !== undefined ? modalCookie.caption : ''}</div>
-                <img src={modalCookie !== undefined ? modalCookie.mobileUrl : ''} style={{ width: "100%" }} />
-                <div className="text">{modalCookie !== undefined ? modalCookie.size : ''}</div>
-              </div>
+          <div>
+            <div className="numbertext">
+              {modalCookie !== undefined ? modalCookie.caption : ""}
+            </div>
+            <img
+              src={modalCookie !== undefined ? modalCookie.mobileUrl : ""}
+              style={{ width: "100%" }}
+            />
+            <div className="text">
+              {modalCookie !== undefined ? modalCookie.size : ""}
+            </div>
+          </div>
         </div>
         <br />
         <div>
-
-        {cookiesToShow.map((cookie) => {
+          {cookiesToShow.map((cookie) => {
             return (
-              <img key={cookie.mobileUrl} onClick={() => {setModalCookie(cookie);}} className='cookie-thumbnail' src={cookie.mobileUrl}/>
+              <img
+                key={cookie.mobileUrl}
+                onClick={() => {
+                  setModalCookie(cookie);
+                }}
+                className="cookie-thumbnail"
+                src={cookie.mobileUrl}
+              />
             );
           })}
         </div>
