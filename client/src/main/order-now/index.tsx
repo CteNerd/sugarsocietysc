@@ -14,8 +14,12 @@ export default function OrderNow() {
       </div>
       <div>
         <p>Download Form then attach to Order Submission</p>
-        <a href=""><button>Valentine's Day Order Form</button></a>
-        <a href=""><button>Custom Order Form</button></a>
+        <a href="">
+          <button>Valentine's Day Order Form</button>
+        </a>
+        <a href="">
+          <button>Custom Order Form</button>
+        </a>
       </div>
       <div className="contact-us-form-container">
         <a href="https://forms.gle/Rp9JpVfMj3XpV3FN7" target={"_blank"}>
