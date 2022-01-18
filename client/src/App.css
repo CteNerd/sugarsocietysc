@@ -214,3 +214,18 @@ footer {
 .col-12 {
   width: 100%;
 }
+
+@font-face {
+  font-family: "AstralSisters";
+  src: local("LucidaHandwriting"), url(./fonts/astral_sisters/Astral\ Sisters.ttf);
+}
+
+@font-face {
+  font-family: "Cream";
+  src: local("Cream"), url(./fonts/cream_2/cream-DEMO.ttf);
+}
+
+@font-face {
+  font-family: "Cream";
+  src: local("Cream"), url(./fonts/lemon_milk/LEMONMILK-Medium.otf);
+}
