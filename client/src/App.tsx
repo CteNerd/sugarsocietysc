@@ -62,10 +62,10 @@ function App() {
             <a href="/our-cookies">Our Cookies</a>
           </div>
           <div key="order" className="menu-item col-1">
-            <a href="/order-inquiry">Order Inquiry</a>
+            <a href="/order-inquiry">Pricing</a>
           </div>
           <div key="contact" className="menu-item col-1">
-            <a href="/contact">Contact Us</a>
+            <a href="/contact">Order Now</a>
           </div>
         </nav>
       );
