@@ -14,7 +14,7 @@ export default function Specials(props: Props) {
           className="specials-img"
           src="https://wellcall-app-cdk.s3.amazonaws.com/Christmas+Cookie+Sale+Advertisment+Picture.jpg"
         />
-        <a href="/order-inquiry">
+        <a href="/order-now">
           <button>Order Now</button>
         </a>
       </div>
