@@ -61,7 +61,7 @@ export default function SideNav() {
       <a href="/order-inquiry">
         <ShoppingCartOutlined /> Pricing
       </a>
-      <a href="/contact">
+      <a href="/order-now">
         <AlertOutlined /> Order Now
       </a>
     </div>
