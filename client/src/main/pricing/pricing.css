@@ -1,3 +1,7 @@
+.page-content-container {
+    min-height: auto;
+}
+
 .pricing-table-header {
     font-family: LemonMilk;
     padding-top: 10px;
