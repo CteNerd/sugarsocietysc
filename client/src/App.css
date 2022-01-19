@@ -227,6 +227,6 @@ footer {
 }
 
 @font-face {
-  font-family: "Cream";
-  src: local("Cream"), url(./fonts/lemon_milk/LEMONMILK-Medium.otf);
+  font-family: "LemonMilk";
+  src: local("LemonMilk"), url(./fonts/lemon_milk/LEMONMILK-Medium.otf);
 }
