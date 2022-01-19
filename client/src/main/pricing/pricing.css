@@ -1,18 +1,30 @@
+.pricing-header {
+  font-family: AstralSisters;
+}
+
+.pricing-table table {
+    width: 100%;
+    padding: 10px 0px;
+}
+
 .page-content-container {
   min-height: auto;
 }
 
 .pricing-table-header {
-  font-family: LemonMilk;
+  font-family: AstralSisters;
+  font-size: large;
   padding-top: 10px;
 }
 
 .pricing-table-item {
-  font-family: AstralSisters;
+  font-family: LemonMilk;
+  font-size: smaller;
 }
 
 .pricing-table-price {
   font-family: Cream;
+  float: right;
 }
 
 /* Tooltip text */

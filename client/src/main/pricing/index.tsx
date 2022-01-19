@@ -5,7 +5,7 @@ import "./pricing.css";
 export default function Pricing() {
   return (
     <div>
-      <h1>Pricing</h1>
+      <h1 className="pricing-header">Pricing</h1>
       <div>
         <p>TBD</p>
       </div>
@@ -37,7 +37,10 @@ export default function Pricing() {
               </td>
               <td className="pricing-table-price">$36.00</td>
             </tr>
-
+          </table>
+        </div>
+        <div className="pricing-table">
+          <table>
             <tr className="pricing-table-header tooltip">
               <td>Cookie Design Extras</td>
             </tr>
@@ -99,7 +102,10 @@ export default function Pricing() {
               </td>
               <td className="pricing-table-price">$1.00</td>
             </tr>
-
+          </table>
+        </div>
+        <div className="pricing-table">
+          <table>
             <tr className="pricing-table-header tooltip">
               <td>Packaging</td>
             </tr>
@@ -111,12 +117,18 @@ export default function Pricing() {
               <td>Bakery Box w/ Zig Zag Paper</td>
               <td className="pricing-table-price">$1.50</td>
             </tr>
-
+          </table>
+        </div>
+        <div className="pricing-table">
+          <table>
             <tr className="pricing-table-header tooltip">
               <td>Shipping</td>
               <td className="pricing-table-price">TBD</td>
             </tr>
-
+          </table>
+        </div>
+        <div className="pricing-table">
+          <table>
             <tr className="pricing-table-header tooltip">
               <td>Other</td>
             </tr>
