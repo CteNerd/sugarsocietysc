@@ -1,37 +1,37 @@
 .page-content-container {
-    min-height: auto;
+  min-height: auto;
 }
 
 .pricing-table-header {
-    font-family: LemonMilk;
-    padding-top: 10px;
+  font-family: LemonMilk;
+  padding-top: 10px;
 }
 
 .pricing-table-item {
-    font-family: AstralSisters;
+  font-family: AstralSisters;
 }
 
 .pricing-table-price {
-    font-family: Cream;
+  font-family: Cream;
 }
 
 /* Tooltip text */
 .tooltip .tooltiptext {
-    font-family: Cream;
-    visibility: hidden;
-    width: 120px;
-    background-color: black;
-    color: #fff;
-    text-align: center;
-    padding: 5px 0;
-    border-radius: 6px;
-   
-    /* Position the tooltip text - see examples below! */
-    position: absolute;
-    z-index: 1;
-  }
-  
-  /* Show the tooltip text when you mouse over the tooltip container */
-  .tooltip:hover .tooltiptext {
-    visibility: visible;
-  }
+  font-family: Cream;
+  visibility: hidden;
+  width: 120px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+
+  /* Position the tooltip text - see examples below! */
+  position: absolute;
+  z-index: 1;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}

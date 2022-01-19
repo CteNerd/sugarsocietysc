@@ -19,6 +19,22 @@
   height: 90px;
 }
 
+.allergens-header {
+  font-family: BebasNeue;
+}
+
+.ingredients-header {
+  font-family: BebasNeue;
+}
+
+.allergens-body {
+  font-family: Cream;
+}
+
+.ingredients-body {
+  font-family: Cream;
+}
+
 /* Style the buttons that are used to open and close the accordion panel */
 .accordion {
   background-color: #eee;

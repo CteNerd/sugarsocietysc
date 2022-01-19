@@ -323,6 +323,26 @@ export default function OurCookies(props: Props) {
       >
         <p>Coming Soon...</p>
       </div>
+      <div className="ingredients-container">
+        <h4 className="ingredients-header">Ingredients</h4>
+        <div className="ingredients-body">
+          Our cookie dough is made from scratch for each order! We understand
+          many people have food allergies or sensitivities so below you will
+          find the specific ingredients included in our yummy sugar cookies.
+          Please let us know if you have further questions.
+        </div>
+        <div className="ingredients-body">
+          Ingredients: All Purpose Flour (Bleached) , Granulated Sugar, Powdered
+          Sugar, Salted Butter, Egg, Vanilla Extract, Baking Powder, Salt,
+          Meringue Powder, Water, Corn Syrup, Glycerin, Yellow5, Blue1, Red3,
+          Yello6, Red40, Agar Gum, Potassium Sorbate, Citric Acid, Sodium
+          Citrate
+        </div>
+      </div>
+      <div className="allergens-container">
+        <h4 className="allergens-header">Allergens</h4>
+        <div className="allergens-body">Allergen: Egg and Wheat</div>
+      </div>
       <div id="myModal" className={modalOpen ? "modal-opened" : "modal-closed"}>
         <ModalContent />
       </div>

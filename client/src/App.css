@@ -230,3 +230,8 @@ footer {
   font-family: "LemonMilk";
   src: local("LemonMilk"), url(./fonts/lemon_milk/LEMONMILK-Medium.otf);
 }
+
+@font-face {
+  font-family: "BebasNeue";
+  src: local("BebasNeue"), url(./fonts/bebas_neue/BebasNeue-Regular.ttf);
+}
