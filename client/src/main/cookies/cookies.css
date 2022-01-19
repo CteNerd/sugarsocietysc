@@ -19,12 +19,22 @@
   height: 90px;
 }
 
+.allergens-container {
+  padding: 5px 0px;
+}
+
+.ingredients-container {
+  padding: 5px 0px;
+}
+
 .allergens-header {
   font-family: BebasNeue;
+  font-size: x-large;
 }
 
 .ingredients-header {
   font-family: BebasNeue;
+  font-size: x-large;
 }
 
 .allergens-body {
