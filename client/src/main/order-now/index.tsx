@@ -3,7 +3,7 @@ import "./order-now.css";
 
 export default function OrderNow() {
   return (
-    <div>
+    <div className="order-now-page-container">
       <div>
         <h1>Order Now</h1>
         <p>

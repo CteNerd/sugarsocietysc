@@ -10,3 +10,13 @@ iframe {
 button {
   margin: 5px;
 }
+
+.order-now-page-container {
+  width: 40vw;
+}
+
+@media only screen and (max-width: 900px) {
+  .order-now-page-container {
+    width: 100%;
+  }
+}
