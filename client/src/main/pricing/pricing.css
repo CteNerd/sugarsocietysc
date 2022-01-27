@@ -3,7 +3,7 @@
 }
 
 .pricing-table table {
-  width: 100%;
+  width: 50%;
   padding: 10px 0px;
 }
 
@@ -13,9 +13,14 @@
   padding-top: 10px;
 }
 
-.pricing-table-item {
+.pricing-table-row {
   font-family: LemonMilk;
   font-size: smaller;
+}
+
+.pricing-table-item {
+  font-family: Cream;
+  float: left;
 }
 
 .pricing-table-price {
