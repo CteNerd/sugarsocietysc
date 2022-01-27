@@ -6,3 +6,7 @@ iframe {
 .contact-us-form {
   height: 750px;
 }
+
+button {
+  margin: 5px;
+}

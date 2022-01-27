@@ -1,10 +1,11 @@
 .App {
   text-align: center;
-  background-image: url("https://wellcall-app-cdk.s3.amazonaws.com/Landscape3.JPG");
+  /* background-image: url("https://wellcall-app-cdk.s3.amazonaws.com/Landscape3.JPG"); */
   background-repeat: round;
   background-attachment: fixed;
   background-size: cover;
   min-height: 100vh;
+  display: block;
 }
 
 .App-logo {
@@ -35,9 +36,8 @@
 }
 
 .main-nav-container {
-  background-color: rgb(255, 255, 255, 0.6);
+  background-color: rgb(255, 255, 255);
   width: 100vw;
-  position: fixed;
 }
 
 .main-nav {
@@ -57,18 +57,15 @@
 
 .App-body-container {
   text-align: -webkit-center;
-  /* height: 100vh; */
   padding-bottom: 100px;
 }
 
 .App-body {
   width: 60vw;
-  padding: 25vh 0vh 10vh 0vh;
-  /* position: fixed; */
 }
 
 .page-content-container {
-  background-color: rgb(255, 255, 255, 0.6);
+  background-color: rgba(165, 164, 164, 0.6);
   padding: 10px;
   min-height: 90vh;
 }
@@ -154,7 +151,6 @@ footer {
 
   .App {
     background-repeat: repeat-y;
-    background-image: url("https://wellcall-app-cdk.s3.amazonaws.com/Potrait%2BZoom1-mobile.jpg");
   }
 
   .footer-link-container {

@@ -102,7 +102,6 @@
 
   .App {
     background-repeat: repeat-y;
-    background-image: url("https://wellcall-app-cdk.s3.amazonaws.com/Sugar-Cookies-8.jpg");
   }
 }
 
