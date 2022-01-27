@@ -14,10 +14,18 @@ export default function OrderNow() {
       </div>
       <div>
         <p>Download Form then attach to Order Submission</p>
-        <a href="https://wellcall-app-cdk.s3.amazonaws.com/Valentine's+Day+Order+Form.pdf" target={"_blank"} download>
+        <a
+          href="https://wellcall-app-cdk.s3.amazonaws.com/Valentine's+Day+Order+Form.pdf"
+          target={"_blank"}
+          download
+        >
           <button>Valentine's Day Order Form</button>
         </a>
-        <a href="https://wellcall-app-cdk.s3.amazonaws.com/Custom+Order+Form.pdf" target={"_blank"} download>
+        <a
+          href="https://wellcall-app-cdk.s3.amazonaws.com/Custom+Order+Form.pdf"
+          target={"_blank"}
+          download
+        >
           <button>Custom Order Form</button>
         </a>
       </div>

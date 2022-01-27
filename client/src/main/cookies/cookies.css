@@ -14,9 +14,14 @@
   margin: 10px 0px;
 }
 
+.card-img-container {
+  float: left;
+  padding: 0px 5px;
+}
+
 .card-img {
-  width: 160px;
-  height: 90px;
+  width: 100%;
+  padding: 5px;
 }
 
 .allergens-container {
@@ -66,9 +71,9 @@
 
 /* Style the accordion panel. Note: hidden by default */
 .panel {
-  padding: 0 18px;
+  /* padding: 0 18px; */
   background-color: white;
-  display: none;
+  display: block;
   overflow: hidden;
 }
 
@@ -261,6 +266,11 @@ img {
   .modal-content {
     width: 100%;
   }
+
+  .card-img {
+    max-height: 10vh;
+    padding: 5px;
+  }
 }
 
 /* On smaller screens, decrease text size */
@@ -271,5 +281,10 @@ img {
 
   .modal-content {
     width: 100%;
+  }
+
+  .card-img {
+    max-height: 10vh;
+    padding: 5px;
   }
 }
