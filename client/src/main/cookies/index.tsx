@@ -156,6 +156,14 @@ export default function OurCookies(props: Props) {
             <div className={"card-img-container"} style={{ width: props.isMobile ? "50%" : "33%" }}>
               <img
                 src={
+                  "https://wellcall-app-cdk.s3.amazonaws.com/ConversationHearts.jpg"
+                }
+                className={"card-img"}
+              />
+            </div>
+            <div className={"card-img-container"} style={{ width: props.isMobile ? "50%" : "33%" }}>
+              <img
+                src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/GreekLife-AKA.jpeg"
                 }
                 className={"card-img"}
@@ -173,6 +181,14 @@ export default function OurCookies(props: Props) {
               <img
                 src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/HawaiianCulture.jpeg"
+                }
+                className={"card-img"}
+              />
+            </div>
+            <div className={"card-img-container"} style={{ width: props.isMobile ? "50%" : "33%" }}>
+              <img
+                src={
+                  "https://wellcall-app-cdk.s3.amazonaws.com/V-Day-Tic-Tac-Toe.jpg"
                 }
                 className={"card-img"}
               />
