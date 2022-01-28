@@ -1,0 +1,22 @@
+iframe {
+  width: 100%;
+  height: 100%;
+}
+
+.contact-us-form {
+  height: 750px;
+}
+
+button {
+  margin: 5px;
+}
+
+.order-now-page-container {
+  width: 40vw;
+}
+
+@media only screen and (max-width: 900px) {
+  .order-now-page-container {
+    width: 100%;
+  }
+}

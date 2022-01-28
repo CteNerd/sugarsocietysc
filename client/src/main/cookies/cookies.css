@@ -14,9 +14,41 @@
   margin: 10px 0px;
 }
 
+.card-img-container {
+  float: left;
+  padding: 0px 5px;
+}
+
 .card-img {
-  width: 160px;
-  height: 90px;
+  width: 100%;
+  height: 20vh;
+  padding: 5px;
+}
+
+.allergens-container {
+  padding: 5px 0px;
+}
+
+.ingredients-container {
+  padding: 5px 0px;
+}
+
+.allergens-header {
+  font-family: BebasNeue;
+  font-size: x-large;
+}
+
+.ingredients-header {
+  font-family: BebasNeue;
+  font-size: x-large;
+}
+
+.allergens-body {
+  font-family: Cream;
+}
+
+.ingredients-body {
+  font-family: Cream;
 }
 
 /* Style the buttons that are used to open and close the accordion panel */
@@ -40,9 +72,9 @@
 
 /* Style the accordion panel. Note: hidden by default */
 .panel {
-  padding: 0 18px;
+  /* padding: 0 18px; */
   background-color: white;
-  display: none;
+  display: block;
   overflow: hidden;
 }
 
@@ -76,7 +108,6 @@
 
   .App {
     background-repeat: repeat-y;
-    background-image: url("https://wellcall-app-cdk.s3.amazonaws.com/Sugar-Cookies-8.jpg");
   }
 }
 
@@ -236,6 +267,11 @@ img {
   .modal-content {
     width: 100%;
   }
+
+  .card-img {
+    max-height: 10vh;
+    padding: 5px;
+  }
 }
 
 /* On smaller screens, decrease text size */
@@ -246,5 +282,10 @@ img {
 
   .modal-content {
     width: 100%;
+  }
+
+  .card-img {
+    max-height: 10vh;
+    padding: 5px;
   }
 }

@@ -118,210 +118,104 @@ export default function OurCookies(props: Props) {
   return (
     <div>
       <h1>Our Cookies</h1>
-      <button
-        className="accordion"
-        onClick={() => {
-          onAccordionSelection("christmas");
-        }}
-      >
-        Christmas
-      </button>
-      <div
-        className="panel"
-        style={{ display: openPanel === "christmas" ? "block" : "none" }}
-      >
+      <div className="panel">
         <div className="row">
-          <div className={props.isMobile ? "col-12" : "col-4"}>
-            <div
-              className="card"
-              key="santa"
-              onClick={(e) => {
-                setModalOpen(true);
-                setSelectedCookie("santa");
-              }}
-            >
-              <img
-                src={"https://wellcall-app-cdk.s3.amazonaws.com/Santa+Trio.JPG"}
-                className={"card-img"}
-              />
-              <h3>{"Santa Cookies"}</h3>
-            </div>
-            <div
-              className="card"
-              onClick={() => {
-                setModalOpen(true);
-                setSelectedCookie("tree");
-              }}
-            >
-              <img
-                src={"https://wellcall-app-cdk.s3.amazonaws.com/Tree+Group.JPG"}
-                className={"card-img"}
-              />
-              <h3>{"Christmas Tree Cookies"}</h3>
-            </div>
-            <div
-              className="card"
-              onClick={() => {
-                setModalOpen(true);
-                setSelectedCookie("phrase");
-              }}
-            >
-              <img
-                src={"https://wellcall-app-cdk.s3.amazonaws.com/Joy.JPG"}
-                className={"card-img"}
-              />
-              <h3>{"Christmas Phrase Cookies"}</h3>
-            </div>
-            <div
-              className="card"
-              onClick={() => {
-                setModalOpen(true);
-                setSelectedCookie("ornament");
-              }}
-            >
+          <div>
+            <div className={"card-img-container"} style={{ width: props.isMobile ? "50%" : "33%" }}>
               <img
                 src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/Stringed+Lights.JPG"
+                  "https://wellcall-app-cdk.s3.amazonaws.com/AmazonPeccy.jpeg"
                 }
                 className={"card-img"}
               />
-              <h3>{"Christmas Ornament Cookies"}</h3>
             </div>
-          </div>
-          <div className={props.isMobile ? "col-12" : "col-4"}>
-            <div
-              className="card"
-              onClick={() => {
-                setModalOpen(true);
-                setSelectedCookie("snowman");
-              }}
-            >
+            <div className={"card-img-container"} style={{ width: props.isMobile ? "50%" : "33%" }}>
               <img
                 src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/Mini+Frosty.JPG"
+                  "https://wellcall-app-cdk.s3.amazonaws.com/BirthdayBlue.jpeg"
                 }
                 className={"card-img"}
               />
-              <h3>{"Snowman Cookies"}</h3>
             </div>
-            <div
-              className="card"
-              onClick={() => {
-                setModalOpen(true);
-                setSelectedCookie("stocking");
-              }}
-            >
-              <img
-                src={"https://wellcall-app-cdk.s3.amazonaws.com/Stocking.JPG"}
-                className={"card-img"}
-              />
-              <h3>{"Christmas Stocking Cookies"}</h3>
-            </div>
-            <div
-              className="card"
-              onClick={() => {
-                setModalOpen(true);
-                setSelectedCookie("reindeer");
-              }}
-            >
-              <img
-                src={"https://wellcall-app-cdk.s3.amazonaws.com/Rudolph2.JPG"}
-                className={"card-img"}
-              />
-              <h3>{"Reindeer Cookies"}</h3>
-            </div>
-            <div
-              className="card"
-              onClick={() => {
-                setModalOpen(true);
-                setSelectedCookie("hollyberry");
-              }}
-            >
+            <div className={"card-img-container"} style={{ width: props.isMobile ? "50%" : "33%" }}>
               <img
                 src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/Holly+Berry1.JPG"
+                  "https://wellcall-app-cdk.s3.amazonaws.com/BirthdayColorful.JPG"
                 }
                 className={"card-img"}
               />
-              <h3>{"Holly Berry Cookies"}</h3>
             </div>
-          </div>
-          <div className={props.isMobile ? "col-12" : "col-4"}>
-            <div
-              className="card"
-              onClick={() => {
-                setModalOpen(true);
-                setSelectedCookie("gingerbread");
-              }}
-            >
+            <div className={"card-img-container"} style={{ width: props.isMobile ? "50%" : "33%" }}>
               <img
                 src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/Ginger+Family.JPG"
+                  "https://wellcall-app-cdk.s3.amazonaws.com/ChristmasGroup.jpeg"
                 }
                 className={"card-img"}
               />
-              <h3>{"Gingerbread Cookies"}</h3>
             </div>
-            <div
-              className="card"
-              onClick={() => {
-                setModalOpen(true);
-                setSelectedCookie("candycane");
-              }}
-            >
+            <div className={"card-img-container"} style={{ width: props.isMobile ? "50%" : "33%" }}>
               <img
                 src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/Candy+Cane+Lane.JPG"
+                  "https://wellcall-app-cdk.s3.amazonaws.com/ConversationHearts.jpg"
                 }
                 className={"card-img"}
               />
-              <h3>{"Candy Cane Cookies"}</h3>
             </div>
-            <div
-              className="card"
-              onClick={() => {
-                setModalOpen(true);
-                setSelectedCookie("star");
-              }}
-            >
+            <div className={"card-img-container"} style={{ width: props.isMobile ? "50%" : "33%" }}>
               <img
-                src={"https://wellcall-app-cdk.s3.amazonaws.com/Star+Trio.JPG"}
+                src={
+                  "https://wellcall-app-cdk.s3.amazonaws.com/GreekLife-AKA.jpeg"
+                }
                 className={"card-img"}
               />
-              <h3>{"Christmas Star Cookies"}</h3>
+            </div>
+            <div className={"card-img-container"} style={{ width: props.isMobile ? "50%" : "33%" }}>
+              <img
+                src={
+                  "https://wellcall-app-cdk.s3.amazonaws.com/GreekLife-Delta.jpeg"
+                }
+                className={"card-img"}
+              />
+            </div>
+            <div className={"card-img-container"} style={{ width: props.isMobile ? "50%" : "33%" }}>
+              <img
+                src={
+                  "https://wellcall-app-cdk.s3.amazonaws.com/HawaiianCulture.jpeg"
+                }
+                className={"card-img"}
+              />
+            </div>
+            <div className={"card-img-container"} style={{ width: props.isMobile ? "50%" : "33%" }}>
+              <img
+                src={
+                  "https://wellcall-app-cdk.s3.amazonaws.com/V-Day-Tic-Tac-Toe.jpg"
+                }
+                className={"card-img"}
+              />
             </div>
           </div>
         </div>
       </div>
 
-      <button
-        className="accordion"
-        onClick={() => {
-          onAccordionSelection("birthday");
-        }}
-      >
-        Birthday
-      </button>
-      <div
-        className="panel"
-        style={{ display: openPanel === "birthday" ? "block" : "none" }}
-      >
-        <p>Coming Soon...</p>
+      <div className="ingredients-container">
+        <h4 className="ingredients-header">Ingredients</h4>
+        <div className="ingredients-body">
+          Our cookie dough is made from scratch for each order! We understand
+          many people have food allergies or sensitivities so below you will
+          find the specific ingredients included in our yummy sugar cookies.
+          Please let us know if you have further questions.
+        </div>
+        <div className="ingredients-body">
+          Ingredients: All Purpose Flour (Bleached) , Granulated Sugar, Powdered
+          Sugar, Salted Butter, Egg, Vanilla Extract, Baking Powder, Salt,
+          Meringue Powder, Water, Corn Syrup, Glycerin, Yellow5, Blue1, Red3,
+          Yellow6, Red40, Agar Gum, Potassium Sorbate, Citric Acid, Sodium
+          Citrate
+        </div>
       </div>
-
-      <button
-        className="accordion"
-        onClick={() => {
-          onAccordionSelection("work");
-        }}
-      >
-        Corporate
-      </button>
-      <div
-        className="panel"
-        style={{ display: openPanel === "work" ? "block" : "none" }}
-      >
-        <p>Coming Soon...</p>
+      <div className="allergens-container">
+        <h4 className="allergens-header">Allergens</h4>
+        <div className="allergens-body">Allergen: Egg and Wheat</div>
       </div>
       <div id="myModal" className={modalOpen ? "modal-opened" : "modal-closed"}>
         <ModalContent />

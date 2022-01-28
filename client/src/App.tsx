@@ -5,7 +5,7 @@ import OurStory from "./main/story";
 import Specials from "./main/specials";
 import OurCookies from "./main/cookies";
 import OrderInquiry from "./main/order";
-import Contact from "./main/contact";
+import OrderNow from "./main/order-now";
 import {
   FacebookOutlined,
   GoogleOutlined,
@@ -13,6 +13,8 @@ import {
 } from "@ant-design/icons";
 import "./App.css";
 import SideNav from "./main/sideNav/sideNav";
+import Contact from "./main/contact";
+import Pricing from "./main/pricing";
 
 function App() {
   const breakpoint = window.matchMedia("(max-width: 1279px)");
@@ -62,10 +64,10 @@ function App() {
             <a href="/our-cookies">Our Cookies</a>
           </div>
           <div key="order" className="menu-item col-1">
-            <a href="/order-inquiry">Order Inquiry</a>
+            <a href="/pricing">Pricing</a>
           </div>
           <div key="contact" className="menu-item col-1">
-            <a href="/contact">Contact Us</a>
+            <a href="/order-now">Order Now</a>
           </div>
         </nav>
       );
@@ -93,8 +95,11 @@ function App() {
                 <Route path="/our-cookies">
                   <OurCookies isMobile={isMobile} />
                 </Route>
-                <Route path="/order-inquiry">
-                  <OrderInquiry />
+                <Route path="/pricing">
+                  <Pricing />
+                </Route>
+                <Route path="/order-now">
+                  <OrderNow />
                 </Route>
                 <Route path="/contact">
                   <Contact />

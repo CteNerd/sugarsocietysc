@@ -12,8 +12,7 @@ export default function Contact() {
           local pick up or delivery. Please contact us with any pricing or
           cookie designs that are not featured on our website. If you are ready
           to place an order, please head over to the{" "}
-          {<a href="/order-inquiry">Order Now</a>} page and complete the order
-          form.
+          {<a href="/order-now">Order Now</a>} page and complete the order form.
         </p>
       </div>
       <div className="contact-us-form-container">

@@ -41,19 +41,6 @@ export default function SideNav() {
       document.getElementById("mySidenav")!.style.width = "0";
   }
 
-  let content = <></>;
-  content = (
-    <>
-      <a href="/organization-registration">
-        <TeamOutlined /> Add Your Team to We'll Call Tix
-      </a>
-      <a href="/tix-holder-registration">
-        <UserOutlined /> Join We'll Call Tix Yourself
-      </a>
-      <a href="/login">Login</a>
-    </>
-  );
-
   return (
     <div id="mySidenav" className="sidenav">
       <div className="closebtn" onClick={closeNav}>
@@ -71,11 +58,11 @@ export default function SideNav() {
       <a href="/our-cookies">
         <PieChartOutlined /> Our Cookies
       </a>
-      <a href="/order-inquiry">
-        <ShoppingCartOutlined /> Order Inquiry
+      <a href="/pricing">
+        <ShoppingCartOutlined /> Pricing
       </a>
-      <a href="/contact">
-        <AlertOutlined /> Contact Us
+      <a href="/order-now">
+        <AlertOutlined /> Order Now
       </a>
     </div>
   );
