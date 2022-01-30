@@ -121,7 +121,10 @@ export default function OurCookies(props: Props) {
       <div className="panel">
         <div className="row">
           <div>
-            <div className={"card-img-container"} style={{ width: props.isMobile ? "50%" : "33%" }}>
+            <div
+              className={"card-img-container"}
+              style={{ width: props.isMobile ? "50%" : "33%" }}
+            >
               <img
                 src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/AmazonPeccy.jpeg"
@@ -129,7 +132,10 @@ export default function OurCookies(props: Props) {
                 className={"card-img"}
               />
             </div>
-            <div className={"card-img-container"} style={{ width: props.isMobile ? "50%" : "33%" }}>
+            <div
+              className={"card-img-container"}
+              style={{ width: props.isMobile ? "50%" : "33%" }}
+            >
               <img
                 src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/BirthdayBlue.jpeg"
@@ -137,7 +143,10 @@ export default function OurCookies(props: Props) {
                 className={"card-img"}
               />
             </div>
-            <div className={"card-img-container"} style={{ width: props.isMobile ? "50%" : "33%" }}>
+            <div
+              className={"card-img-container"}
+              style={{ width: props.isMobile ? "50%" : "33%" }}
+            >
               <img
                 src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/BirthdayColorful.JPG"
@@ -145,7 +154,10 @@ export default function OurCookies(props: Props) {
                 className={"card-img"}
               />
             </div>
-            <div className={"card-img-container"} style={{ width: props.isMobile ? "50%" : "33%" }}>
+            <div
+              className={"card-img-container"}
+              style={{ width: props.isMobile ? "50%" : "33%" }}
+            >
               <img
                 src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/ChristmasGroup.jpeg"
@@ -153,7 +165,10 @@ export default function OurCookies(props: Props) {
                 className={"card-img"}
               />
             </div>
-            <div className={"card-img-container"} style={{ width: props.isMobile ? "50%" : "33%" }}>
+            <div
+              className={"card-img-container"}
+              style={{ width: props.isMobile ? "50%" : "33%" }}
+            >
               <img
                 src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/ConversationHearts.jpg"
@@ -161,7 +176,10 @@ export default function OurCookies(props: Props) {
                 className={"card-img"}
               />
             </div>
-            <div className={"card-img-container"} style={{ width: props.isMobile ? "50%" : "33%" }}>
+            <div
+              className={"card-img-container"}
+              style={{ width: props.isMobile ? "50%" : "33%" }}
+            >
               <img
                 src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/GreekLife-AKA.jpeg"
@@ -169,7 +187,10 @@ export default function OurCookies(props: Props) {
                 className={"card-img"}
               />
             </div>
-            <div className={"card-img-container"} style={{ width: props.isMobile ? "50%" : "33%" }}>
+            <div
+              className={"card-img-container"}
+              style={{ width: props.isMobile ? "50%" : "33%" }}
+            >
               <img
                 src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/GreekLife-Delta.jpeg"
@@ -177,7 +198,10 @@ export default function OurCookies(props: Props) {
                 className={"card-img"}
               />
             </div>
-            <div className={"card-img-container"} style={{ width: props.isMobile ? "50%" : "33%" }}>
+            <div
+              className={"card-img-container"}
+              style={{ width: props.isMobile ? "50%" : "33%" }}
+            >
               <img
                 src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/HawaiianCulture.jpeg"
@@ -185,7 +209,10 @@ export default function OurCookies(props: Props) {
                 className={"card-img"}
               />
             </div>
-            <div className={"card-img-container"} style={{ width: props.isMobile ? "50%" : "33%" }}>
+            <div
+              className={"card-img-container"}
+              style={{ width: props.isMobile ? "50%" : "33%" }}
+            >
               <img
                 src={
                   "https://wellcall-app-cdk.s3.amazonaws.com/V-Day-Tic-Tac-Toe.jpg"

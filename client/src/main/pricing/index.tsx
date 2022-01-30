@@ -114,7 +114,9 @@ export default function Pricing() {
               <td className="pricing-table-price">$1.00</td>
             </tr>
             <tr className="pricing-table-row tooltip">
-              <td className={"pricing-table-item"}>Bakery Box w/ Zig Zag Paper</td>
+              <td className={"pricing-table-item"}>
+                Bakery Box w/ Zig Zag Paper
+              </td>
               <td className="pricing-table-price">$1.50</td>
             </tr>
           </table>
