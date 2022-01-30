@@ -36,7 +36,7 @@ export default function Home(props: HomeProps) {
     Cookies.forEach((cookie, index) => {
       content.push(
         <div className="mySlides fade">
-          <div className="numbertext">{index} / {Cookies.length}</div>
+          {/* <div className="numbertext">{index} / {Cookies.length}</div> */}
           <img
             src={cookie.url}
             className="slide-img"
