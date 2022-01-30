@@ -56,7 +56,7 @@ export default function Home(props: HomeProps) {
           <div className="numbertext">1 / 3</div>
           <img
             src="https://wellcall-app-cdk.s3.amazonaws.com/AmazonPeccy.jpeg"
-            style={{ width: "100%" }}
+            className="slide-img"
           />
           <div className="text">Caption Text</div>
         </div>
@@ -65,7 +65,7 @@ export default function Home(props: HomeProps) {
           <div className="numbertext">2 / 3</div>
           <img
             src="https://wellcall-app-cdk.s3.amazonaws.com/BirthdayBlue.jpeg"
-            style={{ width: "100%" }}
+            className="slide-img"
           />
           <div className="text">Caption Two</div>
         </div>
@@ -74,7 +74,7 @@ export default function Home(props: HomeProps) {
           <div className="numbertext">3 / 3</div>
           <img
             src="https://wellcall-app-cdk.s3.amazonaws.com/ChristmasGroup.jpeg"
-            style={{ width: "100%" }}
+            className="slide-img"
           />
           <div className="text">Caption Three</div>
         </div>
