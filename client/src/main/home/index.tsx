@@ -1,4 +1,5 @@
 import "./home.css";
+import Cookies from "../cookies/valentines-cookies.json"
 
 interface HomeProps {
   isMobile: boolean;
@@ -7,14 +8,6 @@ interface HomeProps {
 export default function Home(props: HomeProps) {
   var slideIndex = 1;
   showSlides(slideIndex);
-
-  function plusSlides(n: number) {
-    showSlides((slideIndex += n));
-  }
-
-  function currentSlide(n: number) {
-    showSlides((slideIndex = n));
-  }
 
   function showSlides(n: number) {
     var i;
@@ -37,6 +30,29 @@ export default function Home(props: HomeProps) {
     setTimeout(showSlides, 3500); // Change image every 3.5 seconds
   }
 
+  function CarouselImages() {
+    let content:JSX.Element[] = []
+
+    Cookies.forEach((cookie, index) => {
+      content.push(
+        <div className="mySlides fade">
+          <div className="numbertext">{index} / {Cookies.length}</div>
+          <img
+            src={cookie.url}
+            className="slide-img"
+          />
+          <div className="text">{cookie.caption}</div>
+        </div>
+      )
+    });
+
+    return (
+      <div>
+        {content}
+      </div>
+    )
+  }
+
   return (
     <div>
       <div>
@@ -52,113 +68,107 @@ export default function Home(props: HomeProps) {
       </div>
 
       <div className="slideshow-container">
-        <div className="mySlides fade">
-          <div className="numbertext">1 / 12</div>
+        {/* <div className="mySlides fade">
+          <div className="numbertext">1 / 11</div>
           <img
             src="https://wellcall-app-cdk.s3.amazonaws.com/ConversationHearts.jpg"
             className="slide-img"
           />
-          <div className="text">Caption Text</div>
+          <div className="text">Conversation Hearts</div>
         </div>
 
         <div className="mySlides fade">
-          <div className="numbertext">2 / 12</div>
+          <div className="numbertext">2 / 11</div>
           <img
             src="https://wellcall-app-cdk.s3.amazonaws.com/V-Day-Tic-Tac-Toe.jpg"
             className="slide-img"
           />
-          <div className="text">Caption Two</div>
+          <div className="text">Tic Tac Toe</div>
         </div>
 
         <div className="mySlides fade">
-          <div className="numbertext">3 / 12</div>
+          <div className="numbertext">3 / 11</div>
           <img
             src="https://wellcall-app-cdk.s3.amazonaws.com/You+Hold+The+Key+To+My+Heart.jpeg"
             className="slide-img"
           />
-          <div className="text">Caption Three</div>
+          <div className="text">You Have the Key to My Heart</div>
         </div>
 
         <div className="mySlides fade">
-          <div className="numbertext">4 / 12</div>
+          <div className="numbertext">4 / 11</div>
           <img
             src="https://wellcall-app-cdk.s3.amazonaws.com/Will+You+Be+My+Valentine.jpeg"
             className="slide-img"
           />
-          <div className="text">Caption Three</div>
+          <div className="text">Will You Be My Valentine?</div>
         </div>
 
         <div className="mySlides fade">
-          <div className="numbertext">5 / 12</div>
+          <div className="numbertext">5 / 11</div>
           <img
             src="https://wellcall-app-cdk.s3.amazonaws.com/You+Got+My+Spidey+Senses+Tingling.jpg"
             className="slide-img"
           />
-          <div className="text">Caption Three</div>
+          <div className="text">Spiderman</div>
         </div>
 
         <div className="mySlides fade">
-          <div className="numbertext">6 / 12</div>
+          <div className="numbertext">6 / 11</div>
           <img
             src="https://wellcall-app-cdk.s3.amazonaws.com/Will+You+Be+My+Valentine+(Pink).jpeg"
             className="slide-img"
           />
-          <div className="text">Caption Three</div>
+          <div className="text">Will You Be My Valentine?</div>
         </div>
 
         <div className="mySlides fade">
-          <div className="numbertext">7 / 12</div>
+          <div className="numbertext">7 / 11</div>
           <img
             src="https://wellcall-app-cdk.s3.amazonaws.com/Will+You+Be+My+Valentine+(Red).jpeg"
             className="slide-img"
           />
-          <div className="text">Caption Three</div>
+          <div className="text">Will You Be My Valentine?</div>
         </div>
 
         <div className="mySlides fade">
-          <div className="numbertext">8 / 12</div>
+          <div className="numbertext">8 / 11</div>
           <img
             src="https://wellcall-app-cdk.s3.amazonaws.com/V-Day-TicTacToe.jpeg"
             className="slide-img"
           />
-          <div className="text">Caption Three</div>
+          <div className="text">Tic Tac Toe</div>
         </div>
 
         <div className="mySlides fade">
-          <div className="numbertext">9 / 12</div>
-          <img
-            src="https://wellcall-app-cdk.s3.amazonaws.com/V-Day-TicTacToe-YouWonMyHeart.jpeg"
-            className="slide-img"
-          />
-          <div className="text">Caption Three</div>
-        </div>
-
-        <div className="mySlides fade">
-          <div className="numbertext">10 / 12</div>
+          <div className="numbertext">9 / 11</div>
           <img
             src="https://wellcall-app-cdk.s3.amazonaws.com/Whale+You+Be+My+Valentine.jpg"
             className="slide-img"
           />
-          <div className="text">Caption Three</div>
+          <div className="text">Whale You Be My Valentine?</div>
         </div>
 
         <div className="mySlides fade">
-          <div className="numbertext">11 / 12</div>
+          <div className="numbertext">10 / 11</div>
           <img
             src="https://wellcall-app-cdk.s3.amazonaws.com/V-Day+XO+XO.jpeg"
             className="slide-img"
           />
-          <div className="text">Caption Three</div>
+          <div className="text">XO XO</div>
         </div>
 
         <div className="mySlides fade">
-          <div className="numbertext">12 / 12</div>
+          <div className="numbertext">11 / 11</div>
           <img
             src="https://wellcall-app-cdk.s3.amazonaws.com/V-Day+TicTacToe+Game.jpeg"
             className="slide-img"
           />
-          <div className="text">Caption Three</div>
-        </div>
+          <div className="text">Tic Tac Toe</div>
+        </div> */}
+
+        <CarouselImages />
+
       </div>
     </div>
   );
