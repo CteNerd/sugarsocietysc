@@ -5,9 +5,9 @@
     "type": "santa",
     "caption": "Conversation Hearts",
     "price": {
-      "giftSet" : "",
+      "giftSet": "",
       "each": "3",
-      "TwoDozen" : "65"
+      "TwoDozen": "65"
     }
   },
   {
@@ -16,9 +16,9 @@
     "type": "santa",
     "caption": "Tic Tac Toe",
     "price": {
-      "giftSet" : "",
+      "giftSet": "",
       "each": "3",
-      "TwoDozen" : "65"
+      "TwoDozen": "65"
     }
   },
   {
@@ -27,9 +27,9 @@
     "type": "santa",
     "caption": "You Have the Key to My Heart",
     "price": {
-      "giftSet" : "12",
+      "giftSet": "12",
       "each": "",
-      "TwoDozen" : ""
+      "TwoDozen": ""
     }
   },
   {
@@ -38,9 +38,9 @@
     "type": "snowman",
     "caption": "Will You Be My Valentine?",
     "price": {
-      "giftSet" : "12",
+      "giftSet": "12",
       "each": "",
-      "TwoDozen" : ""
+      "TwoDozen": ""
     }
   },
   {
@@ -49,9 +49,9 @@
     "type": "snowman",
     "caption": "Spiderman",
     "price": {
-      "giftSet" : "",
+      "giftSet": "",
       "each": "3",
-      "TwoDozen" : "65"
+      "TwoDozen": "65"
     }
   },
   {
@@ -60,9 +60,9 @@
     "type": "snowman",
     "caption": "Will You Be My Valentine?",
     "price": {
-      "giftSet" : "12",
+      "giftSet": "12",
       "each": "",
-      "TwoDozen" : ""
+      "TwoDozen": ""
     }
   },
   {
@@ -71,9 +71,9 @@
     "type": "gingerbread",
     "caption": "Will You Be My Valentine?",
     "price": {
-      "giftSet" : "12",
+      "giftSet": "12",
       "each": "",
-      "TwoDozen" : ""
+      "TwoDozen": ""
     }
   },
   {
@@ -82,9 +82,9 @@
     "type": "gingerbread",
     "caption": "Tic Tac Toe",
     "price": {
-      "giftSet" : "",
+      "giftSet": "",
       "each": "3",
-      "TwoDozen" : "65"
+      "TwoDozen": "65"
     }
   },
   {
@@ -93,9 +93,9 @@
     "type": "gingerbread",
     "caption": "Whale You Be My Valentine?",
     "price": {
-      "giftSet" : "",
+      "giftSet": "",
       "each": "3",
-      "TwoDozen" : "65"
+      "TwoDozen": "65"
     }
   },
   {
@@ -104,9 +104,9 @@
     "type": "gingerbread",
     "caption": "XO XO",
     "price": {
-      "giftSet" : "12",
+      "giftSet": "12",
       "each": "",
-      "TwoDozen" : ""
+      "TwoDozen": ""
     }
   },
   {
@@ -115,9 +115,9 @@
     "type": "gingerbread",
     "caption": "Tic Tac Toe",
     "price": {
-      "giftSet" : "",
+      "giftSet": "",
       "each": "3",
-      "TwoDozen" : "65"
+      "TwoDozen": "65"
     }
   },
   {
@@ -126,9 +126,9 @@
     "type": "gingerbread",
     "caption": "L.O.V.E.",
     "price": {
-      "giftSet" : "12",
+      "giftSet": "12",
       "each": "",
-      "TwoDozen" : ""
+      "TwoDozen": ""
     }
   },
   {
@@ -137,9 +137,9 @@
     "type": "gingerbread",
     "caption": "L.O.V.E.",
     "price": {
-      "giftSet" : "12",
+      "giftSet": "12",
       "each": "",
-      "TwoDozen" : ""
+      "TwoDozen": ""
     }
   }
 ]

@@ -1,5 +1,5 @@
 import "./home.css";
-import Cookies from "../cookies/valentines-cookies.json"
+import Cookies from "../cookies/valentines-cookies.json";
 
 interface HomeProps {
   isMobile: boolean;
@@ -31,26 +31,19 @@ export default function Home(props: HomeProps) {
   }
 
   function CarouselImages() {
-    let content:JSX.Element[] = []
+    let content: JSX.Element[] = [];
 
     Cookies.forEach((cookie, index) => {
       content.push(
         <div className="mySlides fade">
           {/* <div className="numbertext">{index} / {Cookies.length}</div> */}
-          <img
-            src={cookie.url}
-            className="slide-img"
-          />
+          <img src={cookie.url} className="slide-img" />
           <div className="text">{cookie.caption}</div>
         </div>
-      )
+      );
     });
 
-    return (
-      <div>
-        {content}
-      </div>
-    )
+    return <div>{content}</div>;
   }
 
   return (
