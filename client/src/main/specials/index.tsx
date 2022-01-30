@@ -1,11 +1,49 @@
 import React from "react";
 import "./specials.css";
+import Cookies from "../cookies/valentines-cookies.json"
 
 interface Props {
   isMobile: boolean;
 }
 
 export default function Specials(props: Props) {
+
+  function SpecialCookies() {
+    let content: JSX.Element[] = []
+
+    Cookies.forEach((cookie, index) => {
+      let price = "";
+
+      if (cookie.price.giftSet) {
+        price = `Gift Set: $${cookie.price.giftSet}`
+      } else if (cookie.price.each) {
+        price = `Each: $${cookie.price.each} or Two Dozen : $${cookie.price.TwoDozen}`
+      }
+
+      content.push(
+        <div
+          className={"card-img-container"}
+          style={{ width: props.isMobile ? "50%" : "33%" }}
+        >
+          <img
+            src={
+              cookie.url
+            }
+            className={"card-img"}
+          />
+          <div className="special-cookie-title">{cookie.caption}</div>
+          <div className="special-cookie-description">{price}</div>
+        </div>
+      )
+    });
+
+    return (
+      <div>
+        {content}
+      </div>
+    )
+  }
+
   return (
     <div>
       <div>
@@ -14,164 +52,7 @@ export default function Specials(props: Props) {
           src="https://wellcall-app-cdk.s3.amazonaws.com/Valentines+Pre-Order+Menu.jpg"
         />
         <div className="row">
-          <div>
-            <div
-              className={"card-img-container"}
-              style={{ width: props.isMobile ? "50%" : "33%" }}
-            >
-              <img
-                src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/ConversationHearts.jpg"
-                }
-                className={"card-img"}
-              />
-              <div className="special-cookie-title">Something Title</div>
-              <div className="special-cookie-description">Something</div>
-            </div>
-            <div
-              className={"card-img-container"}
-              style={{ width: props.isMobile ? "50%" : "33%" }}
-            >
-              <img
-                src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/V-Day-Tic-Tac-Toe.jpg"
-                }
-                className={"card-img"}
-              />
-              <div className="special-cookie-title">Something Title</div>
-              <div className="special-cookie-description">Something</div>
-            </div>
-            <div
-              className={"card-img-container"}
-              style={{ width: props.isMobile ? "50%" : "33%" }}
-            >
-              <img
-                src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/You+Hold+The+Key+To+My+Heart.jpeg"
-                }
-                className={"card-img"}
-              />
-              <div className="special-cookie-title">Something Title</div>
-              <div className="special-cookie-description">Something</div>
-            </div>
-            <div
-              className={"card-img-container"}
-              style={{ width: props.isMobile ? "50%" : "33%" }}
-            >
-              <img
-                src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/Will+You+Be+My+Valentine.jpeg"
-                }
-                className={"card-img"}
-              />
-              <div className="special-cookie-title">Something Title</div>
-              <div className="special-cookie-description">Something</div>
-            </div>
-            <div
-              className={"card-img-container"}
-              style={{ width: props.isMobile ? "50%" : "33%" }}
-            >
-              <img
-                src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/You+Got+My+Spidey+Senses+Tingling.jpg"
-                }
-                className={"card-img"}
-              />
-              <div className="special-cookie-title">Something Title</div>
-              <div className="special-cookie-description">Something</div>
-            </div>
-            <div
-              className={"card-img-container"}
-              style={{ width: props.isMobile ? "50%" : "33%" }}
-            >
-              <img
-                src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/Will+You+Be+My+Valentine+(Pink).jpeg"
-                }
-                className={"card-img"}
-              />
-              <div className="special-cookie-title">Something Title</div>
-              <div className="special-cookie-description">Something</div>
-            </div>
-            <div
-              className={"card-img-container"}
-              style={{ width: props.isMobile ? "50%" : "33%" }}
-            >
-              <img
-                src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/Will+You+Be+My+Valentine+(Red).jpeg"
-                }
-                className={"card-img"}
-              />
-              <div className="special-cookie-title">Something Title</div>
-              <div className="special-cookie-description">Something</div>
-            </div>
-            <div
-              className={"card-img-container"}
-              style={{ width: props.isMobile ? "50%" : "33%" }}
-            >
-              <img
-                src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/V-Day-TicTacToe.jpeg"
-                }
-                className={"card-img"}
-              />
-              <div className="special-cookie-title">Something Title</div>
-              <div className="special-cookie-description">Something</div>
-            </div>
-            <div
-              className={"card-img-container"}
-              style={{ width: props.isMobile ? "50%" : "33%" }}
-            >
-              <img
-                src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/V-Day-TicTacToe-YouWonMyHeart.jpeg"
-                }
-                className={"card-img"}
-              />
-              <div className="special-cookie-title">Something Title</div>
-              <div className="special-cookie-description">Something</div>
-            </div>
-            <div
-              className={"card-img-container"}
-              style={{ width: props.isMobile ? "50%" : "33%" }}
-            >
-              <img
-                src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/Whale+You+Be+My+Valentine.jpg"
-                }
-                className={"card-img"}
-              />
-              <div className="special-cookie-title">Something Title</div>
-              <div className="special-cookie-description">Something</div>
-            </div>
-            <div
-              className={"card-img-container"}
-              style={{ width: props.isMobile ? "50%" : "33%" }}
-            >
-              <img
-                src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/V-Day+XO+XO.jpeg"
-                }
-                className={"card-img"}
-              />
-              <div className="special-cookie-title">Something Title</div>
-              <div className="special-cookie-description">Something</div>
-            </div>
-            <div
-              className={"card-img-container"}
-              style={{ width: props.isMobile ? "50%" : "33%" }}
-            >
-              <img
-                src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/V-Day+TicTacToe+Game.jpeg"
-                }
-                className={"card-img"}
-              />
-              <div className="special-cookie-title">Something Title</div>
-              <div className="special-cookie-description">Something</div>
-            </div>
-          </div>
+          <SpecialCookies />
         </div>
         <a href="/order-now">
           <button>Order Now</button>
