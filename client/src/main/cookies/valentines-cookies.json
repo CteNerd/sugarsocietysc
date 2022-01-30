@@ -119,5 +119,27 @@
       "each": "3",
       "TwoDozen" : "65"
     }
+  },
+  {
+    "url": "https://wellcall-app-cdk.s3.amazonaws.com/L.O.V.E.+(red).jpg",
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Ginger%2BTrio-%2BTraditional-mobile.jpg",
+    "type": "gingerbread",
+    "caption": "L.O.V.E.",
+    "price": {
+      "giftSet" : "12",
+      "each": "",
+      "TwoDozen" : ""
+    }
+  },
+  {
+    "url": "https://wellcall-app-cdk.s3.amazonaws.com/L.O.V.E.+(pink).jpg",
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/Ginger%2BTrio-%2BTraditional-mobile.jpg",
+    "type": "gingerbread",
+    "caption": "L.O.V.E.",
+    "price": {
+      "giftSet" : "12",
+      "each": "",
+      "TwoDozen" : ""
+    }
   }
 ]
