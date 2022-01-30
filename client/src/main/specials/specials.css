@@ -4,5 +4,15 @@
   padding: 40px;
 }
 
+[class*="special-cookie-"] {
+  text-align: left;
+  width: 100%;
+  padding-left: 10px;
+}
+
+.special-cookie-title {
+  font-weight: 700;
+}
+
 @media only screen and (max-width: 600px) {
 }

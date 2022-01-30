@@ -1,12 +1,51 @@
-import { LoadingOutlined } from "@ant-design/icons";
-import React from "react";
 import "./home.css";
+import Cookies from "../cookies/valentines-cookies.json";
 
 interface HomeProps {
   isMobile: boolean;
 }
 
 export default function Home(props: HomeProps) {
+  var slideIndex = 1;
+  showSlides(slideIndex);
+
+  function showSlides(n: number) {
+    var i;
+    var slides = document.getElementsByClassName(
+      "mySlides"
+    ) as HTMLCollectionOf<HTMLElement>;
+
+    for (i = 0; i < slides.length; i++) {
+      slides[i].style.display = "none";
+    }
+    slideIndex++;
+    if (slideIndex > slides.length) {
+      slideIndex = 1;
+    }
+
+    if (slides[slideIndex - 1]) {
+      slides[slideIndex - 1].style.display = "block";
+    }
+
+    setTimeout(showSlides, 3500); // Change image every 3.5 seconds
+  }
+
+  function CarouselImages() {
+    let content: JSX.Element[] = [];
+
+    Cookies.forEach((cookie, index) => {
+      content.push(
+        <div className="mySlides fade">
+          {/* <div className="numbertext">{index} / {Cookies.length}</div> */}
+          <img src={cookie.url} className="slide-img" />
+          <div className="text">{cookie.caption}</div>
+        </div>
+      );
+    });
+
+    return <div>{content}</div>;
+  }
+
   return (
     <div>
       <div>
@@ -19,6 +58,10 @@ export default function Home(props: HomeProps) {
           located in Rosharon, TX and are currently providing our AMAZING
           cookies and customer service to the greater Houston.
         </p>
+      </div>
+
+      <div className="slideshow-container">
+        <CarouselImages />
       </div>
     </div>
   );
