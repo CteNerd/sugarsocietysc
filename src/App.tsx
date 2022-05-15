@@ -4,7 +4,7 @@ import Home from "./main/home";
 import OurStory from "./main/story";
 import Specials from "./main/specials";
 import OurCookies from "./main/cookies";
-import OrderInquiry from "./main/order";
+import CreateInvoice from "./main/invoice/create-invoice";
 import OrderNow from "./main/order-now";
 import {
   FacebookOutlined,
@@ -103,6 +103,9 @@ function App() {
                 </Route>
                 <Route path="/contact">
                   <Contact />
+                </Route>
+                <Route path="/create-invoice">
+                  <CreateInvoice />
                 </Route>
                 <Route path="/">
                   <Home isMobile />
