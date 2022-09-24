@@ -1,106 +1,148 @@
-import React from 'react';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { SubmitInvoiceModel } from "../../models/invoice/submitInvoiceModel";
+import { NotificationManager } from "react-notifications";
+import moment from "moment";
+import CookieComponent from "../../components/Cookie";
+import CookieModel from "../../models/invoice/cookieModel";
+
+let initialInvoice: SubmitInvoiceModel = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  phone: "",
+  taxPercentage: 0,
+  cookies: [
+    {
+      name: "",
+      id: "",
+      pricePerEach: 3.5,
+      add_ons: [
+        {
+          id: "",
+          name: "",
+          type: "",
+          price: 0.5,
+          count: 0,
+          message: "",
+        },
+      ],
+      colors: [""],
+      inspiration_images: [""],
+      quantity: 1,
+    },
+  ],
+  pickupDate: moment().add(1, "days").format(),
+  dateCreated: "",
+  invoiceNumber: "",
+};
 
 export default function CreateInvoice() {
+  const [invoice, setInvoice] = useState(initialInvoice);
 
-    return (
+  function submitInvoice() {
+    axios
+      .post(`https://sugarsocietysc-api.azurewebsites.net/api/invoice`, invoice)
+      .then((res) => {
+        NotificationManager.success(
+          "Successfully submitted invoice.",
+          "Invoice Sent."
+        );
+      })
+      .catch(() => {
+        NotificationManager.error(
+          "Failed to submit invoice.",
+          "Error",
+          5000,
+          () => {
+            alert("callback");
+          }
+        );
+      });
+  }
+
+  function AddNewCookie() {
+    let cookieToAdd: CookieModel = {
+      name: "",
+      id: "",
+      pricePerEach: 3.5,
+      add_ons: [],
+      colors: [""],
+      inspiration_images: [""],
+      quantity: 1,
+    };
+
+    setInvoice({ ...invoice, cookies: [...invoice.cookies, cookieToAdd] });
+  }
+
+  return (
     <div>
+      <section>
         <div>
-            <h3>Contact Information</h3>
-            <div>
-                <label>
-                    First Name
-                </label>
-                <input />
-                <label>
-                    Last Name
-                </label>
-                <input />
-                <label>
-                    Email
-                </label>
-                <input />
-                <label>
-                    Phone
-                </label>
-                <input />
-            </div>
+          <h3>Contact Information</h3>
+          <div>
+            <label>First Name</label>
+            <input
+              onChange={(e) =>
+                setInvoice({ ...invoice, firstName: e.target.value })
+              }
+            />
+            <label>Last Name</label>
+            <input
+              onChange={(e) =>
+                setInvoice({ ...invoice, lastName: e.target.value })
+              }
+            />
+            <label>Email</label>
+            <input
+              onChange={(e) =>
+                setInvoice({ ...invoice, email: e.target.value })
+              }
+            />
+            <label>Phone</label>
+            <input
+              onChange={(e) =>
+                setInvoice({ ...invoice, phone: e.target.value })
+              }
+            />
+          </div>
         </div>
+      </section>
+      <section>
         <div>
-            <h3>Delivery Information</h3>
-            <div>
-                <label>
-                    Address 1
-                </label>
-                <input />
-                <label>
-                    Address 2
-                </label>
-                <input />
-                <label>
-                    City
-                </label>
-                <input />
-                <label>
-                    State
-                </label>
-                <input />
-                <label>
-                    Zip Code
-                </label>
-                <input />
-            </div>
+          <h3>Delivery Information</h3>
+          <div>
+            <label>Address 1</label>
+            <input />
+            <label>Address 2</label>
+            <input />
+            <label>City</label>
+            <input />
+            <label>State</label>
+            <input />
+            <label>Zip Code</label>
+            <input />
+          </div>
         </div>
-        <div>
-            <h3>Cookie Selection</h3>
+      </section>
+      <section>
+        {invoice.cookies.map((cookie, index) => {
+          return (
             <div>
-                <label>Cookie Name</label>
-                <div>
-                    <div>Main Image</div>
-                    <img />
-                </div>
-                <label>Price Per Cookie</label>
-                <span>$3.50</span>
-                <label>Cookie Quantity</label>
-                <input />
-                <div>
-                    <h4>Add-Ons</h4>
-                    <label>Type</label>
-                    <select>
-                        <option>Select Add-On</option>
-                        <option>Writing</option>
-                        <option>Spray Paint</option>
-                    </select>
-                    <label>Custom Message</label>
-                    <input />
-                    <label>Price Per Add-On</label>
-                    <span>$0.50</span>
-                    <label>Add-On Quantity</label>
-                    <select>
-                        <option>Select Count</option>
-                        <option>1</option>
-                        <option>2</option>
-                        <option>3</option>
-                    </select>
-                </div>
-                <div>
-                    <h4>Colors</h4>
-                    <label>Primary Color of Cookie</label>
-                    <input />
-                    <label>Secondary Color of Cookie</label>
-                    <input />
-                    <label>Additional Colors</label>
-                    <input />
-                </div>
-                <div>
-                    <h4>Inspriational Images</h4>
-                    <ol>
-                        <li>
-                            <input />
-                        </li>
-                    </ol>
-                </div>
+              <h4>{index + 1}. Cookie</h4>
+              <CookieComponent
+                cookie={cookie}
+                onChange={(returnedCookie) => {
+                  invoice.cookies[index] = returnedCookie;
+                  setInvoice(invoice);
+                }}
+              />
             </div>
-        </div>
+          );
+        })}
+        <button onClick={() => AddNewCookie()}>Add Cookie</button>
+      </section>
+      <button onClick={() => submitInvoice()}>Submit Invoice</button>
     </div>
-    )
+  );
 }
