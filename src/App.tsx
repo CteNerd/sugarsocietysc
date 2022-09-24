@@ -15,6 +15,10 @@ import "./App.css";
 import SideNav from "./main/sideNav/sideNav";
 import Contact from "./main/contact";
 import Pricing from "./main/pricing";
+import { NotificationContainer } from "react-notifications";
+import "react-notifications/lib/notifications.css";
+import PrivacyPolicy from "./main/privacy/privacy-policy";
+import OrderForm from "./main/order/order-form";
 
 function App() {
   const breakpoint = window.matchMedia("(max-width: 1279px)");
@@ -66,8 +70,8 @@ function App() {
           <div key="order" className="menu-item col-1">
             <a href="/pricing">Pricing</a>
           </div>
-          <div key="contact" className="menu-item col-1">
-            <a href="/order-now">Order Now</a>
+          <div key="order-form" className="menu-item col-1">
+            <a href="/order-form">Order Form</a>
           </div>
         </nav>
       );
@@ -82,6 +86,7 @@ function App() {
             <Navigation />
           </div>
         </header>
+        <NotificationContainer />
         <body className="App-body-container">
           <div className="App-body">
             <div className="page-content-container">
@@ -101,8 +106,14 @@ function App() {
                 <Route path="/order-now">
                   <OrderNow />
                 </Route>
+                <Route path="/order-form">
+                  <OrderForm />
+                </Route>
                 <Route path="/contact">
                   <Contact />
+                </Route>
+                <Route path="/privacy">
+                  <PrivacyPolicy />
                 </Route>
                 <Route path="/create-invoice">
                   <CreateInvoice />
