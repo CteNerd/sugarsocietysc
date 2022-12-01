@@ -94,9 +94,9 @@ function App() {
                 <Route path="/our-story">
                   <OurStory />
                 </Route>
-                <Route path="/specials">
+                {/* <Route path="/specials">
                   <Specials isMobile={isMobile} />
-                </Route>
+                </Route> */}
                 <Route path="/our-cookies">
                   <OurCookies isMobile={isMobile} />
                 </Route>
