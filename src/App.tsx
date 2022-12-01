@@ -70,8 +70,8 @@ function App() {
           <div key="order" className="menu-item col-1">
             <a href="/pricing">Pricing</a>
           </div>
-          <div key="order-form" className="menu-item col-1">
-            <a href="/order-form">Order Form</a>
+          <div key="order-now" className="menu-item col-1">
+            <a href="/order-now">Order Now</a>
           </div>
         </nav>
       );
