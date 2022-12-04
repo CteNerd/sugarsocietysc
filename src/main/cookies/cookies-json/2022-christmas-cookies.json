@@ -1,226 +1,156 @@
 [
   {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Santa1.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Santa1-mobile.jpg",
+    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1486.jpg",
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1486.jpg",
     "type": "santa",
-    "caption": "Santa 1",
-    "size": "3.5 x 4"
+    "caption": "Gnome, Mug, Tree",
+    "price": {
+      "giftSet": "",
+      "each": "3",
+      "TwoDozen": "65"
+    }
   },
   {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Santa2.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Santa2-mobile.jpg",
+    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1500.jpg",
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1500.jpg",
     "type": "santa",
-    "caption": "Santa 2",
-    "size": "3.5 x 4"
+    "caption": "Mini's Gift Box",
+    "price": {
+      "giftSet": "",
+      "each": "3",
+      "TwoDozen": "65"
+    }
   },
   {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Santa3.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Santa3-mobile.jpg",
+    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1501.jpg",
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1501.jpg",
     "type": "santa",
-    "caption": "Santa 3",
-    "size": "3.5 x 4"
+    "caption": "Mini's Gift Box",
+    "price": {
+      "giftSet": "12",
+      "each": "",
+      "TwoDozen": ""
+    }
   },
   {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Mini+Frosty.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Mini+Frosty-mobile.jpg",
+    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1502.jpg",
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1502.jpg",
     "type": "snowman",
-    "caption": "Mini Frosty",
-    "size": "1.5 x 2.5"
+    "caption": "Gift Box",
+    "price": {
+      "giftSet": "12",
+      "each": "",
+      "TwoDozen": ""
+    }
   },
   {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Behind+The+Sceens7.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Behind%2BThe%2BSceens7-mobile.jpg",
+    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1509.jpg",
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1509.jpg",
     "type": "snowman",
-    "caption": "Mini Frosty",
-    "size": "1.5 x 2.5"
+    "caption": "Merry Christmas Gift Box",
+    "price": {
+      "giftSet": "",
+      "each": "3",
+      "TwoDozen": "65"
+    }
   },
   {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Behind+the+sceens8.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Behind%2Bthe%2Bsceens8-mobile.jpg",
+    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1512.jpg",
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1512.jpg",
     "type": "snowman",
-    "caption": "Mini Frosty",
-    "size": "1.5 x 2.5"
+    "caption": "Cookie & Target Gift Card",
+    "price": {
+      "giftSet": "12",
+      "each": "",
+      "TwoDozen": ""
+    }
   },
   {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Ginger+Duo-+White.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Ginger%2BDuo-%2BWhite-mobile.jpg",
+    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1513.jpg",
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1513.jpg",
     "type": "gingerbread",
-    "caption": "Gingerbread Duo w/ White Outline",
-    "size": "3.5 x 4.5"
+    "caption": "Starbucks Cup & Gift Card",
+    "price": {
+      "giftSet": "12",
+      "each": "",
+      "TwoDozen": ""
+    }
   },
   {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Ginger+Family.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Ginger%2BFamily-mobile.jpg",
+    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1527.jpg",
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1527.jpg",
     "type": "gingerbread",
-    "caption": "Gingerbread Family",
-    "size": ""
+    "caption": "Minis",
+    "price": {
+      "giftSet": "",
+      "each": "3",
+      "TwoDozen": "65"
+    }
   },
   {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Ginger+Family+2.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Ginger%2BFamily%2B2-mobile.jpg",
+    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1552.jpg",
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1552.jpg",
     "type": "gingerbread",
-    "caption": "Gingerbread Family",
-    "size": ""
+    "caption": "DIY Gingerbread Woman",
+    "price": {
+      "giftSet": "",
+      "each": "3",
+      "TwoDozen": "65"
+    }
   },
   {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Ginger+Mini+Trio.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Ginger%2BMini%2BTrio-mobile.jpg",
+    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1554.jpg",
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1554.jpg",
     "type": "gingerbread",
-    "caption": "Mini Ginger 1, 2, & 3",
-    "size": "2 x 2"
+    "caption": "DIY Gingerbread Man",
+    "price": {
+      "giftSet": "12",
+      "each": "",
+      "TwoDozen": ""
+    }
   },
   {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Ginger+Trio-+Traditional.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Ginger%2BTrio-%2BTraditional-mobile.jpg",
+    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1557.jpg",
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1557.jpg",
     "type": "gingerbread",
-    "caption": "Trio of Traditional Gingerbread",
-    "size": ""
+    "caption": "Personalized Cookies",
+    "price": {
+      "giftSet": "",
+      "each": "3",
+      "TwoDozen": "65"
+    }
   },
   {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Gingerbread1.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Gingerbread1-mobile.jpg",
+    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1563.jpg",
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1563.jpg",
     "type": "gingerbread",
-    "caption": "Gingerbread 1",
-    "size": "3.5 x 4.5"
+    "caption": "Elf on the Shelf",
+    "price": {
+      "giftSet": "12",
+      "each": "",
+      "TwoDozen": ""
+    }
   },
   {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Gingerbread2.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Gingerbread2-mobile.jpg",
+    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1565.jpg",
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1565.jpg",
     "type": "gingerbread",
-    "caption": "Gingerbread 2",
-    "size": "3.5 x 4.5"
+    "caption": "Gnome, Tree, Santa, Mug",
+    "price": {
+      "giftSet": "12",
+      "each": "",
+      "TwoDozen": ""
+    }
   },
   {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Classic+Tree.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Classic%2BTree-mobile.jpg",
-    "type": "tree",
-    "caption": "Classic Tree",
-    "size": "3 x 3.5"
-  },
-  {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Evergreen.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Evergreen-mobile.jpg",
-    "type": "tree",
-    "caption": "Evergreen Tree",
-    "size": "3 x 3.5"
-  },
-  {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Oh+Christmas+Tree.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Oh%2BChristmas%2BTree-mobile.jpg",
-    "type": "tree",
-    "caption": "Oh Christmas Tree",
-    "size": "3 x 3.5"
-  },
-  {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Pine+Tree.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Pine%2BTree-mobile.jpg",
-    "type": "tree",
-    "caption": "Pine Tree",
-    "size": "3 x 3.5"
-  },
-  {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Spruce+Tree.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Spruce%2BTree-mobile.jpg",
-    "type": "tree",
-    "caption": "Spruce Tree",
-    "size": "3 x 3.5"
-  },
-  {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Spruce2.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Spruce2-mobile.jpg",
-    "type": "tree",
-    "caption": "Spruce Tree",
-    "size": "3 x 3.5"
-  },
-  {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Tree+Group.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Tree%2BGroup-mobile.jpg",
-    "type": "tree",
-    "caption": "Group of Trees",
-    "size": "3 x 3.5"
-  },
-  {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Tree+Mini+Trio.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Tree%2BMini%2BTrio-mobile.jpg",
-    "type": "tree",
-    "caption": "Trio of Mini Trees",
-    "size": "2 x 2.5"
-  },
-  {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Stocking.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Stocking-mobile.jpg",
-    "type": "stocking",
-    "caption": "Stocking",
-    "size": "3 x 3.5"
-  },
-  {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Candy+Cane.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Candy%2BCane-mobile.jpg",
-    "type": "candycane",
-    "caption": "Candy Cane",
-    "size": "2 x 3"
-  },
-  {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Candy+Cane+Lane.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Candy%2BCane%2BLane-mobile.jpg",
-    "type": "candycane",
-    "caption": "Candy Cane Lane",
-    "size": ""
-  },
-  {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Joy.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Joy-mobile.jpg",
-    "type": "phrase",
-    "caption": "Joy",
-    "size": ""
-  },
-  {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Rudolph1.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Rudolph1-mobile.jpg",
-    "type": "reindeer",
-    "caption": "Rudolph 1",
-    "size": ""
-  },
-  {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Rudolph2.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Rudolph2-mobile.jpg",
-    "type": "reindeer",
-    "caption": "Rudolph 2",
-    "size": "2.5 x 3.5"
-  },
-  {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Shine+Bright.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Shine%2BBright-mobile.jpg",
-    "type": "star",
-    "caption": "Shine Bright Star",
-    "size": "4 x 4"
-  },
-  {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Wishing+Star.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Wishing%2BStar-mobile.jpg",
-    "type": "star",
-    "caption": "Wishing Star",
-    "size": "4 x 4"
-  },
-  {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Stringed+Lights.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Stringed%2BLights-mobile.jpg",
-    "type": "ornament",
-    "caption": "Stringed Lights",
-    "size": "2.5 x 3"
-  },
-  {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Holly+Berry1.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Holly%2BBerry1-mobile.jpg",
-    "type": "hollyberry",
-    "caption": "Holly Berry 1",
-    "size": "3 x 3"
-  },
-  {
-    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Holly+Berry2.JPG",
-    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Holly%2BBerry2-mobile.jpg",
-    "type": "hollyberry",
-    "caption": "Holly Berry 2",
-    "size": "3 x 3"
+    "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1567.jpg",
+    "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2022/IMG_1567.jpg",
+    "type": "gingerbread",
+    "caption": "Mug & Tree",
+    "price": {
+      "giftSet": "12",
+      "each": "",
+      "TwoDozen": ""
+    }
   }
 ]
