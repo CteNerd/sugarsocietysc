@@ -127,7 +127,7 @@ export default function OurCookies(props: Props) {
             >
               <img
                 src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/AmazonPeccy.jpeg"
+                  "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/AmazonPeccy.jpeg"
                 }
                 className={"card-img"}
               />
@@ -138,7 +138,7 @@ export default function OurCookies(props: Props) {
             >
               <img
                 src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/BirthdayBlue.jpeg"
+                  "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/BirthdayBlue.jpeg"
                 }
                 className={"card-img"}
               />
@@ -149,7 +149,7 @@ export default function OurCookies(props: Props) {
             >
               <img
                 src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/BirthdayColorful.JPG"
+                  "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/BirthdayColorful.JPG"
                 }
                 className={"card-img"}
               />
@@ -160,7 +160,7 @@ export default function OurCookies(props: Props) {
             >
               <img
                 src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/ChristmasGroup.jpeg"
+                  "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/ChristmasGroup.jpeg"
                 }
                 className={"card-img"}
               />
@@ -171,7 +171,7 @@ export default function OurCookies(props: Props) {
             >
               <img
                 src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/ConversationHearts.jpg"
+                  "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/ConversationHearts.jpg"
                 }
                 className={"card-img"}
               />
@@ -182,7 +182,7 @@ export default function OurCookies(props: Props) {
             >
               <img
                 src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/GreekLife-AKA.jpeg"
+                  "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/GreekLife-AKA.jpeg"
                 }
                 className={"card-img"}
               />
@@ -193,7 +193,7 @@ export default function OurCookies(props: Props) {
             >
               <img
                 src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/GreekLife-Delta.jpeg"
+                  "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/GreekLife-Delta.jpeg"
                 }
                 className={"card-img"}
               />
@@ -204,7 +204,7 @@ export default function OurCookies(props: Props) {
             >
               <img
                 src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/HawaiianCulture.jpeg"
+                  "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/HawaiianCulture.jpeg"
                 }
                 className={"card-img"}
               />
@@ -215,7 +215,7 @@ export default function OurCookies(props: Props) {
             >
               <img
                 src={
-                  "https://wellcall-app-cdk.s3.amazonaws.com/V-Day-Tic-Tac-Toe.jpg"
+                  "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/V-Day-Tic-Tac-Toe.jpg"
                 }
                 className={"card-img"}
               />

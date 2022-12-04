@@ -39,7 +39,7 @@ export default function Specials(props: Props) {
       <div>
         <img
           className="specials-img"
-          src="https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/ads/2022/Christmas+2022+Cookie+Menu.jpg"
+          src="https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/sugar-society/ads/2022/Christmas+2022+Cookie+Menu.jpg"
         />
         <div className="row">
           <SpecialCookies />

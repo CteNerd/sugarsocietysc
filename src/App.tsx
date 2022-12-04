@@ -60,7 +60,7 @@ function App() {
             <a href="/">
               <img
                 className="nav-logo"
-                src="https://wellcall-app-cdk.s3.amazonaws.com/sugar-society-sugar-cookies.png"
+                src="https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/sugar-society-sugar-cookies.png"
               />
             </a>
           </div>
