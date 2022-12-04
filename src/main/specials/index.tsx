@@ -26,7 +26,7 @@ export default function Specials(props: Props) {
         >
           <img src={cookie.url} className={"card-img"} />
           <div className="special-cookie-title">{cookie.caption}</div>
-          <div className="special-cookie-description">{price}</div>
+          {/* <div className="special-cookie-description">{price}</div> */}
         </div>
       );
     });
