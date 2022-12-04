@@ -60,7 +60,7 @@ function App() {
             <a href="/">
               <img
                 className="nav-logo"
-                src="https://wellcall-app-cdk.s3.amazonaws.com/sugar-society-sugar-cookies.png"
+                src="https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/sugar-society-sugar-cookies.png"
               />
             </a>
           </div>
@@ -94,9 +94,9 @@ function App() {
                 <Route path="/our-story">
                   <OurStory />
                 </Route>
-                {/* <Route path="/specials">
+                <Route path="/specials">
                   <Specials isMobile={isMobile} />
-                </Route> */}
+                </Route>
                 <Route path="/our-cookies">
                   <OurCookies isMobile={isMobile} />
                 </Route>

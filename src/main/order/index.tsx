@@ -16,13 +16,13 @@ export default function OrderInquiry() {
           order.
         </p>
         <a
-          href="https://wellcall-app-cdk.s3.amazonaws.com/Christmas+Order+Form+PDF.pdf"
+          href="https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Christmas+Order+Form+PDF.pdf"
           target="_blank"
         >
           <button>Christmas Order Form</button>
         </a>
         <a
-          href="https://wellcall-app-cdk.s3.amazonaws.com/Order+Form+PDF.pdf"
+          href="https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Order+Form+PDF.pdf"
           target="_blank"
         >
           <button>Order Form</button>
