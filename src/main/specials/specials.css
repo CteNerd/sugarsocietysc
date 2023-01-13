@@ -15,7 +15,7 @@
   display: flex;
 }
 
-.card-img-container:hover [class*="special-cookie-"]{
+.card-img-container:hover [class*="special-cookie-"] {
   display: none;
 }
 
