@@ -50,6 +50,9 @@ export default function Home(props: HomeProps) {
     <div>
       <div>
         <h1 className="home-header">Welcome</h1>
+        <div className="slideshow-container">
+          <CarouselImages />
+        </div>
         <p className="home-body">
           Welcome to Sugar Society Sugar Cookies the newest black owned small
           business bringing you beautifully designed sugar cookies for your
@@ -58,10 +61,6 @@ export default function Home(props: HomeProps) {
           located in Rosharon, TX and are currently providing our AMAZING
           cookies and customer service to the greater Houston.
         </p>
-      </div>
-
-      <div className="slideshow-container">
-        <CarouselImages />
       </div>
     </div>
   );

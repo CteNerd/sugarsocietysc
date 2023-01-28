@@ -4,6 +4,26 @@
   padding: 40px;
 }
 
+.card-img-container {
+  padding: 0px 0px !important;
+}
+
+.card-img-container:hover {
+  z-index: 999;
+  position: relative;
+  text-align: center;
+  display: flex;
+}
+
+.card-img-container:hover [class*="special-cookie-"] {
+  display: none;
+}
+
+.card-img:hover {
+  height: 50vh;
+  width: 50vw;
+}
+
 [class*="special-cookie-"] {
   text-align: left;
   width: 100%;

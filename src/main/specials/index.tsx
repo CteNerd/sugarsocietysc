@@ -1,6 +1,6 @@
 import React from "react";
 import "./specials.css";
-import Cookies from "../cookies/cookies-json/2022-christmas-cookies.json";
+import Cookies from "../cookies/cookies-json/2022-valentines-cookies.json";
 
 interface Props {
   isMobile: boolean;
@@ -39,7 +39,7 @@ export default function Specials(props: Props) {
       <div>
         <img
           className="specials-img"
-          src="https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/ads/2022/Christmas+2022+Cookie+Menu.jpg"
+          src="https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/ads/2023/Pink+Blue+Illustrated+Hearts+Valentine's+Day+Food+and+Drink+Menu.jpg"
         />
         <div className="row">
           <SpecialCookies />
