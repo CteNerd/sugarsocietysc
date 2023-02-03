@@ -1,5 +1,5 @@
 import "./home.css";
-import Cookies from "../cookies/cookies-json/2022-christmas-cookies.json";
+import Cookies from "../cookies/cookies-json/2023-valentines-cookies.json";
 
 interface HomeProps {
   isMobile: boolean;

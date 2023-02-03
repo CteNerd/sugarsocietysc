@@ -1,0 +1,91 @@
+[
+    {
+      "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2023/Allstar+Valentine.jpg",
+      "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2023/Allstar+Valentine.jpg",
+      "type": "valentines",
+      "caption": "Allstar Valentine",
+      "price": {
+        "giftSet": "",
+        "each": "5",
+        "TwoDozen": ""
+      }
+    },
+    {
+      "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2023/Conversation+Heart+Valentine.jpg",
+      "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2023/Conversation+Heart+Valentine.jpg",
+      "type": "valentines",
+      "caption": "Conversation Heart Valentine",
+      "price": {
+        "giftSet": "",
+        "each": "",
+        "TwoDozen": ""
+      }
+    },
+    {
+      "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2023/Conversation+Hearts+(3.5).jpg",
+      "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2023/Conversation+Hearts+(3.5).jpg",
+      "type": "valentines",
+      "caption": "Conversation Hearts",
+      "price": {
+        "giftSet": "",
+        "each": "",
+        "TwoDozen": ""
+      }
+    },
+    {
+      "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2023/Customized+Conversation+Heart.jpg",
+      "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2023/Customized+Conversation+Heart.jpg",
+      "type": "valentines",
+      "caption": "Customized Conversation Heart",
+      "price": {
+        "giftSet": "",
+        "each": "",
+        "TwoDozen": ""
+      }
+    },
+    {
+      "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2023/DIY+Kit.jpg",
+      "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2023/DIY+Kit.jpg",
+      "type": "valentines",
+      "caption": "DIY Kit",
+      "price": {
+        "giftSet": "",
+        "each": "",
+        "TwoDozen": ""
+      }
+    },
+    {
+      "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2023/Mini-+Conversation+Hearts+(2.5).jpg",
+      "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2023/Mini-+Conversation+Hearts+(2.5).jpg",
+      "type": "valentines",
+      "caption": "Mini- Conversation Hearts",
+      "price": {
+        "giftSet": "",
+        "each": "",
+        "TwoDozen": ""
+      }
+    },
+    {
+      "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2023/POP+Valentine.jpg",
+      "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2023/POP+Valentine.jpg",
+      "type": "valentines",
+      "caption": "POP Valentine",
+      "price": {
+        "giftSet": "",
+        "each": "",
+        "TwoDozen": ""
+      }
+    },
+    {
+      "url": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2023/Valentine+Set.jpg",
+      "mobileUrl": "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/2023/Valentine+Set.jpg",
+      "type": "valentines",
+      "caption": "Valentine Set",
+      "price": {
+        "giftSet": "",
+        "each": "",
+        "TwoDozen": ""
+      }
+    }
+  ]
+  
