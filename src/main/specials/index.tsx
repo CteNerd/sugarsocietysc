@@ -1,6 +1,6 @@
 import React from "react";
 import "./specials.css";
-import Cookies from "../cookies/cookies-json/2022-valentines-cookies.json";
+import Cookies from "../cookies/cookies-json/2023-valentines-cookies.json";
 
 interface Props {
   isMobile: boolean;
