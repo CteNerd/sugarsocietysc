@@ -19,7 +19,7 @@ export default function OrderNow() {
             <button>Custom Order Form</button>
           </a>
         </div>
-        <div hidden={moment().isAfter('2023-02-12T10:00')}>
+        <div hidden={moment().isAfter('2023-02-05T10:00')}>
           <a href="https://form.asana.com/?k=kMA__QIK7RFNLbdasSNh-g&d=1203037369805982&embed=true">
             <button>Valentine Order Form</button>
           </a>
