@@ -67,9 +67,9 @@ function App() {
           <div key="cookies" className="menu-item col-1">
             <a href="/our-cookies">Our Cookies</a>
           </div>
-          <div key="order" className="menu-item col-1">
+          {/* <div key="order" className="menu-item col-1">
             <a href="/pricing">Pricing</a>
-          </div>
+          </div> */}
           <div key="order-now" className="menu-item col-1">
             <a href="/order-now">Order Now</a>
           </div>
@@ -100,9 +100,9 @@ function App() {
                 <Route path="/our-cookies">
                   <OurCookies isMobile={isMobile} />
                 </Route>
-                <Route path="/pricing">
+                {/* <Route path="/pricing">
                   <Pricing />
-                </Route>
+                </Route> */}
                 <Route path="/order-now">
                   <OrderNow />
                 </Route>

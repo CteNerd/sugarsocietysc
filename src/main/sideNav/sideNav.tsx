@@ -58,9 +58,9 @@ export default function SideNav() {
       <a href="/our-cookies">
         <PieChartOutlined /> Our Cookies
       </a>
-      <a href="/pricing">
+      {/* <a href="/pricing">
         <ShoppingCartOutlined /> Pricing
-      </a>
+      </a> */}
       <a href="/order-now">
         <AlertOutlined /> Order Now
       </a>
