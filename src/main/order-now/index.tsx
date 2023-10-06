@@ -3,6 +3,7 @@ import moment from "moment";
 import "./order-now.css";
 
 export default function OrderNow() {
+  const envVar = process.env.TEST_STRING;
   return (
     <div className="order-now-page-container">
       <div>
@@ -25,6 +26,7 @@ export default function OrderNow() {
           </a>
         </div>
       </div>
+      <b>{envVar}</b>
     </div>
   );
 }
