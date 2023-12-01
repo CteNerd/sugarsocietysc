@@ -3,6 +3,8 @@ import moment from "moment";
 import "./order-now.css";
 
 export default function OrderNow() {
+  const envVar = process.env.REACT_APP_TEST_STRING;
+  const nodeVar = process.env.NODE_ENV;
   return (
     <div className="order-now-page-container">
       <div>
@@ -25,6 +27,8 @@ export default function OrderNow() {
           </a>
         </div>
       </div>
+      <h1>{envVar}</h1>
+      <h1>{nodeVar}</h1>
     </div>
   );
 }
