@@ -37,8 +37,6 @@ export default function OrderNow() {
           </a>
         </div>
       </div>
-      <h1>{envVar}</h1>
-      <h1>{nodeVar}</h1>
     </div>
   );
 }
