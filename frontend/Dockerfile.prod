@@ -1,0 +1,17 @@
+FROM node:16
+
+WORKDIR /app
+
+COPY package.json ./
+COPY tsconfig.json ./
+COPY public ./public
+COPY src ./src
+
+RUN npm install
+
+# Set the API base URL for production
+ENV REACT_APP_API_BASE_URL=http://signature-beauty-alb-1927250329.us-east-1.elb.amazonaws.com/api
+
+EXPOSE 3000
+
+CMD ["npm", "start"]

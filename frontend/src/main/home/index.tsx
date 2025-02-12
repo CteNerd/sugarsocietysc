@@ -1,11 +1,23 @@
+import React, { useEffect, useState } from "react";
 import "./home.css";
 import Cookies from "../cookies/cookies-json/2023-valentines-cookies.json";
+import { fetchHealthStatus } from "../../api";
 
 interface HomeProps {
   isMobile: boolean;
 }
 
 export default function Home(props: HomeProps) {
+  const [healthStatus, setHealthStatus] = useState<string>("");
+
+  useEffect(() => {
+    const getHealthStatus = async () => {
+      const status = await fetchHealthStatus();
+      setHealthStatus(status);
+    };
+    getHealthStatus();
+  }, []);
+
   var slideIndex = 1;
   showSlides(slideIndex);
 
@@ -60,6 +72,9 @@ export default function Home(props: HomeProps) {
           birthday celebration, wedding, baby shower or corporate event. We are
           located in Rosharon, TX and are currently providing our AMAZING
           cookies and customer service to the greater Houston.
+        </p>
+        <p className="health-status">
+          Health Status: {healthStatus}
         </p>
       </div>
     </div>

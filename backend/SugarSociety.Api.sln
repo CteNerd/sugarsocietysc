@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SugarSociety.Api", "SugarSociety.Api\SugarSociety.Api.csproj", "{57D09F1B-7AE1-4DDA-852C-AB7F4F619C7D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SugarSociety.Service", "SugarSociety.Service\SugarSociety.Service.csproj", "{CC001721-3456-47D7-A9D5-64B0642A8157}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SugarSociety.Data", "SugarSociety.Data\SugarSociety.Data.csproj", "{BFA03EB9-633B-4DEA-9744-88EAE2E348C4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SugarSociety.Models", "SugarSociety.Models\SugarSociety.Models.csproj", "{02F449BD-440D-4B29-822C-C7479BD81209}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{57D09F1B-7AE1-4DDA-852C-AB7F4F619C7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57D09F1B-7AE1-4DDA-852C-AB7F4F619C7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57D09F1B-7AE1-4DDA-852C-AB7F4F619C7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57D09F1B-7AE1-4DDA-852C-AB7F4F619C7D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CC001721-3456-47D7-A9D5-64B0642A8157}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC001721-3456-47D7-A9D5-64B0642A8157}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC001721-3456-47D7-A9D5-64B0642A8157}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC001721-3456-47D7-A9D5-64B0642A8157}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BFA03EB9-633B-4DEA-9744-88EAE2E348C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BFA03EB9-633B-4DEA-9744-88EAE2E348C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BFA03EB9-633B-4DEA-9744-88EAE2E348C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BFA03EB9-633B-4DEA-9744-88EAE2E348C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{02F449BD-440D-4B29-822C-C7479BD81209}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02F449BD-440D-4B29-822C-C7479BD81209}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02F449BD-440D-4B29-822C-C7479BD81209}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02F449BD-440D-4B29-822C-C7479BD81209}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
