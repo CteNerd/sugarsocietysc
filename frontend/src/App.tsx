@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import Home from "./main/home";
 import OurStory from "./main/story";
 import Specials from "./main/specials";
@@ -90,38 +90,18 @@ function App() {
         <body className="App-body-container">
           <div className="App-body">
             <div className="page-content-container">
-              <Switch>
-                <Route path="/our-story">
-                  <OurStory />
-                </Route>
-                <Route path="/specials">
-                  <Specials isMobile={isMobile} />
-                </Route>
-                <Route path="/our-cookies">
-                  <OurCookies isMobile={isMobile} />
-                </Route>
-                {/* <Route path="/pricing">
-                  <Pricing />
-                </Route> */}
-                <Route path="/order-now">
-                  <OrderNow />
-                </Route>
-                <Route path="/order-form">
-                  <OrderForm />
-                </Route>
-                <Route path="/contact">
-                  <Contact />
-                </Route>
-                <Route path="/privacy">
-                  <PrivacyPolicy />
-                </Route>
-                <Route path="/create-invoice">
-                  <CreateInvoice />
-                </Route>
-                <Route path="/">
-                  <Home isMobile />
-                </Route>
-              </Switch>
+              <Routes>
+                <Route path="/our-story" element={<OurStory />} />
+                <Route path="/specials" element={<Specials isMobile={isMobile} />} />
+                <Route path="/our-cookies" element={<OurCookies isMobile={isMobile} />} />
+                {/* <Route path="/pricing" element={<Pricing />} /> */}
+                <Route path="/order-now" element={<OrderNow />} />
+                <Route path="/order-form" element={<OrderForm />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/create-invoice" element={<CreateInvoice />} />
+                <Route path="/" element={<Home isMobile={isMobile} />} />
+              </Routes>
             </div>
           </div>
         </body>
