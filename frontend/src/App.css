@@ -1,233 +1,189 @@
-.App {
-  text-align: center;
-  /* background-image: url("https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Landscape3.JPG"); */
-  background-repeat: round;
-  background-attachment: fixed;
-  background-size: cover;
-  min-height: 100vh;
-  display: block;
+/* App.css */
+
+/* Global Styles */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.6;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+a {
+    text-decoration: none;
+    color: #333;
+    font-family: 'Poppins', sans-serif;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    width: 100vw;
-    height: 100vh;
-  }
+ul {
+    list-style: none;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
 }
 
-.App-header {
-  /* min-height: 100vh; */
-  display: block;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: #fff;
-  position: relative;
+/* Header Styles */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: #f8f8f8;
+    border-bottom: 1px solid #ddd;
+    font-family: 'Poppins', sans-serif;
 }
 
-.nav-logo {
-  width: 8vw;
+.logo img {
+    height: 50px;
 }
 
-.main-nav-container {
-  background-color: rgb(255, 255, 255);
-  width: 100vw;
+nav ul {
+    display: flex;
+    gap: 1rem;
+    font-family: 'Poppins', sans-serif;
 }
 
-.main-nav {
-  position: relative;
-  display: flex;
-  justify-content: center;
+nav a:hover {
+    color: #007bff;
 }
 
-.menu-item {
-  padding: 20px 40px;
-  font-size: 20px;
-  font-weight: 300;
-}
-.menu-item a {
-  color: #000;
-}
-
-.App-body-container {
-  text-align: -webkit-center;
-  padding-bottom: 100px;
+/* Hero Section Styles */
+#hero {
+    text-align: center;
+    padding: 2rem 1rem;
+    background-color: #e9ecef;
+    font-family: 'Poppins', sans-serif;
 }
 
-.App-body {
-  width: 60vw;
+#hero h1 {
+    margin-bottom: 0.5rem;
+    font-family: 'Poppins', sans-serif;
 }
 
-.page-content-container {
-  background-color: rgba(165, 164, 164, 0.6);
-  padding: 10px;
-  min-height: 90vh;
+#hero p {
+    margin-bottom: 1rem;
+    color: #555;
+    font-family: 'Poppins', sans-serif;
 }
 
-h1,
-h2,
-p {
-  font-weight: 300;
+#hero img {
+    max-width: 100%;
+    height: auto;
 }
 
-p {
-  font-size: 20px;
+/* Services Section Styles */
+#services {
+    padding: 2rem 1rem;
+    font-family: 'Poppins', sans-serif;
 }
 
-button {
-  background-color: #000;
-  color: #fff;
-  font-size: 20px;
-  font-weight: 300;
+#services h2 {
+    text-align: center;
+    margin-bottom: 1rem;
+    font-family: 'Poppins', sans-serif;
 }
 
-button:hover {
-  cursor: pointer;
+.service {
+    margin-bottom: 1.5rem;
+    font-family: 'Poppins', sans-serif;
 }
 
-.App-link {
-  color: #61dafb;
+.service h3 {
+    margin-bottom: 0.5rem;
+    color: #333;
+    font-family: 'Poppins', sans-serif;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.service p {
+    margin: 0;
+    color: #666;
+    font-family: 'Poppins', sans-serif;
 }
 
-footer {
-  background-color: #fff;
-  width: 100vw;
-  bottom: 0;
-  position: fixed;
-  padding: 20px;
+/* About Section Styles */
+#about {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+    background-color: #f8f8f8;
+    font-family: 'Poppins', sans-serif;
 }
 
-.col-33 {
-  width: 33%;
-  display: inline-block;
+#about h2 {
+    margin-bottom: 1rem;
+    font-family: 'Poppins', sans-serif;
 }
 
-.App-header .menu-btn {
-  vertical-align: middle;
-  float: left;
-  padding: 1vh;
-  min-height: 10vh;
+#about p {
+    max-width: 800px;
+    margin-bottom: 1rem;
+    text-align: center;
+    color: #555;
+    font-family: 'Poppins', sans-serif;
 }
 
-.menu-btn:hover {
-  cursor: pointer;
+#about img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
 }
 
-.App-header .menu-line:hover {
-  cursor: pointer;
-}
-.App-header .menu-line {
-  width: 35px;
-  height: 5px;
-  background-color: #000;
-  margin: 6px 0;
+/* Contact Section Styles */
+#contact {
+    padding: 2rem 1rem;
+    text-align: center;
+    font-family: 'Poppins', sans-serif;
 }
 
-.social-link {
-  padding: 5px;
-  font-size: 20px;
+#contact h2 {
+    margin-bottom: 1rem;
+    font-family: 'Poppins', sans-serif;
 }
 
-@media only screen and (max-width: 600px) {
-  .App-body {
-    width: 80vw;
-    padding: 15vh 0vh 10vh 0vh;
-  }
-
-  .App {
-    background-repeat: repeat-y;
-  }
-
-  .footer-link-container {
-    display: block;
-    padding: 3px;
-  }
+#contact p {
+    margin: 0.5rem 0;
+    color: #555;
+    font-family: 'Poppins', sans-serif;
 }
 
-* {
-  box-sizing: border-box;
+#contact form {
+    margin-top: 1rem;
+    font-family: 'Poppins', sans-serif;
 }
 
-.row::after {
-  content: "";
-  clear: both;
-  display: table;
+#contact input[type="email"] {
+    padding: 0.5rem;
+    width: 250px;
+    max-width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: 'Poppins', sans-serif;
 }
 
-[class*="col-"] {
-  float: left;
-  padding: 0px 15px;
+#contact button {
+    padding: 0.5rem 1rem;
+    margin-left: 0.5rem;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
 }
 
-.col-1 {
-  width: 8.33%;
-}
-.col-2 {
-  width: 16.66%;
-}
-.col-3 {
-  width: 25%;
-}
-.col-4 {
-  width: 33.33%;
-}
-.col-5 {
-  width: 41.66%;
-}
-.col-6 {
-  width: 50%;
-}
-.col-7 {
-  width: 58.33%;
-}
-.col-8 {
-  width: 66.66%;
-}
-.col-9 {
-  width: 75%;
-}
-.col-10 {
-  width: 83.33%;
-}
-.col-11 {
-  width: 91.66%;
-}
-.col-12 {
-  width: 100%;
+#contact button:hover {
+    background-color: #0056b3;
 }
 
-@font-face {
-  font-family: "AstralSisters";
-  src: local("LucidaHandwriting"),
-    url(./fonts/astral_sisters/Astral\ Sisters.ttf);
-}
+/* Responsive Design */
+@media (min-width: 768px) {
+    #about {
+        flex-direction: row;
+        justify-content: center;
+        gap: 2rem;
+    }
 
-@font-face {
-  font-family: "Cream";
-  src: local("Cream"), url(./fonts/cream_2/cream-DEMO.ttf);
-}
-
-@font-face {
-  font-family: "LemonMilk";
-  src: local("LemonMilk"), url(./fonts/lemon_milk/LEMONMILK-Medium.otf);
-}
-
-@font-face {
-  font-family: "BebasNeue";
-  src: local("BebasNeue"), url(./fonts/bebas_neue/BebasNeue-Regular.ttf);
+    #about p {
+        text-align: left;
+    }
 }

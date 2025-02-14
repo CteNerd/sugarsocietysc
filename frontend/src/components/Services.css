@@ -1,0 +1,86 @@
+/* Services.css */
+
+.services {
+    position: relative;
+    width: 100%;
+    padding: 4rem 2rem;
+    background-image: url('https://uptown-financials-images.s3.us-east-1.amazonaws.com/uptown_financials_keyboard.png'); /* Replace with actual image */
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed; /* Parallax effect */
+  }
+  
+  .services-overlay {
+    background-color: rgba(255, 255, 255, 0.7); /* Semi-transparent white overlay */
+    padding: 3rem;
+    border-radius: 10px;
+  }
+  
+  .services h2 {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  .service {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 20px;
+    padding: 1.5rem 0;
+  }
+  
+  .service-column {
+    padding: 10px;
+  }
+  
+  .service-column-1 {
+    flex: 2;
+  }
+  
+  .service-column-2 {
+    flex: 3;
+  }
+  
+  .service h3 {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .service h4 {
+    font-size: 1.2rem;
+    font-weight: normal;
+    color: #555;
+    margin-bottom: 1rem;
+  }
+  
+  .service p {
+    font-size: 1rem;
+    color: #333;
+    line-height: 1.5;
+  }
+  
+  hr {
+    border: 0;
+    height: 1px;
+    background-color: #999;
+    margin: 1.5rem 0;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .services {
+      padding: 2rem 1rem;
+    }
+  
+    .services-overlay {
+      padding: 2rem;
+    }
+  
+    .service h3 {
+      font-size: 1.5rem;
+    }
+  
+    .service h4 {
+      font-size: 1rem;
+    }
+  }
