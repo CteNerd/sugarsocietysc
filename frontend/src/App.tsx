@@ -6,11 +6,6 @@ import Specials from "./main/specials";
 import OurCookies from "./main/cookies";
 import CreateInvoice from "./main/invoice/create-invoice";
 import OrderNow from "./main/order-now";
-import {
-  FacebookOutlined,
-  GoogleOutlined,
-  InstagramOutlined,
-} from "@ant-design/icons";
 import "./App.css";
 import SideNav from "./main/sideNav/sideNav";
 import Contact from "./main/contact";
@@ -117,7 +112,7 @@ function App() {
               href="https://www.facebook.com/Sugar-Society-Sugar-Cookies-105693268589749"
               target="_blank"
             >
-              <FacebookOutlined />
+              {/* <FacebookOutlined /> */}
             </a>
 
             <a
@@ -125,14 +120,14 @@ function App() {
               href="https://www.instagram.com/sugarsocietysc/"
               target="_blank"
             >
-              <InstagramOutlined />
+              {/* <InstagramOutlined /> */}
             </a>
             <a
               className="social-link"
               href="https://g.page/r/CdDfLKquRwTPEAo"
               target="_blank"
             >
-              <GoogleOutlined />
+              {/* <GoogleOutlined /> */}
             </a>
           </div>
           <div className="footer-link-container">
