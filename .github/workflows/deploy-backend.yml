@@ -41,12 +41,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Check for backend changes
+        id: check_changes
+        run: |
+          if git diff --quiet HEAD^ HEAD ./backend; then
+            echo "No changes in backend. Skipping build and deploy."
+            exit 0
+          fi
+
       - name: Set up .NET Core
+        if: steps.check_changes.outputs.changes == 'true'
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: '9.0.x'
 
       - name: Configure AWS Credentials
+        if: steps.check_changes.outputs.changes == 'true'
         uses: aws-actions/configure-aws-credentials@v3
         with:
           aws-access-key-id: ${{ inputs.AWS_ACCESS_KEY_ID }}
@@ -54,23 +64,29 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Install backend dependencies
+        if: steps.check_changes.outputs.changes == 'true'
         run: dotnet restore
         working-directory: ./backend/SugarSociety.Api
 
       - name: Build backend
+        if: steps.check_changes.outputs.changes == 'true'
         run: dotnet build --configuration Release
         working-directory: ./backend/SugarSociety.Api
 
       - name: Build backend Docker image
+        if: steps.check_changes.outputs.changes == 'true'
         run: docker build -f ./backend/Dockerfile.prod -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/sugar-society:backend-latest ./backend
 
       - name: Log in to Amazon ECR
+        if: steps.check_changes.outputs.changes == 'true'
         run: |
           aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
       - name: Push backend Docker image to ECR
+        if: steps.check_changes.outputs.changes == 'true'
         run: docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/sugar-society:backend-latest
 
       - name: Deploy to AWS Fargate
+        if: steps.check_changes.outputs.changes == 'true'
         run: |
           aws ecs update-service --cluster sugar-society --service sugar-society-backend --force-new-deployment
