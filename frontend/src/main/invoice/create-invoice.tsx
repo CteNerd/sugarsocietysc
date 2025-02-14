@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { SubmitInvoiceModel } from "../../models/invoice/submitInvoiceModel";
-import { NotificationManager } from "react-notifications";
-import moment from "moment";
+// import { NotificationManager } from "react-notifications";
+// import moment from "moment";
 import CookieComponent from "../../components/Cookie";
 import CookieModel from "../../models/invoice/cookieModel";
 
@@ -32,7 +31,7 @@ let initialInvoice: SubmitInvoiceModel = {
       quantity: 1,
     },
   ],
-  pickupDate: moment().add(1, "days").format(),
+  pickupDate: 'moment().add(1, "days").format()',
   dateCreated: "",
   invoiceNumber: "",
 };
@@ -40,26 +39,26 @@ let initialInvoice: SubmitInvoiceModel = {
 export default function CreateInvoice() {
   const [invoice, setInvoice] = useState(initialInvoice);
 
-  function submitInvoice() {
-    axios
-      .post(`https://sugarsocietysc-api.azurewebsites.net/api/invoice`, invoice)
-      .then((res) => {
-        NotificationManager.success(
-          "Successfully submitted invoice.",
-          "Invoice Sent."
-        );
-      })
-      .catch(() => {
-        NotificationManager.error(
-          "Failed to submit invoice.",
-          "Error",
-          5000,
-          () => {
-            alert("callback");
-          }
-        );
-      });
-  }
+  // function submitInvoice() {
+  //   axios
+  //     .post(`https://sugarsocietysc-api.azurewebsites.net/api/invoice`, invoice)
+  //     .then((res) => {
+  //       NotificationManager.success(
+  //         "Successfully submitted invoice.",
+  //         "Invoice Sent."
+  //       );
+  //     })
+  //     .catch(() => {
+  //       NotificationManager.error(
+  //         "Failed to submit invoice.",
+  //         "Error",
+  //         5000,
+  //         () => {
+  //           alert("callback");
+  //         }
+  //       );
+  //     });
+  // }
 
   function AddNewCookie() {
     let cookieToAdd: CookieModel = {
@@ -142,7 +141,7 @@ export default function CreateInvoice() {
         })}
         <button onClick={() => AddNewCookie()}>Add Cookie</button>
       </section>
-      <button onClick={() => submitInvoice()}>Submit Invoice</button>
+      {/* <button onClick={() => submitInvoice()}>Submit Invoice</button> */}
     </div>
   );
 }

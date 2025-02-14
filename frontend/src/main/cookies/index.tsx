@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Cookies from "./cookies-json/2022-christmas-cookies.json";
 import "./cookies.css";
-import { Carousel } from "antd";
+// import { Carousel } from "antd";
 import { clearTimeout } from "timers";
 
 interface Props {

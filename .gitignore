@@ -25,3 +25,5 @@ yarn-error.log*
 sendgrid.env
 /frontend/node_modules
 /backend/**/obj
+/frontend/build
+frontend/package-lock.json

@@ -1,22 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import Home from "./main/home";
 import OurStory from "./main/story";
 import Specials from "./main/specials";
 import OurCookies from "./main/cookies";
 import CreateInvoice from "./main/invoice/create-invoice";
 import OrderNow from "./main/order-now";
-import {
-  FacebookOutlined,
-  GoogleOutlined,
-  InstagramOutlined,
-} from "@ant-design/icons";
 import "./App.css";
 import SideNav from "./main/sideNav/sideNav";
 import Contact from "./main/contact";
 import Pricing from "./main/pricing";
-import { NotificationContainer } from "react-notifications";
-import "react-notifications/lib/notifications.css";
 import PrivacyPolicy from "./main/privacy/privacy-policy";
 import OrderForm from "./main/order/order-form";
 
@@ -86,42 +79,21 @@ function App() {
             <Navigation />
           </div>
         </header>
-        <NotificationContainer />
         <body className="App-body-container">
           <div className="App-body">
             <div className="page-content-container">
-              <Switch>
-                <Route path="/our-story">
-                  <OurStory />
-                </Route>
-                <Route path="/specials">
-                  <Specials isMobile={isMobile} />
-                </Route>
-                <Route path="/our-cookies">
-                  <OurCookies isMobile={isMobile} />
-                </Route>
-                {/* <Route path="/pricing">
-                  <Pricing />
-                </Route> */}
-                <Route path="/order-now">
-                  <OrderNow />
-                </Route>
-                <Route path="/order-form">
-                  <OrderForm />
-                </Route>
-                <Route path="/contact">
-                  <Contact />
-                </Route>
-                <Route path="/privacy">
-                  <PrivacyPolicy />
-                </Route>
-                <Route path="/create-invoice">
-                  <CreateInvoice />
-                </Route>
-                <Route path="/">
-                  <Home isMobile />
-                </Route>
-              </Switch>
+              <Routes>
+                <Route path="/our-story" element={<OurStory />} />
+                <Route path="/specials" element={<Specials isMobile={isMobile} />} />
+                <Route path="/our-cookies" element={<OurCookies isMobile={isMobile} />} />
+                {/* <Route path="/pricing" element={<Pricing />} /> */}
+                <Route path="/order-now" element={<OrderNow />} />
+                <Route path="/order-form" element={<OrderForm />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/create-invoice" element={<CreateInvoice />} />
+                <Route path="/" element={<Home isMobile={isMobile} />} />
+              </Routes>
             </div>
           </div>
         </body>
@@ -137,7 +109,7 @@ function App() {
               href="https://www.facebook.com/Sugar-Society-Sugar-Cookies-105693268589749"
               target="_blank"
             >
-              <FacebookOutlined />
+              {/* <FacebookOutlined /> */}
             </a>
 
             <a
@@ -145,14 +117,14 @@ function App() {
               href="https://www.instagram.com/sugarsocietysc/"
               target="_blank"
             >
-              <InstagramOutlined />
+              {/* <InstagramOutlined /> */}
             </a>
             <a
               className="social-link"
               href="https://g.page/r/CdDfLKquRwTPEAo"
               target="_blank"
             >
-              <GoogleOutlined />
+              {/* <GoogleOutlined /> */}
             </a>
           </div>
           <div className="footer-link-container">

@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import sgMail from "@sendgrid/mail";
+// import sgMail from "@sendgrid/mail";
 
 export default function OrderInquiry() {
   return (
