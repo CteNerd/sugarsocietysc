@@ -10,8 +10,6 @@ import "./App.css";
 import SideNav from "./main/sideNav/sideNav";
 import Contact from "./main/contact";
 import Pricing from "./main/pricing";
-import { NotificationContainer } from "react-notifications";
-import "react-notifications/lib/notifications.css";
 import PrivacyPolicy from "./main/privacy/privacy-policy";
 import OrderForm from "./main/order/order-form";
 
@@ -81,7 +79,6 @@ function App() {
             <Navigation />
           </div>
         </header>
-        <NotificationContainer />
         <body className="App-body-container">
           <div className="App-body">
             <div className="page-content-container">
