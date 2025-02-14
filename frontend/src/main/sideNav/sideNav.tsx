@@ -1,29 +1,29 @@
 import React, { useEffect, useState } from "react";
-import {
-  HomeOutlined,
-  InfoCircleOutlined,
-  TeamOutlined,
-  MailOutlined,
-  LogoutOutlined,
-  CaretDownOutlined,
-  UserAddOutlined,
-  UsergroupAddOutlined,
-  CalendarOutlined,
-  ScheduleOutlined,
-  CarryOutOutlined,
-  PlusSquareOutlined,
-  BarsOutlined,
-  SafetyOutlined,
-  ShoppingOutlined,
-  UnorderedListOutlined,
-  UserOutlined,
-  BookOutlined,
-  StarOutlined,
-  PieChartOutlined,
-  ProfileOutlined,
-  ShoppingCartOutlined,
-  AlertOutlined,
-} from "@ant-design/icons";
+// import {
+//   HomeOutlined,
+//   InfoCircleOutlined,
+//   TeamOutlined,
+//   MailOutlined,
+//   LogoutOutlined,
+//   CaretDownOutlined,
+//   UserAddOutlined,
+//   UsergroupAddOutlined,
+//   CalendarOutlined,
+//   ScheduleOutlined,
+//   CarryOutOutlined,
+//   PlusSquareOutlined,
+//   BarsOutlined,
+//   SafetyOutlined,
+//   ShoppingOutlined,
+//   UnorderedListOutlined,
+//   UserOutlined,
+//   BookOutlined,
+//   StarOutlined,
+//   PieChartOutlined,
+//   ProfileOutlined,
+//   ShoppingCartOutlined,
+//   AlertOutlined,
+// } from "@ant-design/icons";
 import "./sideNav.css";
 
 export default function SideNav() {
@@ -47,22 +47,27 @@ export default function SideNav() {
         &times;
       </div>
       <a href="/">
-        <HomeOutlined /> Home
+        {/* <HomeOutlined />  */}
+        Home
       </a>
       <a href="/our-story">
-        <BookOutlined /> Our Story
+        {/* <BookOutlined />  */}
+        Our Story
       </a>
       <a href="/specials">
-        <StarOutlined /> Specials
+        {/* <StarOutlined />  */}
+        Specials
       </a>
       <a href="/our-cookies">
-        <PieChartOutlined /> Our Cookies
+        {/* <PieChartOutlined />  */}
+        Our Cookies
       </a>
       {/* <a href="/pricing">
         <ShoppingCartOutlined /> Pricing
       </a> */}
       <a href="/order-now">
-        <AlertOutlined /> Order Now
+        {/* <AlertOutlined />  */}
+        Order Now
       </a>
     </div>
   );
