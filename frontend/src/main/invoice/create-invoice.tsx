@@ -31,7 +31,7 @@ let initialInvoice: SubmitInvoiceModel = {
       quantity: 1,
     },
   ],
-  pickupDate: moment().add(1, "days").format(),
+  // pickupDate: moment().add(1, "days").format(),
   dateCreated: "",
   invoiceNumber: "",
 };
