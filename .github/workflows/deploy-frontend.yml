@@ -22,12 +22,6 @@ jobs:
   build-and-deploy-frontend:
     runs-on: ubuntu-latest
 
-    services:
-      mongo:
-        image: mongo:latest
-        ports:
-          - 27017:27017
-
     env:
       MONGO_DB_CONNECTION_STRING: ${{ secrets.MONGO_DB_CONNECTION_STRING }}
       DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
@@ -41,13 +35,13 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Check for frontend changes
-      id: check_changes
-      run: |
-        if git diff --quiet HEAD^ HEAD ./frontend; then
-          echo "No changes in frontend. Skipping build and deploy."
-          exit 0
-        fi
+    # - name: Check for frontend changes
+    #   id: check_changes
+    #   run: |
+    #     if git diff --quiet HEAD^ HEAD ./frontend; then
+    #       echo "No changes in frontend. Skipping build and deploy."
+    #       exit 0
+    #     fi
 
     - name: Configure AWS Credentials
       if: steps.check_changes.outputs.changes == 'true'
