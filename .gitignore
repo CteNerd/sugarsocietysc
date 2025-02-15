@@ -27,3 +27,4 @@ sendgrid.env
 /backend/**/obj
 /frontend/build
 frontend/package-lock.json
+/backend/**/bin
