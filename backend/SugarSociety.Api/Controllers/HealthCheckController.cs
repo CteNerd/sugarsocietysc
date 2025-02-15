@@ -18,6 +18,7 @@ namespace SugarSociety.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> Check()
         {
+            Console.WriteLine("Health check requested");
             await _healthCheckService.LogHealthCheckAsync();
             return Ok(new HealthCheckResult(HealthStatus.Healthy));
         }

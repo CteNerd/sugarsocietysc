@@ -28,3 +28,4 @@ sendgrid.env
 /frontend/build
 frontend/package-lock.json
 /backend/**/bin
+/backend/SugarSociety.Api/appsettings.Development.json
