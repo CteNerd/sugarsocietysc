@@ -2,51 +2,51 @@ import React from "react";
 
 export default function PrivacyPolicy() {
   return (
-    <div>
+    <div className="privacy-policy">
       <h1>Privacy Policy</h1>
       <p>Last updated: May 24, 2022</p>
-      <p>
-        This Privacy Policy describes Our policies and procedures on the
-        collection, use and disclosure of Your information when You use the
-        Service and tells You about Your privacy rights and how the law protects
-        You.
-      </p>
-      <p>
-        We use Your Personal data to provide and improve the Service. By using
-        the Service, You agree to the collection and use of information in
-        accordance with this Privacy Policy.
-      </p>
+      
+      <section className="introduction">
+        <p>
+          Sugar Society Sugar Cookies ("we," "our," or "us") is committed to protecting 
+          your privacy. This Privacy Policy explains how we collect, use, and safeguard 
+          your information when you use our website and services.
+        </p>
+        <p>
+          As an established artisanal cookie business, we take your privacy seriously. 
+          We want to be transparent about our data practices and give you control over 
+          your information.
+        </p>
+      </section>
+
       <h1>Interpretation and Definitions</h1>
       <h2>Interpretation</h2>
       <p>
-        The words of which the initial letter is capitalized have meanings
-        defined under the following conditions. The following definitions shall
-        have the same meaning regardless of whether they appear in singular or
-        in plural.
+        Words with initial capital letters have meanings defined under the
+        following conditions. These definitions shall have the same meaning
+        regardless of whether they appear in singular or plural.
       </p>
       <h2>Definitions</h2>
       <p>For the purposes of this Privacy Policy:</p>
       <ul>
         <li>
           <p>
-            <strong>Account</strong> means a unique account created for You to
+            <strong>Account</strong> means a unique account created for you to
             access our Service or parts of our Service.
           </p>
         </li>
         <li>
           <p>
-            <strong>Company</strong> (referred to as either &quot;the
-            Company&quot;, &quot;We&quot;, &quot;Us&quot; or &quot;Our&quot; in
-            this Agreement) refers to Sugar Society Sugar Cookies, 13522 Ithaca
-            Cresent Lane, Rosharon, TX, 77583.
+            <strong>Company</strong> (referred to as either "the Company", "We",
+            "Us" or "Our" in this Agreement) refers to Sugar Society Sugar
+            Cookies, 13522 Ithaca Crescent Lane, Rosharon, TX, 77583.
           </p>
         </li>
         <li>
           <p>
-            <strong>Cookies</strong> are small files that are placed on Your
-            computer, mobile device or any other device by a website, containing
-            the details of Your browsing history on that website among its many
-            uses.
+            <strong>Cookies</strong> are small files placed on your computer,
+            mobile device, or any other device by a website, containing details
+            of your browsing history on that website among its many uses.
           </p>
         </li>
         <li>
@@ -57,7 +57,7 @@ export default function PrivacyPolicy() {
         <li>
           <p>
             <strong>Device</strong> means any device that can access the Service
-            such as a computer, a cellphone or a digital tablet.
+            such as a computer, a cellphone, or a digital tablet.
           </p>
         </li>
         <li>
@@ -77,8 +77,8 @@ export default function PrivacyPolicy() {
             who processes the data on behalf of the Company. It refers to
             third-party companies or individuals employed by the Company to
             facilitate the Service, to provide the Service on behalf of the
-            Company, to perform services related to the Service or to assist the
-            Company in analyzing how the Service is used.
+            Company, to perform services related to the Service, or to assist
+            the Company in analyzing how the Service is used.
           </p>
         </li>
         <li>
@@ -542,6 +542,41 @@ export default function PrivacyPolicy() {
             </a>
           </p>
         </li>
+      </ul>
+      <h2>Data Processing and Storage</h2>
+      <p>
+        We utilize Amazon Web Services (AWS) infrastructure to process and store all data 
+        collected through our website. AWS provides industry-leading security measures 
+        and compliance certifications to ensure your data remains protected. All data is 
+        processed within the United States in accordance with applicable data protection laws.
+      </p>
+      <p>
+        <strong>Important Notice Regarding Data Sales:</strong> We do not sell, trade, 
+        or rent your personal information to third parties. Your trust is important to us, 
+        and we are committed to using your information solely for the purpose of providing 
+        and improving our services.
+      </p>
+      <h2>Social Media Integration</h2>
+      <p>
+        Our website integrates with Instagram to display our latest cookie creations 
+        and business updates. This integration allows us to showcase our products 
+        through our Instagram feed on our website. When you interact with our 
+        Instagram-sourced content:
+      </p>
+      <ul>
+        <li>We receive basic analytics about content interaction</li>
+        <li>Your viewing of our Instagram content is subject to Instagram's own privacy policy</li>
+        <li>We do not receive or store your Instagram credentials or personal information</li>
+      </ul>
+      <h2>Service Providers</h2>
+      <p>
+        We engage the following trusted service providers to operate our business:
+      </p>
+      <ul>
+        <li>Amazon Web Services (AWS) for secure cloud infrastructure and hosting</li>
+        <li>Instagram (Meta Platforms, Inc.) for social media integration</li>
+        <li>Stripe, PayPal, and Zelle for payment processing</li>
+        <li>Twilio for communication services</li>
       </ul>
       <h1>Children's Privacy</h1>
       <p>
