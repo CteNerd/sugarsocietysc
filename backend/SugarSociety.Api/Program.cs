@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using SugarSociety.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,19 +17,20 @@ builder.Services.AddCors(options =>
 });
 
 // Register MongoDB client and database
-builder.Services.AddSingleton<IMongoClient>(sp =>
-{
-    var settings = MongoClientSettings.FromConnectionString(builder.Configuration.GetConnectionString("MongoDb"));
-    return new MongoClient(settings);
-});
+// builder.Services.AddSingleton<IMongoClient>(sp =>
+// {
+//     var settings = MongoClientSettings.FromConnectionString(builder.Configuration.GetConnectionString("MongoDb"));
+//     return new MongoClient(settings);
+// });
 
-// Register ApplicationDbContext with MySQL configuration
+// Register ApplicationDbContext with PostgreSQL configuration
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),
+        b => b.MigrationsAssembly("SugarSociety.Data")));
 
 // Register HealthCheckRepository
-builder.Services.AddScoped<IHealthCheckRepository, HealthCheckRepository>();
 builder.Services.AddScoped<IHealthCheckService, HealthCheckService>();
+builder.Services.AddScoped<IHealthCheckRepository, HealthCheckRepository>();
 
 builder.Services.AddControllers();
 builder.Services.AddHealthChecks();

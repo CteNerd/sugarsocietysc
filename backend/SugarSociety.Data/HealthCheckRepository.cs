@@ -16,12 +16,14 @@
 
         public async Task AddHealthCheckRecordAsync()
         {
+            Console.WriteLine("Logging health check");
             var record = new HealthCheckRecord
             {
                 Timestamp = DateTime.UtcNow
             };
 
             _context.HealthCheckRecords.Add(record);
+            Console.WriteLine("Logged health check");
             await _context.SaveChangesAsync();
         }
     }
