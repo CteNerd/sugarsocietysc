@@ -44,23 +44,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 string GetConnectionString()
 {
-    var envConnectionString = Environment.GetEnvironmentVariable("DEFAULT_CONNECTION");
     var configConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     
-    Console.WriteLine("Connection String Debug:");
-    Console.WriteLine($"Environment Variable: {(string.IsNullOrEmpty(envConnectionString) ? "null" : "has value")}");
-    Console.WriteLine($"Config Value: {(string.IsNullOrEmpty(configConnectionString) ? "null" : "has value")}");
-    Console.WriteLine($"All Environment Variables:");
-    foreach (var env in Environment.GetEnvironmentVariables().Keys)
-    {
-        Console.WriteLine($"- {env}");
-    }
-    
-    if (!string.IsNullOrEmpty(envConnectionString))
-    {
-        return envConnectionString;
-    }
-    else if (!string.IsNullOrEmpty(configConnectionString))
+    if (!string.IsNullOrEmpty(configConnectionString))
     {
         return configConnectionString;
     }
