@@ -40,20 +40,18 @@ builder.Services.AddCors(options =>
 
 // Register ApplicationDbContext with PostgreSQL configuration
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(GetConnectionString(builder.Configuration),
-        b => b.MigrationsAssembly("SugarSociety.Data")));
+    options.UseNpgsql(GetConnectionString()));
 
-string GetConnectionString(IConfiguration configuration)
+string GetConnectionString()
 {
-    var connectionString = configuration.GetConnectionString("DefaultConnection");
     var envConnectionString = Environment.GetEnvironmentVariable("DEFAULT_CONNECTION");
-
     if (!string.IsNullOrEmpty(envConnectionString))
     {
-        connectionString = envConnectionString;
+        return envConnectionString;
     }
-
-    return connectionString;
+    
+    return builder.Configuration.GetConnectionString("DefaultConnection") 
+        ?? throw new InvalidOperationException("Connection string not found.");
 }
 
 // Register HealthCheckRepository

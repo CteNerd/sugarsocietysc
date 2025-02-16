@@ -14,4 +14,5 @@ RUN dotnet publish "./SugarSociety.Api/SugarSociety.Api.csproj" -c Release -o /a
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+ENV DEFAULT_CONNECTION=""
 ENTRYPOINT ["dotnet", "SugarSociety.Api.dll"]
