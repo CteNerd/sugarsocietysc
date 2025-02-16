@@ -22,6 +22,10 @@ namespace SugarSociety.Data
             {
                 throw new ArgumentException("Invalid connection string");
             }
+            else
+            {
+                Console.WriteLine($"Connection string is valid. First 10 chars: {connectionString[..10]}");
+            }
         }
 
         public async Task AddHealthCheckRecordAsync()
