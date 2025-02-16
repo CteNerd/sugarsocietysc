@@ -59,7 +59,7 @@ jobs:
         working-directory: ./backend/SugarSociety.Api
 
       - name: Build backend Docker image
-        run: docker build -f ./backend/Dockerfile.prod -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/sugar-society:backend-latest ./backend
+        run: docker build -f ./backend/Dockerfile.prod --build-arg DEFAULT_CONNECTION="${{ secrets.DEFAULT_CONNECTION }}" -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/sugar-society:backend-latest ./backend
 
       - name: Log in to Amazon ECR
         run: |

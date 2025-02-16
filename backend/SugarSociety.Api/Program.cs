@@ -45,23 +45,27 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 string GetConnectionString()
 {
     var envConnectionString = Environment.GetEnvironmentVariable("DEFAULT_CONNECTION");
+    var configConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    
+    Console.WriteLine("Connection String Debug:");
+    Console.WriteLine($"Environment Variable: {(string.IsNullOrEmpty(envConnectionString) ? "null" : "has value")}");
+    Console.WriteLine($"Config Value: {(string.IsNullOrEmpty(configConnectionString) ? "null" : "has value")}");
+    Console.WriteLine($"All Environment Variables:");
+    foreach (var env in Environment.GetEnvironmentVariables().Keys)
+    {
+        Console.WriteLine($"- {env}");
+    }
+    
     if (!string.IsNullOrEmpty(envConnectionString))
     {
-        Console.WriteLine("Using connection string from environment variable.");
-        Console.WriteLine($"First 5 chars: {envConnectionString[..5]}");
-        return envConnectionString;
-    } 
-    else if (!string.IsNullOrEmpty(builder.Configuration.GetConnectionString("DefaultConnection"))) 
-    {
-        Console.WriteLine("Using connection string from app Settings variable.");
-        Console.WriteLine($"First 5 chars: {envConnectionString[..5]}");
         return envConnectionString;
     }
-    else
+    else if (!string.IsNullOrEmpty(configConnectionString))
     {
-        Console.WriteLine("Hard Coding connection string.");
-        return "Server=sugar-society-db.cbbjws1c8kdw.us-east-1.rds.amazonaws.com;Database=SugarSociety;User Id=postgres;Password=roqbow-qyskex-wiMfu9;";
+        return configConnectionString;
     }
+    
+    throw new InvalidOperationException("No connection string found in either environment variables or configuration.");
 }
 
 // Register HealthCheckRepository
