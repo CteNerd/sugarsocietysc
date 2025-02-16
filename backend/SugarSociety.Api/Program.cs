@@ -8,13 +8,23 @@ using Microsoft.OpenApi.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure Serilog
-var loggerConfig = new LoggerConfiguration()
-    .WriteTo.AWSSeriLog(new AWSLoggerConfig
+var loggerConfig = new LoggerConfiguration();
+
+if (builder.Environment.IsProduction())
+{
+    Console.WriteLine("Configuring Serilog for production environment");
+    loggerConfig.WriteTo.AWSSeriLog(new AWSLoggerConfig
     {
         LogGroup = "/aws/ecs/containerinsights/sugar-society/performance",
         Region = "us-east-1",
-        LogStreamName= "sugar-society-api",
+        LogStreamName = "sugar-society-api",
     });
+}
+else
+{
+    Console.WriteLine("Configuring Serilog for development environment");
+    loggerConfig.WriteTo.Console();
+}
 
 Log.Logger = loggerConfig.CreateLogger();
 builder.Host.UseSerilog();
@@ -77,17 +87,18 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
-    app.MapOpenApi();
-    app.UseSwagger(option =>
-    {
-        option.RouteTemplate = "api/swagger/{documentName}/swagger.json";
-    });
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "Sugar Society SC API V1");
-        c.RoutePrefix = "api/swagger";
-    });
 }
+
+app.MapOpenApi();
+app.UseSwagger(option =>
+{
+    option.RouteTemplate = "api/swagger/{documentName}/swagger.json";
+});
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "Sugar Society SC API V1");
+    c.RoutePrefix = "api/swagger";
+});
 
 app.UseHttpsRedirection();
 
