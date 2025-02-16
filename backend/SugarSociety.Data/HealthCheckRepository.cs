@@ -1,4 +1,7 @@
-﻿namespace SugarSociety.Data
+﻿using Microsoft.EntityFrameworkCore;
+using System.Data.Common;
+
+namespace SugarSociety.Data
 {
     public interface IHealthCheckRepository
     {
@@ -12,6 +15,13 @@
         public HealthCheckRepository(ApplicationDbContext context)
         {
             _context = context;
+
+            // Check if the connection string is valid
+            var connectionString = context.Database.GetConnectionString();
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                throw new ArgumentException("Invalid connection string");
+            }
         }
 
         public async Task AddHealthCheckRecordAsync()
