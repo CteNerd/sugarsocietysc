@@ -24,7 +24,8 @@ namespace SugarSociety.Data
             }
             else
             {
-                Console.WriteLine($"Connection string is valid. First 10 chars: {connectionString[..10]}");
+                Console.WriteLine($"Connection string is valid.");
+                Console.WriteLine($"First 5 chars: {connectionString[..5]}");
             }
         }
 
