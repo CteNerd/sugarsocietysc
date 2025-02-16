@@ -29,3 +29,4 @@ sendgrid.env
 frontend/package-lock.json
 /backend/**/bin
 /backend/SugarSociety.Api/appsettings.Development.json
+backend/SugarSociety.Api/aws-logger-errors.txt
