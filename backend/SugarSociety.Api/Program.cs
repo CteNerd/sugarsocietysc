@@ -3,6 +3,7 @@ using Serilog;
 using AWS.Logger;
 using AWS.Logger.SeriLog;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -65,7 +66,10 @@ builder.Services.AddHealthChecks();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
+});
 
 var app = builder.Build();
 
@@ -77,7 +81,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Sugar Society API V1");
+        c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "My API V1");
         c.RoutePrefix = "api/swagger";
     });
 }
