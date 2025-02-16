@@ -33,8 +33,8 @@ namespace SugarSociety.Data
             };
 
             _context.HealthCheckRecords.Add(record);
-            Console.WriteLine("Logged health check");
             await _context.SaveChangesAsync();
+            Console.WriteLine("Logged health check");
         }
     }
 }
