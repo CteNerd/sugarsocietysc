@@ -1,6 +1,21 @@
 using Microsoft.EntityFrameworkCore;
+using Serilog;
+using AWS.Logger;
+using AWS.Logger.SeriLog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Serilog
+var loggerConfig = new LoggerConfiguration()
+    .WriteTo.AWSSeriLog(new AWSLoggerConfig
+    {
+        LogGroup = "/aws/ecs/containerinsights/sugar-society/performance",
+        Region = "us-east-1",
+        LogStreamName= "sugar-society-api",
+    });
+
+Log.Logger = loggerConfig.CreateLogger();
+builder.Host.UseSerilog();
 
 // Add services to the container.
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
