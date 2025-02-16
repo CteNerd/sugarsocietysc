@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using AWS.Logger;
 using AWS.Logger.SeriLog;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -60,13 +61,11 @@ builder.Services.AddScoped<IHealthCheckRepository, HealthCheckRepository>();
 
 builder.Services.AddControllers();
 builder.Services.AddHealthChecks();
-// builder.Services.AddScoped<IContactService, ContactService>();
-// builder.Services.AddScoped<INewsService, NewsService>();
-// builder.Services.AddScoped<IMessagingRepository, MessagingRepository>();
-// builder.Services.AddScoped<INewsArticleRepository, NewsArticleRepository>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
@@ -75,6 +74,12 @@ if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
     app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Sugar Society API V1");
+        c.RoutePrefix = "api/swagger";
+    });
 }
 
 app.UseHttpsRedirection();
