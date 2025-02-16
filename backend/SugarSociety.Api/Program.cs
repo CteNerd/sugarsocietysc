@@ -47,11 +47,21 @@ string GetConnectionString()
     var envConnectionString = Environment.GetEnvironmentVariable("DEFAULT_CONNECTION");
     if (!string.IsNullOrEmpty(envConnectionString))
     {
+        Console.WriteLine("Using connection string from environment variable.");
+        Console.WriteLine($"First 5 chars: {envConnectionString[..5]}");
+        return envConnectionString;
+    } 
+    else if (!string.IsNullOrEmpty(builder.Configuration.GetConnectionString("DefaultConnection"))) 
+    {
+        Console.WriteLine("Using connection string from app Settings variable.");
+        Console.WriteLine($"First 5 chars: {envConnectionString[..5]}");
         return envConnectionString;
     }
-    
-    return builder.Configuration.GetConnectionString("DefaultConnection") 
-        ?? throw new InvalidOperationException("Connection string not found.");
+    else
+    {
+        Console.WriteLine("Hard Coding connection string.");
+        return "Server=sugar-society-db.cbbjws1c8kdw.us-east-1.rds.amazonaws.com;Database=SugarSociety;User Id=postgres;Password=roqbow-qyskex-wiMfu9;";
+    }
 }
 
 // Register HealthCheckRepository
