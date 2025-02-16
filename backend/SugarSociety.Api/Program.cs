@@ -68,7 +68,7 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API V1", Version = "v1" });
 });
 
 var app = builder.Build();
@@ -78,11 +78,14 @@ if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
     app.MapOpenApi();
-    app.UseSwagger();
+    app.UseSwagger(option =>
+    {
+        option.RouteTemplate = "api/swagger/{documentName}/swagger.json";
+    });
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-        c.RoutePrefix = "swagger";
+        c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "Sugar Society SC API V1");
+        c.RoutePrefix = "api/swagger";
     });
 }
 
