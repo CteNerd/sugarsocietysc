@@ -1,0 +1,26 @@
+{
+  "short_name": "Sugar Society",
+  "name": "Sugar Society Sugar Cookies",
+  "description": "Beautifully designed custom sugar cookies for all your special events in Houston, TX",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "sugar-society-sugar-cookies-icon.ico",
+      "type": "image/x-icon",
+      "sizes": "192x192"
+    },
+    {
+      "src": "sugar-society-sugar-cookies.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff"
+}

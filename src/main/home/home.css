@@ -1,0 +1,238 @@
+.home-header {
+  font-family: AstralSisters;
+}
+
+.home-body {
+  font-family: Cream;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Slideshow container */
+.slideshow-container {
+  height: 50vh;
+  position: relative;
+  margin: auto;
+  background-color: white;
+  overflow: hidden; /* Prevent any content from spilling out */
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Loading container */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 50vh;
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.7);
+}
+
+.loading-container p {
+  margin-top: 20px;
+  font-family: Cream;
+  color: #333;
+}
+
+.mySlides {
+  max-width: 100%;
+  height: 50vh;
+  text-align: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: white;
+  z-index: 1;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease-in-out;
+}
+
+/* Image container for better control */
+.image-container {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: white;
+}
+
+/* Active slide specific style */
+.mySlides.active {
+  opacity: 1;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.slide-img {
+  max-height: 50vh;
+  max-width: 100%;
+  object-fit: contain;
+  margin: 0 auto;
+  display: block;
+  opacity: 1;
+  border: none;
+  background-color: white;
+  transition: opacity 0.5s ease-in-out;
+}
+
+/* Next & previous buttons */
+.prev,
+.next {
+  cursor: pointer;
+  position: absolute;
+  top: 50%;
+  width: 40px;
+  height: 40px;
+  margin-top: -20px;
+  padding: 10px;
+  color: white;
+  font-weight: bold;
+  font-size: 18px;
+  transition: 0.3s ease;
+  border-radius: 50%;
+  user-select: none;
+  background-color: rgba(0, 0, 0, 0.6);
+  border: none;
+  outline: none;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+/* Position the "next button" to the right */
+.next {
+  right: 15px;
+}
+
+/* Position the "prev button" to the left */
+.prev {
+  left: 15px;
+}
+
+/* On hover, add a black background color with a little bit see-through */
+.prev:hover,
+.next:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* Add active state for button clicks */
+.prev:active,
+.next:active {
+  background-color: rgba(0, 0, 0, 1);
+  transform: scale(0.98);
+}
+
+/* Caption text */
+.text {
+  color: #ffffff;
+  font-size: 16px;
+  padding: 10px 12px;
+  position: absolute;
+  bottom: 0;
+  left: 0; 
+  width: 100%;
+  text-align: center;
+  background-color: rgba(0, 0, 0, 0.7);
+  margin: 0;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  z-index: 5;
+}
+
+/* Number text (1/3 etc) */
+.numbertext {
+  color: #f2f2f2;
+  font-size: 12px;
+  padding: 8px 12px;
+  top: 0;
+  text-align: center;
+}
+
+/* The dots/bullets/indicators */
+.dots-container {
+  text-align: center;
+  margin: 10px auto;
+  position: relative;
+  width: 100%;
+  z-index: 5;
+  height: 20px;
+}
+
+.dot {
+  cursor: pointer;
+  height: 12px;
+  width: 12px;
+  margin: 0 5px;
+  background-color: rgba(187, 187, 187, 0.8);
+  border-radius: 50%;
+  display: inline-block;
+  transition: background-color 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.active,
+.dot:hover {
+  background-color: rgba(113, 113, 113, 0.9);
+  transform: scale(1.2);
+}
+
+/* Fading animation */
+.fade {
+  animation-name: crossfade;
+  animation-duration: 2s;
+  animation-timing-function: ease-in-out;
+  animation-fill-mode: forwards;
+}
+
+@keyframes crossfade {
+  0% {
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media only screen and (max-width: 600px) {
+  .slide-img {
+    max-width: 100%;
+  }
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* No cookies message */
+.no-cookies {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50vh;
+  width: 100%;
+  background-color: #f9f9f9;
+  border: 1px dashed #ccc;
+  border-radius: 8px;
+  color: #666;
+  font-family: Cream;
+  font-size: 1.2rem;
+}

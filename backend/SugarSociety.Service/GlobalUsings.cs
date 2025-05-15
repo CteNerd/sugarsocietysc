@@ -1,1 +1,0 @@
-global using SugarSociety.Data;
