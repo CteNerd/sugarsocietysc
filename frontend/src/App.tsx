@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { HelmetProvider } from 'react-helmet-async';
 import Home from "./main/home";
 import OurStory from "./main/story";
 import Specials from "./main/specials";
@@ -12,6 +13,7 @@ import Contact from "./main/contact";
 import Pricing from "./main/pricing";
 import PrivacyPolicy from "./main/privacy/privacy-policy";
 import OrderForm from "./main/order/order-form";
+import NotFound from "./main/error/NotFound";
 
 function App() {
   const breakpoint = window.matchMedia("(max-width: 1279px)");
@@ -54,6 +56,7 @@ function App() {
               <img
                 className="nav-logo"
                 src="https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/sugar-society-sugar-cookies.png"
+                alt="Sugar Society Sugar Cookies Logo"
               />
             </a>
           </div>
@@ -71,32 +74,34 @@ function App() {
     }
   }
   return (
-    <Router>
-      <div className="App">
-        <SideNav />
-        <header className="App-header">
-          <div className="main-nav-container">
-            <Navigation />
-          </div>
-        </header>
-        <body className="App-body-container">
-          <div className="App-body">
-            <div className="page-content-container">
-              <Routes>
-                <Route path="/our-story" element={<OurStory />} />
-                <Route path="/specials" element={<Specials isMobile={isMobile} />} />
-                <Route path="/our-cookies" element={<OurCookies isMobile={isMobile} />} />
-                {/* <Route path="/pricing" element={<Pricing />} /> */}
-                <Route path="/order-now" element={<OrderNow />} />
-                <Route path="/order-form" element={<OrderForm />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/privacy" element={<PrivacyPolicy />} />
-                <Route path="/create-invoice" element={<CreateInvoice />} />
-                <Route path="/" element={<Home isMobile={isMobile} />} />
-              </Routes>
+    <HelmetProvider>
+      <Router>
+        <div className="App">
+          <SideNav />
+          <header className="App-header">
+            <div className="main-nav-container">
+              <Navigation />
             </div>
-          </div>
-        </body>
+          </header>
+          <main className="App-body-container">
+            <div className="App-body">
+              <div className="page-content-container">
+                <Routes>
+                  <Route path="/our-story" element={<OurStory />} />
+                  <Route path="/specials" element={<Specials isMobile={isMobile} />} />
+                  <Route path="/our-cookies" element={<OurCookies isMobile={isMobile} />} />
+                  {/* <Route path="/pricing" element={<Pricing />} /> */}
+                  <Route path="/order-now" element={<OrderNow />} />
+                  <Route path="/order-form" element={<OrderForm />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/create-invoice" element={<CreateInvoice />} />
+                  <Route path="/" element={<Home isMobile={isMobile} />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </div>
+            </div>
+          </main>
         <footer>
           <div className="footer-link-container">
             <a className="footer-link" href="/contact">
@@ -108,6 +113,8 @@ function App() {
               className="social-link"
               href="https://www.facebook.com/Sugar-Society-Sugar-Cookies-105693268589749"
               target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Visit our Facebook page"
             >
               {/* <FacebookOutlined /> */}
             </a>
@@ -116,6 +123,8 @@ function App() {
               className="social-link"
               href="https://www.instagram.com/sugarsocietysc/"
               target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Visit our Instagram page"
             >
               {/* <InstagramOutlined /> */}
             </a>
@@ -123,6 +132,8 @@ function App() {
               className="social-link"
               href="https://g.page/r/CdDfLKquRwTPEAo"
               target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Visit our Google Business page"
             >
               {/* <GoogleOutlined /> */}
             </a>
@@ -135,6 +146,7 @@ function App() {
         </footer>
       </div>
     </Router>
+    </HelmetProvider>
   );
 }
 
