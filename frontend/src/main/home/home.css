@@ -39,7 +39,6 @@
 }
 
 .mySlides {
-  display: none;
   max-width: 100%;
   height: 50vh;
   text-align: center;
@@ -49,13 +48,10 @@
   right: 0;
   bottom: 0;
   background-color: white;
-  z-index: 1; /* ensure proper stacking */
+  z-index: 1;
   opacity: 0;
-  transition: opacity 1s ease-in-out;
-}
-
-.mySlides.active {
-  display: block !important;
+  pointer-events: none;
+  transition: opacity 0.5s ease-in-out;
 }
 
 /* Image container for better control */
@@ -70,10 +66,10 @@
 }
 
 /* Active slide specific style */
-.mySlides.active-slide {
-  display: block !important;
+.mySlides.active {
   opacity: 1;
   z-index: 2;
+  pointer-events: auto;
 }
 
 .slide-img {

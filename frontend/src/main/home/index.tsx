@@ -98,8 +98,8 @@ export default function Home(props: HomeProps) {
           console.log("Auto-advancing to slide:", nextIndex);
           return nextIndex;
         });
-      }, 10000); // Increase timer to 10 seconds for full visibility
-      
+      }, 5000); // Increase timer to 2 seconds for full visibility
+
       // Set up animation end listeners for all slides
       const slides = document.getElementsByClassName("mySlides") as HTMLCollectionOf<HTMLElement>;
       for (let i = 0; i < slides.length; i++) {
@@ -132,137 +132,100 @@ export default function Home(props: HomeProps) {
     }
   }, [allImagesLoaded, cookiesToUse.length]); // Remove slideIndex from dependencies
 
+  // Update the showSlides function to use CSS transitions for smoother animations
   function showSlides(n: number) {
-    // Use a more reliable and straightforward approach
     try {
-      const slides = document.getElementsByClassName("mySlides") as HTMLCollectionOf<HTMLElement>;
-      if (!slides || slides.length === 0) {
-        console.error("No slides found in the DOM");
-        return;
-      }
-      
-      console.log(`Displaying slide ${n} of ${slides.length}`);
-      
-      // Adjust index if out of bounds
-      let slideToShow = n;
-      if (slideToShow > slides.length) slideToShow = 1;
-      if (slideToShow < 1) slideToShow = slides.length;
-      
-      // Find currently displayed slide
-      let currentlyDisplayedSlide: HTMLElement | null = null;
-      for (let i = 0; i < slides.length; i++) {
-        if (slides[i].style.display === "block" && (i !== slideToShow - 1)) {
-          currentlyDisplayedSlide = slides[i];
-          break;
+        const slides = document.getElementsByClassName("mySlides") as HTMLCollectionOf<HTMLElement>;
+        if (!slides || slides.length === 0) {
+            console.error("No slides found in the DOM");
+            return;
         }
-      }
-      
-      // First handle the new slide - make it ready but invisible
-      const nextSlideIndex = slideToShow - 1;
-      const nextSlide = slides[nextSlideIndex];
-      
-      if (nextSlide) {
-        // Prepare the next slide by making it visible but transparent
-        nextSlide.style.display = "block";
-        nextSlide.style.opacity = "0";
-        nextSlide.classList.add("active-slide");
-        
-        // Force a reflow before starting the transition
-        void nextSlide.offsetWidth;
-        
-        // Trigger the fade-in
-        nextSlide.style.opacity = "1";
-        nextSlide.classList.add("fade");
-        console.log(`Prepared slide ${nextSlideIndex + 1} for display`);
-      }
-      
-      // Now handle the current slide that needs to fade out
-      if (currentlyDisplayedSlide) {
-        // Trigger the fade-out
-        currentlyDisplayedSlide.style.opacity = "0";
-        
-        // After transition completes, hide the slide
-        setTimeout(() => {
-          currentlyDisplayedSlide!.style.display = "none";
-          currentlyDisplayedSlide!.classList.remove("active-slide", "fade");
-        }, 1000); // Match transition duration with CSS
-      }
-      
-      // Update dots
-      const dots = document.getElementsByClassName("dot") as HTMLCollectionOf<HTMLElement>;
-      for (let i = 0; i < dots.length; i++) {
-        dots[i].classList.remove("active");
-      }
-      
-      if (dots[nextSlideIndex]) {
-        dots[nextSlideIndex].classList.add("active");
-      }
+
+        // Adjust index if out of bounds
+        let slideToShow = n;
+        if (slideToShow > slides.length) slideToShow = 1;
+        if (slideToShow < 1) slideToShow = slides.length;
+
+        // Remove active class from all slides first
+        for (let i = 0; i < slides.length; i++) {
+            slides[i].classList.remove("active");
+        }
+
+        // Add active class to current slide
+        if (slides[slideToShow - 1]) {
+            slides[slideToShow - 1].classList.add("active");
+        }
+
+        // Update dots
+        const dots = document.getElementsByClassName("dot") as HTMLCollectionOf<HTMLElement>;
+        for (let i = 0; i < dots.length; i++) {
+            dots[i].classList.remove("active");
+        }
+
+        if (dots[slideToShow - 1]) {
+            dots[slideToShow - 1].classList.add("active");
+        }
     } catch (error) {
-      console.error("Error in showSlides:", error);
+        console.error("Error in showSlides:", error);
     }
   }
 
   function CarouselImages() {
     if (!cookiesToUse || cookiesToUse.length === 0) {
-      console.warn("No cookie data available for carousel");
-      return <div className="no-cookies">No cookie images available</div>;
+        console.warn("No cookie data available for carousel");
+        return <div className="no-cookies">No cookie images available</div>;
     }
 
     // If not all images are loaded yet, show loading spinner for the first one
     if (!allImagesLoaded) {
-      return (
-        <div className="loading-container">
-          <LoadingSpinner size="60px" color="#f7cac9" />
-          <p>Loading cookie images...</p>
-        </div>
-      );
+        return (
+            <div className="loading-container">
+                <LoadingSpinner size="60px" color="#f7cac9" />
+                <p>Loading cookie images...</p>
+            </div>
+        );
     }
 
     return (
-      <>
-        {cookiesToUse.map((cookie, index) => (
-          <div 
-            className="mySlides" 
-            key={`slide-${index}`}
-            style={{
-              display: "none", // Hide all slides initially and let showSlides function control visibility
-              backgroundColor: 'white'
-            }}
-          >
-            <div className="image-container">
-              <img 
-                src={cookie.url} 
-                className="slide-img" 
-                alt={cookie.caption || "Custom designed sugar cookie"} 
-                loading={index === 0 ? "eager" : "lazy"}
-                style={{ 
-                  opacity: 1, 
-                  backgroundColor: 'white',
-                  objectFit: 'contain',
-                  width: 'auto',
-                  height: 'auto',
-                  maxHeight: '45vh' // Leave space for the caption
-                }}
-                onLoad={() => {
-                  setImagesLoaded(prev => ({...prev, [index]: true}));
-                  console.log(`Image ${index} loaded`);
-                }}
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  console.warn(`Failed to load image: ${target.src}`);
-                  // Fall back to placeholder if image fails to load
-                  target.src = "https://via.placeholder.com/800x600/f7cac9/000000?text=Sugar+Society+Cookies";
-                  // Mark as loaded even though it's the fallback
-                  setImagesLoaded(prev => ({...prev, [index]: true}));
-                }}
-              />
-              {cookie.caption && <div className="text">{cookie.caption}</div>}
-            </div>
-          </div>
-        ))}
-      </>
+        <>
+            {cookiesToUse.map((cookie, index) => (
+                <div 
+                    className={`mySlides ${index === slideIndex - 1 ? 'active' : ''}`}
+                    key={`slide-${index}`}
+                >
+                    <div className="image-container">
+                        <img 
+                            src={cookie.url} 
+                            className="slide-img" 
+                            alt={cookie.caption || "Custom designed sugar cookie"} 
+                            loading={index === 0 ? "eager" : "lazy"}
+                            style={{ 
+                                backgroundColor: 'white',
+                                objectFit: 'contain',
+                                width: 'auto',
+                                height: 'auto',
+                                maxHeight: '45vh' // Leave space for the caption
+                            }}
+                            onLoad={() => {
+                                setImagesLoaded(prev => ({...prev, [index]: true}));
+                                console.log(`Image ${index} loaded`);
+                            }}
+                            onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                console.warn(`Failed to load image: ${target.src}`);
+                                // Fall back to placeholder if image fails to load
+                                target.src = "https://via.placeholder.com/800x600/f7cac9/000000?text=Sugar+Society+Cookies";
+                                // Mark as loaded even though it's the fallback
+                                setImagesLoaded(prev => ({...prev, [index]: true}));
+                            }}
+                        />
+                        {cookie.caption && <div className="text">{cookie.caption}</div>}
+                    </div>
+                </div>
+            ))}
+        </>
     );
-  }
+}
 
   return (
     <>
