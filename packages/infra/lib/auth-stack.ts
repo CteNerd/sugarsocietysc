@@ -80,7 +80,7 @@ export class AuthStack extends Stack {
         scopes: [cognito.OAuthScope.EMAIL, cognito.OAuthScope.OPENID, cognito.OAuthScope.PROFILE],
         // Local CRA dev server today; add the CloudFront/custom domain once the Web stack cutover
         // (Phase 9) is live — Cognito clients support multiple registered URLs.
-        callbackUrls: ['http://localhost:3000/account', 'http://localhost:3000/login'],
+        callbackUrls: ['http://localhost:3000/auth/callback'],
         logoutUrls: ['http://localhost:3000/login'],
       },
       supportedIdentityProviders: [
