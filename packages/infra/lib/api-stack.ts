@@ -6,6 +6,7 @@ import { HttpJwtAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as cloudwatchActions from 'aws-cdk-lib/aws-cloudwatch-actions';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as eventSources from 'aws-cdk-lib/aws-lambda-event-sources';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -14,6 +15,8 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as rds from 'aws-cdk-lib/aws-rds';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import * as sns from 'aws-cdk-lib/aws-sns';
+import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Construct } from 'constructs';
 import * as path from 'path';
@@ -65,6 +68,15 @@ export class ApiStack extends Stack {
       retention: logs.RetentionDays.ONE_MONTH,
       removalPolicy: envConfig.envName === 'prod' ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
     });
+
+    // Alarm notifications: SNS subscribes a human email per environment — AWS sends a confirmation
+    // email on first deploy, which must be accepted before notifications are delivered.
+    const alarmTopic = new sns.Topic(this, 'AlarmTopic', {
+      topicName: `sugarsocietysc-${envConfig.envName}-alarms`,
+      displayName: `Sugar Society SC (${envConfig.envName}) alarms`,
+    });
+    alarmTopic.addSubscription(new subscriptions.EmailSubscription(envConfig.alertEmail));
+    const alarmAction = new cloudwatchActions.SnsAction(alarmTopic);
 
     const healthFn = new lambdaNode.NodejsFunction(this, 'HealthFn', {
       entry: path.join(__dirname, '../../api/src/lambda.ts'),
@@ -152,20 +164,22 @@ export class ApiStack extends Stack {
       schedule: events.Schedule.rate(Duration.minutes(5)),
       targets: [new targets.LambdaFunction(inventoryHoldExpiryFn)],
     });
-    new cloudwatch.Alarm(this, 'InventoryHoldExpiryErrorsAlarm', {
+    const inventoryHoldExpiryErrorsAlarm = new cloudwatch.Alarm(this, 'InventoryHoldExpiryErrorsAlarm', {
       alarmDescription: 'Investigate failures in the scheduled unpaid inventory hold expiry job.',
       metric: inventoryHoldExpiryFn.metricErrors({ period: Duration.minutes(5), statistic: 'Sum' }),
       threshold: 1,
       evaluationPeriods: 1,
       treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
     });
-    new cloudwatch.Alarm(this, 'GuestPiiRetentionErrorsAlarm', {
+    inventoryHoldExpiryErrorsAlarm.addAlarmAction(alarmAction);
+    const guestPiiRetentionErrorsAlarm = new cloudwatch.Alarm(this, 'GuestPiiRetentionErrorsAlarm', {
       alarmDescription: 'Investigate failures in the scheduled guest-contact purge.',
       metric: guestPiiRetentionFn.metricErrors({ period: Duration.minutes(5), statistic: 'Sum' }),
       threshold: 1,
       evaluationPeriods: 1,
       treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
     });
+    guestPiiRetentionErrorsAlarm.addAlarmAction(alarmAction);
 
     const authSyncFn = new lambdaNode.NodejsFunction(this, 'AuthSyncFn', {
       entry: path.join(__dirname, '../../api/src/lambda.ts'),
@@ -208,14 +222,15 @@ export class ApiStack extends Stack {
       batchSize: 10,
       reportBatchItemFailures: true,
     }));
-    new cloudwatch.Alarm(this, 'NewsletterWorkerErrorsAlarm', {
+    const newsletterWorkerErrorsAlarm = new cloudwatch.Alarm(this, 'NewsletterWorkerErrorsAlarm', {
       alarmDescription: 'Investigate newsletter delivery worker failures and inspect the SQS dead-letter queue.',
       metric: newsletterWorkerFn.metricErrors({ period: Duration.minutes(5), statistic: 'Sum' }),
       threshold: 1,
       evaluationPeriods: 1,
       treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
     });
-    new cloudwatch.Alarm(this, 'NewsletterDeadLetterQueueAlarm', {
+    newsletterWorkerErrorsAlarm.addAlarmAction(alarmAction);
+    const newsletterDeadLetterQueueAlarm = new cloudwatch.Alarm(this, 'NewsletterDeadLetterQueueAlarm', {
       alarmDescription: 'Redrive or investigate failed newsletter messages before retrying the campaign.',
       metric: newsletterDeadLetterQueue.metricApproximateNumberOfMessagesVisible({
         period: Duration.minutes(5),
@@ -225,6 +240,7 @@ export class ApiStack extends Stack {
       evaluationPeriods: 1,
       treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
     });
+    newsletterDeadLetterQueueAlarm.addAlarmAction(alarmAction);
 
     const catalogFn = new lambdaNode.NodejsFunction(this, 'CatalogFn', {
       entry: path.join(__dirname, '../../api/src/lambda.ts'),
@@ -266,11 +282,21 @@ export class ApiStack extends Stack {
 
     this.httpApi = new apigwv2.HttpApi(this, 'HttpApi', {
       apiName: `sugarsocietysc-${envConfig.envName}`,
+      createDefaultStage: false,
       corsPreflight: {
         allowOrigins: [`https://${envConfig.domainName}`],
         allowMethods: [apigwv2.CorsHttpMethod.GET, apigwv2.CorsHttpMethod.POST, apigwv2.CorsHttpMethod.PATCH],
         allowHeaders: ['Authorization', 'Content-Type'],
       },
+    });
+    // Account-level API Gateway throttling is a shared default across the whole AWS account — an
+    // explicit per-stage limit here caps abuse/runaway-automation traffic to this API specifically,
+    // ahead of exposing it to more automated/MCP-style callers.
+    new apigwv2.HttpStage(this, 'HttpApiDefaultStage', {
+      httpApi: this.httpApi,
+      stageName: '$default',
+      autoDeploy: true,
+      throttle: { rateLimit: 50, burstLimit: 100 },
     });
 
     this.httpApi.addRoutes({
@@ -437,7 +463,7 @@ export class ApiStack extends Stack {
       description: 'One-off database migration Lambda invoked by the deployment workflow',
       value: migrateFn.functionArn,
     });
-    new cloudwatch.Alarm(this, 'HttpApiServerErrorsAlarm', {
+    const httpApiServerErrorsAlarm = new cloudwatch.Alarm(this, 'HttpApiServerErrorsAlarm', {
       alarmDescription: 'Investigate repeated 5xx responses from the public API.',
       metric: this.httpApi.metricServerError({
         period: Duration.minutes(5),
@@ -447,5 +473,6 @@ export class ApiStack extends Stack {
       evaluationPeriods: 1,
       treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
     });
+    httpApiServerErrorsAlarm.addAlarmAction(alarmAction);
   }
 }

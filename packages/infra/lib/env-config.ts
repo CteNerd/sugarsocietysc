@@ -14,6 +14,10 @@ export interface EnvConfig {
    * (it's managed externally, e.g. Squarespace/Google Domains), so this must be validated manually
    * there; CDK only imports it by ARN, never creates or auto-validates a cert via Route53. */
   certificateArn: string;
+  /** Email address subscribed to the per-environment SNS alarm topic (API 5xxs, guest-PII purge,
+   * inventory-hold expiry, newsletter worker/DLQ). SNS sends a confirmation email on first deploy —
+   * someone must click it before notifications start flowing. */
+  alertEmail: string;
 }
 
 /** Reads the `environments.<env>` block from cdk.json context (pass -c env=dev|prod). */

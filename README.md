@@ -102,7 +102,10 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for the full phase-by-phase plan and stat
 - [x] Phase 7 — Order management — backend, admin order dashboard, and customer order history.
 - [x] Phase 8 — Newsletter campaigns — admin drafts, fixed branded email rendering, SMS, SQS fan-out,
   preference rechecks, and delivery logs. Real AWS delivery verification remains.
-- [ ] Phase 9 — Hardening and AWS release — guest PII retention, CloudFront WAF/CloudWatch alarms, and
-  manual OIDC deployment workflow are implemented. API-edge protection/rate limits, alarm destinations,
-  real-provider checks, GitHub/AWS setup, and production cutover remain. Configure GitHub Environment
-  **variables** and AWS OIDC as documented; GitHub secrets are not required by the deployment workflow.
+- [ ] Phase 9 — Hardening and AWS release — guest PII retention, CloudFront WAF, CloudWatch alarms with
+  SNS email notifications, API Gateway throttling, and manual OIDC deployment workflow are implemented;
+  `dev` has been successfully deployed end-to-end (OIDC, CDK deploy, migrations, frontend publish,
+  health check all verified). Remaining before production cutover: prod deploy, Squarespace DNS CNAME
+  for `www.sugarsocietysc.com`, switching Stripe to live keys/webhook, and (optionally) enabling Google
+  sign-in with a dedicated OAuth client. Configure GitHub Environment **variables** and AWS OIDC as
+  documented; GitHub secrets are not required by the deployment workflow.
