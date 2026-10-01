@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
 import Home from "./main/home";
 import OurStory from "./main/story";
@@ -11,7 +11,6 @@ import PreSale from "./main/presale";
 import "./App.css";
 import SideNav from "./main/sideNav/sideNav";
 import Contact from "./main/contact";
-import Pricing from "./main/pricing";
 import PrivacyPolicy from "./main/privacy/privacy-policy";
 import OrderForm from "./main/order/order-form";
 import NotFound from "./main/error/NotFound";
@@ -29,11 +28,15 @@ import AdminDashboard from "./main/AdminDashboard";
 import OrderHistory from "./main/OrderHistory";
 
 function App() {
-  const breakpoint = window.matchMedia("(max-width: 1279px)");
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() =>
+    window.matchMedia("(max-width: 1279px)").matches
+  );
 
   useEffect(() => {
-    setIsMobile(breakpoint.matches);
+    const breakpoint = window.matchMedia("(max-width: 1279px)");
+    const updateIsMobile = () => setIsMobile(breakpoint.matches);
+    breakpoint.addEventListener("change", updateIsMobile);
+    return () => breakpoint.removeEventListener("change", updateIsMobile);
   }, []);
 
   /* Set the width of the side navigation to 250px */

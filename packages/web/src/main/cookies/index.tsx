@@ -1,129 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Helmet } from "react-helmet";
-import Cookies from "./cookies-json/2022-christmas-cookies.json";
 import "./cookies.css";
-// import { Carousel } from "antd";
-import { clearTimeout } from "timers";
 
 interface Props {
   isMobile: boolean;
 }
 
 export default function OurCookies(props: Props) {
-  var slideIndex = 1;
-  const [modalOpen, setModalOpen] = useState(false);
-  const [openPanel, setOpenPanel] = useState("");
-  const [selectedCookie, setSelectedCookie] = useState("");
-  const [modalCookie, setModalCookie] = useState<any>();
-
-  useEffect(() => {
-    showSlides(1);
-  }, []);
-
-  // Next/previous controls
-  function plusSlides(n: number) {
-    showSlides((slideIndex += n));
-  }
-
-  function showSlides(n: number) {
-    var i;
-    var slides = Array.from(
-      document.getElementsByClassName(
-        "mySlides"
-      ) as HTMLCollectionOf<HTMLElement>
-    );
-
-    if (n) {
-      if (n > slides.length) {
-        slideIndex = 1;
-      }
-      if (n < 1) {
-        slideIndex = slides.length;
-      }
-    }
-
-    for (i = 0; i < slides.length; i++) {
-      slides[i].style.display = "none";
-    }
-
-    if (slides.length > 0) {
-      slides[slideIndex - 1].style.display = "block";
-    }
-  }
-
-  function onAccordionSelection(key: string) {
-    if (key === openPanel) {
-      setOpenPanel("");
-      return;
-    }
-
-    setOpenPanel(key);
-  }
-
-  function ModalContent() {
-    let cookiesToShow = Cookies.filter(
-      (cookie) => cookie.type === selectedCookie
-    );
-
-    return (
-      <div className="modal-content">
-        <div className="slideshow-container">
-          <div>
-            <div className="numbertext">
-              {modalCookie !== undefined ? modalCookie.caption : ""}
-            </div>
-            <img
-              src={modalCookie !== undefined ? modalCookie.mobileUrl : ""}
-              style={{ width: "100%" }}
-              alt={
-                modalCookie !== undefined
-                  ? modalCookie.caption || "Cookie design"
-                  : "Cookie design"
-              }
-              loading="lazy"
-            />
-            <div className="text">
-              {modalCookie !== undefined ? modalCookie.size : ""}
-            </div>
-          </div>
-        </div>
-        <br />
-        <div>
-          {cookiesToShow.map((cookie) => {
-            return (
-              <img
-                key={cookie.mobileUrl}
-                onClick={() => {
-                  setModalCookie(cookie);
-                }}
-                className="cookie-thumbnail"
-                src={cookie.mobileUrl}
-                alt={cookie.caption || "Cookie thumbnail"}
-                loading="lazy"
-              />
-            );
-          })}
-        </div>
-        <div>
-          <button
-            className="modal-btn"
-            onClick={() => {
-              setModalOpen(false);
-              setModalCookie(undefined);
-            }}
-          >
-            Close
-          </button>
-          <a href="/order-inquiry">
-            <button className="modal-btn" onClick={() => setModalOpen(false)}>
-              Purchase
-            </button>
-          </a>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
       <Helmet>
@@ -147,6 +30,7 @@ export default function OurCookies(props: Props) {
                     "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/AmazonPeccy.jpeg"
                   }
                   className={"card-img"}
+                  alt="Amazon Peccy cookie design"
                 />
               </div>
               <div
@@ -158,6 +42,7 @@ export default function OurCookies(props: Props) {
                     "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/BirthdayBlue.jpeg"
                   }
                   className={"card-img"}
+                  alt="Blue birthday cookie design"
                 />
               </div>
               <div
@@ -169,6 +54,7 @@ export default function OurCookies(props: Props) {
                     "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/BirthdayColorful.JPG"
                   }
                   className={"card-img"}
+                  alt="Colorful birthday cookie design"
                 />
               </div>
               <div
@@ -180,6 +66,7 @@ export default function OurCookies(props: Props) {
                     "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/ChristmasGroup.jpeg"
                   }
                   className={"card-img"}
+                  alt="Christmas cookie assortment"
                 />
               </div>
               <div
@@ -191,6 +78,7 @@ export default function OurCookies(props: Props) {
                     "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/ConversationHearts.jpg"
                   }
                   className={"card-img"}
+                  alt="Conversation heart cookies"
                 />
               </div>
               <div
@@ -202,6 +90,7 @@ export default function OurCookies(props: Props) {
                     "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/GreekLife-AKA.jpeg"
                   }
                   className={"card-img"}
+                  alt="Alpha Kappa Alpha Greek life cookie design"
                 />
               </div>
               <div
@@ -213,6 +102,7 @@ export default function OurCookies(props: Props) {
                     "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/GreekLife-Delta.jpeg"
                   }
                   className={"card-img"}
+                  alt="Delta Sigma Theta Greek life cookie design"
                 />
               </div>
               <div
@@ -224,6 +114,7 @@ export default function OurCookies(props: Props) {
                     "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/HawaiianCulture.jpeg"
                   }
                   className={"card-img"}
+                  alt="Hawaiian culture cookie design"
                 />
               </div>
               <div
@@ -235,6 +126,7 @@ export default function OurCookies(props: Props) {
                     "https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/V-Day-Tic-Tac-Toe.jpg"
                   }
                   className={"card-img"}
+                  alt="Valentine tic-tac-toe cookie design"
                 />
               </div>
             </div>
@@ -260,9 +152,6 @@ export default function OurCookies(props: Props) {
         <div className="allergens-container">
           <h4 className="allergens-header">Allergens</h4>
           <div className="allergens-body">Allergen: Egg and Wheat</div>
-        </div>
-        <div id="myModal" className={modalOpen ? "modal-opened" : "modal-closed"}>
-          <ModalContent />
         </div>
       </div>
     </>
