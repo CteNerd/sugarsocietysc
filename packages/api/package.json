@@ -1,0 +1,39 @@
+{
+  "name": "@sugarsocietysc/api",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/lambda.ts",
+  "scripts": {
+    "dev": "node ../../scripts/with-local-env.cjs tsx watch src/local-server.ts",
+    "build": "tsc -p tsconfig.json",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "migrate": "node-pg-migrate",
+    "seed:cognito": "node ../../scripts/with-local-env.cjs tsx scripts/seed-cognito-local.ts",
+    "seed:halloween-presale": "node ../../scripts/with-local-env.cjs tsx scripts/seed-halloween-presale.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.620.0",
+    "@aws-sdk/client-s3": "^3.620.0",
+    "@aws-sdk/client-secrets-manager": "^3.1144.0",
+    "@aws-sdk/client-ses": "^3.620.0",
+    "@aws-sdk/client-sns": "^3.620.0",
+    "@aws-sdk/client-sqs": "^3.1144.0",
+    "@aws-sdk/s3-request-presigner": "^3.620.0",
+    "@hono/node-server": "^1.12.0",
+    "@sugarsocietysc/shared": "*",
+    "hono": "^4.5.8",
+    "jose": "^4.15.9",
+    "pg": "^8.12.0",
+    "stripe": "^16.8.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.15",
+    "@types/pg": "^8.11.6",
+    "node-pg-migrate": "^7.6.1",
+    "tsx": "^4.17.0",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "@sugarsocietysc/infra",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "cdk": "cdk",
+    "synth:dev": "cdk synth -c env=dev",
+    "synth:prod": "cdk synth -c env=prod",
+    "diff:dev": "cdk diff -c env=dev",
+    "diff:prod": "cdk diff -c env=prod",
+    "deploy:dev": "cdk deploy -c env=dev --all",
+    "deploy:prod": "cdk deploy -c env=prod --all"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.151.0",
+    "constructs": "^10.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.15",
+    "aws-cdk": "^2.151.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
+  }
+}

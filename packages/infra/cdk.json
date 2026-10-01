@@ -1,0 +1,29 @@
+{
+  "app": "npx ts-node --prefer-ts-exts bin/infra.ts",
+  "context": {
+    "environments": {
+      "dev": {
+        "account": "425061472162",
+        "region": "us-east-1",
+        "natGateways": 1,
+        "auroraMinCapacity": 0.5,
+        "auroraMaxCapacity": 2,
+        "domainName": "dev.sugarsocietysc.com",
+        "guestPiiRetentionDays": 60,
+        "googleOAuthClientId": "622792694552-1ilfi8dco17r69fiav2liu83ob8hqbv4.apps.googleusercontent.com",
+        "certificateArn": "arn:aws:acm:us-east-1:425061472162:certificate/90208d78-aa43-4d32-b341-409fb77ab504"
+      },
+      "prod": {
+        "account": "425061472162",
+        "region": "us-east-1",
+        "natGateways": 1,
+        "auroraMinCapacity": 0.5,
+        "auroraMaxCapacity": 4,
+        "domainName": "www.sugarsocietysc.com",
+        "guestPiiRetentionDays": 60,
+        "googleOAuthClientId": "",
+        "certificateArn": "arn:aws:acm:us-east-1:425061472162:certificate/90208d78-aa43-4d32-b341-409fb77ab504"
+      }
+    }
+  }
+}

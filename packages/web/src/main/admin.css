@@ -1,0 +1,101 @@
+.admin-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+  text-align: left;
+}
+
+.admin-page section {
+  margin: 24px 0;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+}
+
+.admin-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0 20px;
+}
+
+.admin-form input:not([type='checkbox']),
+.admin-form textarea,
+.admin-form select {
+  width: 100%;
+  min-width: 0;
+  padding: 10px;
+  font: inherit;
+}
+
+.admin-form textarea {
+  min-height: 72px;
+}
+
+.admin-form label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-form button,
+.admin-order-detail button {
+  padding: 8px 14px;
+}
+
+.admin-record-list details {
+  border-top: 1px solid #ddd;
+  padding: 10px 0;
+}
+
+.admin-record-list summary {
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.campaign-preview {
+  white-space: pre-wrap;
+}
+
+.admin-order-list {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-order-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 12px;
+  text-align: left;
+  font-size: 15px;
+}
+
+.admin-order-detail {
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid #ddd;
+}
+
+.order-history ul {
+  padding-left: 20px;
+}
+
+.order-history button {
+  padding: 8px;
+}
+
+@media (max-width: 600px) {
+  .admin-page {
+    padding: 8px;
+  }
+
+  .admin-page section {
+    padding: 12px;
+  }
+
+  .admin-order-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
