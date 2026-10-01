@@ -1,0 +1,25 @@
+{
+  "app": "npx ts-node --prefer-ts-exts bin/infra.ts",
+  "context": {
+    "environments": {
+      "dev": {
+        "account": "REPLACE_WITH_DEV_ACCOUNT_ID",
+        "region": "us-east-1",
+        "natGateways": 1,
+        "auroraMinCapacity": 0.5,
+        "auroraMaxCapacity": 2,
+        "domainName": "dev.sugarsocietysc.com",
+        "guestPiiRetentionDays": 60
+      },
+      "prod": {
+        "account": "REPLACE_WITH_PROD_ACCOUNT_ID",
+        "region": "us-east-1",
+        "natGateways": 1,
+        "auroraMinCapacity": 0.5,
+        "auroraMaxCapacity": 4,
+        "domainName": "www.sugarsocietysc.com",
+        "guestPiiRetentionDays": 60
+      }
+    }
+  }
+}

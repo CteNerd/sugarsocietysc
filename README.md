@@ -1,45 +1,76 @@
-# Sugar Society SC Monorepo
+# Sugar Society SC
 
-This repository contains both the frontend and backend applications for Sugar Society SC.
+Full-stack platform for Sugar Society SC (royal icing cookie bakery): public site, user accounts,
+newsletter, pre-sale and custom cookie order workflows, Stripe payments, and an admin dashboard.
 
-## Structure
+## Architecture
+
+Monorepo (npm workspaces):
 
 ```
-/Users/rctii/Documents/src/sugarsocietysc
-├── frontend
-│   ├── ...existing frontend files...
-├── backend
-│   ├── Controllers
-│   ├── Models
-│   ├── Program.cs
-│   ├── Startup.cs
-│   ├── ...other backend files...
-├── README.md
-├── .gitignore
+packages/
+  web/      React (CRA) frontend
+  api/      Node/TypeScript Lambda backend (hono), raw SQL via pg (no ORM)
+  infra/    AWS CDK (TypeScript) — Network/Data/Auth/Api/Web stacks
+  shared/   Shared TS types + zod schemas used by both web and api
 ```
 
-## Frontend
+The backend uses a ports-and-adapters design for every external integration (SMS, email, payments,
+storage) so vendors can be swapped (e.g. SNS -> Twilio) by adding one adapter class, never by touching
+business logic. See [.github/copilot-instructions.md](.github/copilot-instructions.md) for full
+conventions, and `.github/instructions/*.instructions.md` for per-package rules.
 
-The frontend application is located in the `frontend` directory.
+Auth is Amazon Cognito (with OAuth/social login support), the database is Aurora Serverless v2
+(PostgreSQL), and hosting is S3 + CloudFront (replacing the previous GitHub Pages deployment once the
+cutover is complete).
 
-### Running the Frontend
+## Local Development
+
+Requires Docker and Node 20+.
 
 ```bash
-cd frontend
-# Use the appropriate command to start your frontend application
-# For example, if it's a React app:
+cp .env.local.example .env.local   # edit if needed, defaults match docker-compose.yml
 npm install
-npm start
+npm run dev
 ```
 
-## Backend
+This single command starts:
+- Postgres, LocalStack (S3/SNS/SQS/Secrets Manager), and cognito-local via `docker compose up`
+- The API dev server (`packages/api`, hot reload) on `http://localhost:3001`
+- The CRA frontend dev server (`packages/web`) on `http://localhost:3000`
 
-The backend application is located in the `backend` directory.
+No AWS account is required for day-to-day feature work.
 
-### Running the Backend
-
+### Other useful commands
 ```bash
-cd backend
-dotnet restore
-dotnet run
+npm run build                                          # build all workspaces
+npm test                                                # test all workspaces
+npm run migrate --workspace=@sugarsocietysc/api         # run DB migrations
+npm run synth:dev --workspace=@sugarsocietysc/infra     # CDK synth (template generation, no AWS calls)
+npm run diff:dev --workspace=@sugarsocietysc/infra      # CDK diff against the dev environment
 ```
+
+`cdk deploy` is intentionally not run automatically by AI agents in this repo — deploys touch real AWS
+billing/resources and require explicit human approval.
+
+## Deployment
+
+- **Frontend**: currently deployed to GitHub Pages via [.github/workflows/deploy.yml](.github/workflows/deploy.yml)
+  on push to `main`. Will migrate to S3 + CloudFront (`packages/infra` `WebStack`) as part of the AWS
+  cutover.
+- **Backend/Infra**: not yet deployed to AWS. `packages/infra` defines `dev` and `prod` environments (see
+  `packages/infra/cdk.json`); CI (`.github/workflows/infra-ci.yml`) runs `cdk synth` on PRs touching infra
+  code.
+
+## Project Status
+
+Phase 0 (monorepo foundation) in progress:
+- [x] Monorepo restructure (`packages/web|api|shared|infra`)
+- [x] Ports-and-adapters scaffolding (notification/payment/storage) with a working `/health` vertical slice
+- [x] CDK stack skeletons (Network, Data, Auth, Api, Web) — not yet deployed
+- [x] Local dev stack (`docker-compose.yml`, `npm run dev`)
+- [x] Repo-level AI tooling (`.github/copilot-instructions.md`, scoped instructions, custom agents, skills)
+- [ ] GitHub OIDC role + AWS account setup, first real `cdk deploy`
+- [ ] Auth & accounts (Cognito + Google OAuth), newsletter, catalog, order workflows, payments, admin
+  dashboard — see upcoming phases
+

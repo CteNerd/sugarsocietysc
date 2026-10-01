@@ -1,16 +1,20 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules/
 /.pnp
 .pnp.js
-/client/node_modules
 
 # testing
-/coverage
+coverage/
 
-# production
-/build
+# build outputs
+packages/web/build/
+packages/*/dist/
+
+# CDK
+packages/infra/cdk.out/
+packages/infra/cdk.context.json
 
 # misc
 .DS_Store
@@ -23,9 +27,3 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 sendgrid.env
-/frontend/node_modules
-/backend/**/obj
-/frontend/build
-frontend/package-lock.json
-/backend/**/bin
-/backend/SugarSociety.Api/appsettings.Development.json

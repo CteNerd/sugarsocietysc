@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: sugarsocietysc
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - sugarsocietysc-pg-data:/var/lib/postgresql/data
+
+  localstack:
+    image: localstack/localstack:3
+    environment:
+      SERVICES: s3,sns,sqs,secretsmanager
+      DEFAULT_REGION: us-east-1
+    ports:
+      - '4566:4566'
+    volumes:
+      - sugarsocietysc-localstack-data:/var/lib/localstack
+
+  cognito-local:
+    image: jagregory/cognito-local:latest
+    ports:
+      - '9229:9229'
+    volumes:
+      - sugarsocietysc-cognito-local-data:/app/.cognito
+
+volumes:
+  sugarsocietysc-pg-data:
+  sugarsocietysc-localstack-data:
+  sugarsocietysc-cognito-local-data:

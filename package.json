@@ -1,45 +1,22 @@
 {
-  "name": "sugarsocietysc-frontend",
+  "name": "sugarsocietysc",
   "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "start": "react-scripts start",
-    "build": "node generate-sitemap.js && react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "generate-sitemap": "node generate-sitemap.js"
-  },
-  "dependencies": {
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0",
-    "react-helmet": "^6.1.0",
-    "react-helmet-async": "^2.0.5",
-    "react-router-dom": "^7.1.5",
-    "react-scripts": "^5.0.1",
-    "typescript": "^4.0.0"
+    "dev": "concurrently -k -n docker,api,web -c blue,green,magenta \"npm:dev:docker\" \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:docker": "docker compose up",
+    "dev:api": "npm run dev --workspace=@sugarsocietysc/api",
+    "dev:web": "npm run start --workspace=@sugarsocietysc/web",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "migrate": "npm run migrate --workspace=@sugarsocietysc/api",
+    "cdk": "npm run cdk --workspace=@sugarsocietysc/infra"
   },
   "devDependencies": {
-    "@types/react": "^18.0.0",
-    "@types/react-dom": "^18.0.0",
-    "@types/react-helmet": "^6.1.11",
-    "@types/react-router-dom": "^5.3.3"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+    "concurrently": "^9.1.2"
   }
 }
