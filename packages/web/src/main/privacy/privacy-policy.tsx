@@ -94,7 +94,7 @@ export default function PrivacyPolicy() {
             accessible from{" "}
             <a
               href="https://www.sugarsocietysc.com"
-              rel="external nofollow noopener"
+              rel="external nofollow noopener noreferrer"
               target="_blank"
             >
               https://www.sugarsocietysc.com
@@ -183,7 +183,7 @@ export default function PrivacyPolicy() {
           disabling, or deleting local shared objects?&quot; available at{" "}
           <a
             href="https://helpx.adobe.com/flash-player/kb/disable-local-shared-objects-flash.html#main_Where_can_I_change_the_settings_for_disabling__or_deleting_local_shared_objects_"
-            rel="external nofollow noopener"
+            rel="external nofollow noopener noreferrer"
             target="_blank"
           >
             https://helpx.adobe.com/flash-player/kb/disable-local-shared-objects-flash.html#main_Where_can_I_change_the_settings_for_disabling__or_deleting_local_shared_objects_
@@ -206,6 +206,7 @@ export default function PrivacyPolicy() {
         close Your web browser. Learn more about cookies:{" "}
         <a
           href="https://www.freeprivacypolicy.com/blog/sample-privacy-policy-template/#Use_Of_Cookies_And_Tracking"
+          rel="noopener noreferrer"
           target="_blank"
         >
           Use of Cookies by Free Privacy Policy
@@ -473,7 +474,7 @@ export default function PrivacyPolicy() {
             Their Privacy Policy can be viewed at{" "}
             <a
               href="https://www.twilio.com/legal/privacy"
-              rel="external nofollow noopener"
+              rel="external nofollow noopener noreferrer"
               target="_blank"
             >
               https://www.twilio.com/legal/privacy
@@ -505,7 +506,7 @@ export default function PrivacyPolicy() {
             Their Privacy Policy can be viewed at{" "}
             <a
               href="https://stripe.com/us/privacy"
-              rel="external nofollow noopener"
+              rel="external nofollow noopener noreferrer"
               target="_blank"
             >
               https://stripe.com/us/privacy
@@ -520,7 +521,7 @@ export default function PrivacyPolicy() {
             Their Privacy Policy can be viewed at{" "}
             <a
               href="https://www.paypal.com/webapps/mpp/ua/privacy-full"
-              rel="external nofollow noopener"
+              rel="external nofollow noopener noreferrer"
               target="_blank"
             >
               https://www.paypal.com/webapps/mpp/ua/privacy-full
@@ -535,7 +536,7 @@ export default function PrivacyPolicy() {
             Their Privacy Policy can be viewed at{" "}
             <a
               href="https://www.zellepay.com/legal/website-privacy-notice"
-              rel="external nofollow noopener"
+              rel="external nofollow noopener noreferrer"
               target="_blank"
             >
               https://www.zellepay.com/legal/website-privacy-notice
@@ -633,7 +634,7 @@ export default function PrivacyPolicy() {
             By visiting this page on our website:{" "}
             <a
               href="https://www.sugarsocietysc.com/contact"
-              rel="external nofollow noopener"
+              rel="external nofollow noopener noreferrer"
               target="_blank"
             >
               https://www.sugarsocietysc.com/contact

@@ -56,7 +56,7 @@ export default function CookieComponent(props: CookieProp) {
         />
         <div>
           <div>Main Image</div>
-          <img />
+          <img alt="" />
         </div>
         <label>Price Per Cookie</label>
         <span>$3.50</span>
@@ -131,7 +131,11 @@ export default function CookieComponent(props: CookieProp) {
                       });
                     }}
                   />
-                  <img src={img} style={{ width: "100%" }} />
+                  <img
+                    src={img}
+                    alt={`Cookie design inspiration ${index + 1}`}
+                    style={{ width: "100%" }}
+                  />
                 </li>
               );
             })}

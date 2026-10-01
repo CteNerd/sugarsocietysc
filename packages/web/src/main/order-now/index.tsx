@@ -3,8 +3,6 @@ import React from "react";
 import "./order-now.css";
 
 export default function OrderNow() {
-  const envVar = process.env.REACT_APP_TEST_STRING;
-  const nodeVar = process.env.NODE_ENV;
   return (
     <div className="order-now-page-container">
       <div>

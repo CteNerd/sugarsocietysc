@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 // import {
 //   HomeOutlined,
 //   InfoCircleOutlined,
@@ -27,15 +27,6 @@ import React, { useEffect, useState } from "react";
 import "./sideNav.css";
 
 export default function SideNav() {
-  const [showEventsDropdown, setShowEventsDropdown] = useState(false);
-  const [showTeamDropdown, setShowTeamDropdown] = useState(false);
-  const [showTicketDropdown, setShowTicketDropdown] = useState(false);
-  const [isTixHolder, setIsTixHolder] = useState(true);
-  const [canAddUsers, setCanAddUsers] = useState(false);
-  const [canAddEvents, setCanAddEvents] = useState(false);
-  const [canViewEventDetails, setCanViewEventDetails] = useState(false);
-  const [isMemberOfOrg, setIsMemberOfOrg] = useState(false);
-
   function closeNav() {
     if (document.getElementById("mySidenav"))
       document.getElementById("mySidenav")!.style.width = "0";

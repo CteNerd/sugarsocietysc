@@ -14,10 +14,11 @@ export default function OrderForm() {
           height="533"
           width="800"
           src="https://form.asana.com/?k=COrL0VvOnsm2jAGEHmonHw&d=1203037369805982&embed=true"
+          title="Custom order form"
         ></iframe>
         <div className="asana-embed-footer">
           <a
-            rel="nofollow noopener"
+            rel="nofollow noopener noreferrer"
             target="_blank"
             className="asana-embed-footer-link"
             href="https://asana.com/?utm_source=embedded_form"
