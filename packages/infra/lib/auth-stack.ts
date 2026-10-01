@@ -78,10 +78,10 @@ export class AuthStack extends Stack {
       oAuth: {
         flows: { authorizationCodeGrant: true },
         scopes: [cognito.OAuthScope.EMAIL, cognito.OAuthScope.OPENID, cognito.OAuthScope.PROFILE],
-        // Local CRA dev server today; add the CloudFront/custom domain once the Web stack cutover
-        // (Phase 9) is live — Cognito clients support multiple registered URLs.
-        callbackUrls: ['http://localhost:3000/auth/callback'],
-        logoutUrls: ['http://localhost:3000/login'],
+        // Local CRA dev server + the deployed env's own domain — Cognito clients support multiple
+        // registered URLs, so both work simultaneously.
+        callbackUrls: ['http://localhost:3000/auth/callback', `https://${envConfig.domainName}/auth/callback`],
+        logoutUrls: ['http://localhost:3000/login', `https://${envConfig.domainName}/login`],
       },
       supportedIdentityProviders: [
         cognito.UserPoolClientIdentityProvider.COGNITO,
