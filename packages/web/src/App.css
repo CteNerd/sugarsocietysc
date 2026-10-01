@@ -91,6 +91,35 @@ button:hover {
   cursor: pointer;
 }
 
+.auth-form-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 400px;
+  margin: 0 auto;
+  gap: 12px;
+}
+
+.auth-form-container form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 12px;
+}
+
+.auth-form-container input {
+  padding: 10px;
+  font-size: 16px;
+}
+
+.auth-error {
+  color: #b00020;
+}
+
+.auth-message {
+  color: #1b5e20;
+}
+
 .App-link {
   color: #61dafb;
 }

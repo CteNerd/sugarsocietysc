@@ -14,6 +14,12 @@ import Pricing from "./main/pricing";
 import PrivacyPolicy from "./main/privacy/privacy-policy";
 import OrderForm from "./main/order/order-form";
 import NotFound from "./main/error/NotFound";
+import Signup from "./main/auth/Signup";
+import Confirm from "./main/auth/Confirm";
+import Login from "./main/auth/Login";
+import Account from "./main/auth/Account";
+import { AuthProvider } from "./auth/AuthContext";
+import ProtectedRoute from "./auth/ProtectedRoute";
 
 function App() {
   const breakpoint = window.matchMedia("(max-width: 1279px)");
@@ -69,12 +75,16 @@ function App() {
           <div key="order-now" className="menu-item col-1">
             <a href="/order-now">Order Now</a>
           </div>
+          <div key="account" className="menu-item col-1">
+            <a href="/account">Account</a>
+          </div>
         </nav>
       );
     }
   }
   return (
     <HelmetProvider>
+      <AuthProvider>
       <Router>
         <div className="App">
           <SideNav />
@@ -96,6 +106,17 @@ function App() {
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/privacy" element={<PrivacyPolicy />} />
                   <Route path="/create-invoice" element={<CreateInvoice />} />
+                  <Route path="/signup" element={<Signup />} />
+                  <Route path="/confirm" element={<Confirm />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route
+                    path="/account"
+                    element={
+                      <ProtectedRoute>
+                        <Account />
+                      </ProtectedRoute>
+                    }
+                  />
                   <Route path="/" element={<Home isMobile={isMobile} />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
@@ -146,6 +167,7 @@ function App() {
         </footer>
       </div>
     </Router>
+      </AuthProvider>
     </HelmetProvider>
   );
 }

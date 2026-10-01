@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { loadConfig } from './config/env';
 import { getPool } from './db/pool';
 import { healthRoutes } from './domains/health/health-routes';
+import { authSyncRoutes } from './domains/auth-sync/auth-sync-routes';
 
 /**
  * Composition root: same `app` is wrapped by the Lambda adapter in production
@@ -13,5 +14,6 @@ export function createApp(): Hono {
 
   const app = new Hono();
   app.route('/health', healthRoutes(pool));
+  app.route('/auth-sync', authSyncRoutes(pool, config));
   return app;
 }

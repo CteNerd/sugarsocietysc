@@ -8,9 +8,11 @@
     "build": "tsc -p tsconfig.json",
     "lint": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "migrate": "node-pg-migrate"
+    "migrate": "node-pg-migrate",
+    "seed:cognito": "tsx scripts/seed-cognito-local.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.620.0",
     "@aws-sdk/client-s3": "^3.620.0",
     "@aws-sdk/client-ses": "^3.620.0",
     "@aws-sdk/client-sns": "^3.620.0",
@@ -18,6 +20,7 @@
     "@hono/node-server": "^1.12.0",
     "@sugarsocietysc/shared": "*",
     "hono": "^4.5.8",
+    "jose": "^4.15.9",
     "pg": "^8.12.0",
     "stripe": "^16.8.0",
     "zod": "^3.23.8"

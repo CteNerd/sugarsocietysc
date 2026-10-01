@@ -13,11 +13,13 @@ const prefix = `SugarSocietySc-${envConfig.envName}`;
 
 const network = new NetworkStack(app, `${prefix}-Network`, envConfig, { env });
 const data = new DataStack(app, `${prefix}-Data`, envConfig, { env, vpc: network.vpc });
-new AuthStack(app, `${prefix}-Auth`, envConfig, { env });
+const auth = new AuthStack(app, `${prefix}-Auth`, envConfig, { env });
 new ApiStack(app, `${prefix}-Api`, envConfig, {
   env,
   vpc: network.vpc,
   lambdaSecurityGroup: data.lambdaSecurityGroup,
   cluster: data.cluster,
+  userPool: auth.userPool,
+  userPoolClient: auth.userPoolClient,
 });
 new WebStack(app, `${prefix}-Web`, envConfig, { env });

@@ -13,6 +13,9 @@ export interface AppConfig {
   stripeWebhookSecret: string;
   guestPiiRetentionDays: number;
   awsRegion: string;
+  cognitoIssuer: string;
+  cognitoJwksUri: string;
+  cognitoClientId: string;
 }
 
 function requireEnv(name: string, fallback?: string): string {
@@ -24,6 +27,7 @@ function requireEnv(name: string, fallback?: string): string {
 }
 
 export function loadConfig(): AppConfig {
+  const cognitoIssuer = requireEnv('COGNITO_ISSUER_URL', 'http://localhost:9229/local_placeholder');
   return {
     databaseUrl: requireEnv('DATABASE_URL'),
     smsProvider: (process.env.SMS_PROVIDER as AppConfig['smsProvider']) ?? 'sns',
@@ -35,5 +39,8 @@ export function loadConfig(): AppConfig {
     stripeWebhookSecret: requireEnv('STRIPE_WEBHOOK_SECRET', 'whsec_placeholder'),
     guestPiiRetentionDays: Number(process.env.GUEST_PII_RETENTION_DAYS ?? 60),
     awsRegion: requireEnv('AWS_REGION', 'us-east-1'),
+    cognitoIssuer,
+    cognitoJwksUri: `${cognitoIssuer}/.well-known/jwks.json`,
+    cognitoClientId: requireEnv('COGNITO_CLIENT_ID', 'local_placeholder'),
   };
 }

@@ -41,6 +41,15 @@ This single command starts:
 
 No AWS account is required for day-to-day feature work.
 
+### One-time local auth setup
+cognito-local needs a fixed User Pool + client (real Cognito gets these from the CDK `AuthStack` instead):
+```bash
+npm run seed:cognito --workspace=@sugarsocietysc/api   # run once cognito-local is up
+```
+Copy the printed `COGNITO_*` / `REACT_APP_COGNITO_*` values into `.env.local`. Note: cognito-local always
+issues tokens with host `0.0.0.0` (not `localhost`) in the `iss` claim — `COGNITO_ISSUER_URL` must use
+`0.0.0.0` locally, exactly as the script prints it.
+
 ### Other useful commands
 ```bash
 npm run build                                          # build all workspaces
@@ -64,13 +73,23 @@ billing/resources and require explicit human approval.
 
 ## Project Status
 
-Phase 0 (monorepo foundation) in progress:
+Phase 0 (monorepo foundation) complete:
 - [x] Monorepo restructure (`packages/web|api|shared|infra`)
 - [x] Ports-and-adapters scaffolding (notification/payment/storage) with a working `/health` vertical slice
 - [x] CDK stack skeletons (Network, Data, Auth, Api, Web) — not yet deployed
 - [x] Local dev stack (`docker-compose.yml`, `npm run dev`)
 - [x] Repo-level AI tooling (`.github/copilot-instructions.md`, scoped instructions, custom agents, skills)
 - [ ] GitHub OIDC role + AWS account setup, first real `cdk deploy`
-- [ ] Auth & accounts (Cognito + Google OAuth), newsletter, catalog, order workflows, payments, admin
-  dashboard — see upcoming phases
+
+Phase 1 (auth & accounts) — local-only scope in progress, AWS checkpoint deferred:
+- [x] `users` + `holiday_preferences` migration
+- [x] `auth-sync` domain (`POST /auth-sync`, `GET /auth-sync/me`) with Cognito JWT verification
+  (`packages/api/src/auth`), backed by `jose` against cognito-local/Cognito JWKS
+- [x] `packages/api/scripts/seed-cognito-local.ts` — one-time local User Pool/client bootstrap
+- [x] CDK: `ApiStack` wired to `AuthStack`'s User Pool via an `HttpJwtAuthorizer` (defense-in-depth at the
+  API Gateway edge; synth-only so far, not deployed)
+- [x] Web: `amazon-cognito-identity-js` signup/confirm/login/account pages + `AuthProvider`/`ProtectedRoute`
+- [ ] Google OAuth federation — requires a real deployed `AuthStack` + registered Google OAuth client
+  (deferred to the Phase 1 AWS checkpoint, see `/memories/repo/local-dev-vs-aws-strategy.md` conceptually)
+- [ ] Newsletter, catalog, order workflows, payments, admin dashboard — see upcoming phases
 
