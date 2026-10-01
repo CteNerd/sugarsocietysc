@@ -18,6 +18,7 @@ import Signup from "./main/auth/Signup";
 import Confirm from "./main/auth/Confirm";
 import Login from "./main/auth/Login";
 import Account from "./main/auth/Account";
+import GoogleCallback from "./main/auth/GoogleCallback";
 import Unsubscribe from "./main/newsletter/Unsubscribe";
 import NewsletterSignup from "./components/NewsletterSignup";
 import { AuthProvider } from "./auth/AuthContext";
@@ -111,6 +112,7 @@ function App() {
                   <Route path="/signup" element={<Signup />} />
                   <Route path="/confirm" element={<Confirm />} />
                   <Route path="/login" element={<Login />} />
+                  <Route path="/auth/callback" element={<GoogleCallback />} />
                   <Route path="/newsletter-unsubscribe" element={<Unsubscribe />} />
                   <Route
                     path="/account"

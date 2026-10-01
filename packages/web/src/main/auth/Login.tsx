@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
 
 export default function Login() {
-  const { signIn } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -47,6 +47,9 @@ export default function Login() {
           {submitting ? 'Logging in…' : 'Log In'}
         </button>
       </form>
+      <button type="button" onClick={signInWithGoogle}>
+        Continue with Google
+      </button>
     </div>
   );
 }

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
 
 export default function Signup() {
-  const { signUp } = useAuth();
+  const { signUp, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({
     firstName: '',
@@ -65,6 +65,9 @@ export default function Signup() {
           {submitting ? 'Creating account…' : 'Sign Up'}
         </button>
       </form>
+      <button type="button" onClick={signInWithGoogle}>
+        Continue with Google
+      </button>
     </div>
   );
 }

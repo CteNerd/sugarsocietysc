@@ -10,7 +10,7 @@
         "auroraMaxCapacity": 2,
         "domainName": "dev.sugarsocietysc.com",
         "guestPiiRetentionDays": 60,
-        "googleOAuthClientId": ""
+        "googleOAuthClientId": "622792694552-1ilfi8dco17r69fiav2liu83ob8hqbv4.apps.googleusercontent.com"
       },
       "prod": {
         "account": "425061472162",
