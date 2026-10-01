@@ -10,7 +10,8 @@
         "auroraMaxCapacity": 2,
         "domainName": "dev.sugarsocietysc.com",
         "guestPiiRetentionDays": 60,
-        "googleOAuthClientId": "622792694552-1ilfi8dco17r69fiav2liu83ob8hqbv4.apps.googleusercontent.com"
+        "googleOAuthClientId": "622792694552-1ilfi8dco17r69fiav2liu83ob8hqbv4.apps.googleusercontent.com",
+        "certificateArn": "arn:aws:acm:us-east-1:425061472162:certificate/b7105c7f-bdcc-41a2-a7e7-38988d521550"
       },
       "prod": {
         "account": "425061472162",
@@ -20,7 +21,8 @@
         "auroraMaxCapacity": 4,
         "domainName": "www.sugarsocietysc.com",
         "guestPiiRetentionDays": 60,
-        "googleOAuthClientId": ""
+        "googleOAuthClientId": "",
+        "certificateArn": "arn:aws:acm:us-east-1:425061472162:certificate/b7105c7f-bdcc-41a2-a7e7-38988d521550"
       }
     }
   }
