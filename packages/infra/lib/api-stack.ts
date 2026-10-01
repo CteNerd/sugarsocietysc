@@ -61,6 +61,39 @@ export class ApiStack extends Stack {
     });
     props.cluster.secret?.grantRead(healthFn);
 
+    // Not wired to any HTTP route or trigger — Aurora lives in a private isolated subnet with no
+    // route from outside AWS, so this is the only way to apply `node-pg-migrate` migrations to a
+    // deployed environment. Invoke manually via `aws lambda invoke` after deploying new migrations
+    // (see README "Deploying to AWS").
+    const migrateFn = new lambdaNode.NodejsFunction(this, 'MigrateFn', {
+      entry: path.join(__dirname, '../../api/src/migrate-lambda.ts'),
+      handler: 'handler',
+      ...commonFnProps,
+      timeout: Duration.seconds(60),
+      environment: commonEnv,
+      bundling: {
+        commandHooks: {
+          beforeBundling: () => [],
+          beforeInstall: () => [],
+          afterBundling: (inputDir: string, outputDir: string) => [
+            `cp -r ${inputDir}/packages/api/migrations ${outputDir}/migrations`,
+          ],
+        },
+      },
+    });
+    props.cluster.secret?.grantRead(migrateFn);
+
+    // One-off demo-data seeder, same rationale/invocation pattern as MigrateFn — run after
+    // migrations whenever a deployed environment needs the Halloween Pre-Sale catalog populated.
+    const seedFn = new lambdaNode.NodejsFunction(this, 'SeedFn', {
+      entry: path.join(__dirname, '../../api/src/seed-lambda.ts'),
+      handler: 'handler',
+      ...commonFnProps,
+      timeout: Duration.seconds(60),
+      environment: commonEnv,
+    });
+    props.cluster.secret?.grantRead(seedFn);
+
     const authSyncFn = new lambdaNode.NodejsFunction(this, 'AuthSyncFn', {
       entry: path.join(__dirname, '../../api/src/lambda.ts'),
       handler: 'handler',
