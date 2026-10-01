@@ -21,6 +21,10 @@ export class StripePaymentProvider implements IPaymentProvider {
       amount,
       currency,
       metadata: { orderId },
+      // This is a single-page app with no dedicated redirect-return page, so disable
+      // redirect-based payment methods (Klarna, Cash App, Amazon Pay, etc.) and keep
+      // payment entirely in-page. Also avoids Stripe's return_url requirement.
+      automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
     });
     return { providerRef: intent.id, clientSecret: intent.client_secret ?? '' };
   }
