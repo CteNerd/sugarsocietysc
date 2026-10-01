@@ -1,4 +1,19 @@
 import { handle } from 'hono/aws-lambda';
+import type { LambdaEvent, LambdaContext } from 'hono/aws-lambda';
 import { createApp } from './app';
+import { resolveDatabaseUrl } from './config/db-secret';
 
-export const handler = handle(createApp());
+let handlerPromise: ReturnType<typeof buildHandler> | undefined;
+
+async function buildHandler() {
+  await resolveDatabaseUrl();
+  return handle(createApp());
+}
+
+export const handler = async (event: LambdaEvent, context: LambdaContext) => {
+  if (!handlerPromise) {
+    handlerPromise = buildHandler();
+  }
+  const h = await handlerPromise;
+  return h(event, context);
+};
