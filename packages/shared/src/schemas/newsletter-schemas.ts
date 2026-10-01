@@ -13,3 +13,9 @@ export const newsletterUnsubscribeSchema = z.object({
   email: z.string().email(),
 });
 export type NewsletterUnsubscribeRequest = z.infer<typeof newsletterUnsubscribeSchema>;
+
+export const newsletterPreferencesSchema = z.object({
+  emailOptIn: z.boolean(),
+  smsOptIn: z.boolean(),
+});
+export type NewsletterPreferencesRequest = z.infer<typeof newsletterPreferencesSchema>;

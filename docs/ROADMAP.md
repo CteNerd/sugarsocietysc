@@ -114,6 +114,12 @@ checkpoints if cost-sensitive (snapshot first to keep data).
   **Remaining for this phase**: deploy `AuthStack` to a real AWS dev account, register a real Google OAuth
   client, verify the federated login flow end-to-end (see checkpoint above) — intentionally deferred.
 - [ ] **Phase 2 — Newsletter signup**: subscribe/unsubscribe, optional member upsell, account settings toggle
+  - [x] `newsletter_subscribers` migration, `newsletter` domain (repository/service/routes + tests),
+    `/newsletter/subscribe` + `/newsletter/unsubscribe` (public), `/newsletter/preferences` (authed,
+    keeps `users.newsletter_opt_in_*` in sync), CDK `NewsletterFn` + HTTP API routes (local-only so far).
+  - [x] Frontend: footer `NewsletterSignup` widget (guest subscribe + account-creation upsell on success),
+    `/newsletter-unsubscribe` landing page, `Account` page email/SMS preference toggles.
+  - [ ] Admin member upsell messaging/copy review, real SES/SNS send verification (deferred to AWS checkpoint).
 - [ ] **Phase 3 — Catalog & admin pricing**: migrate `cookies-json`, admin CRUD, `PreSaleEvent` management
 - [ ] **Phase 4 — Pre-sale order workflow**
 - [ ] **Phase 5 — Custom order workflow**

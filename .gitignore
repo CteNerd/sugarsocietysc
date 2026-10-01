@@ -11,6 +11,8 @@ coverage/
 # build outputs
 packages/web/build/
 packages/*/dist/
+packages/infra/bin/*.js
+packages/infra/lib/*.js
 
 # CDK
 packages/infra/cdk.out/

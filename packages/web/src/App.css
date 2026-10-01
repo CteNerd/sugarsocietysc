@@ -120,6 +120,23 @@ button:hover {
   color: #1b5e20;
 }
 
+.newsletter-signup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.newsletter-signup label {
+  font-size: 14px;
+}
+
+.newsletter-signup input[type='email'] {
+  padding: 6px 10px;
+  font-size: 14px;
+}
+
 .App-link {
   color: #61dafb;
 }

@@ -18,6 +18,8 @@ import Signup from "./main/auth/Signup";
 import Confirm from "./main/auth/Confirm";
 import Login from "./main/auth/Login";
 import Account from "./main/auth/Account";
+import Unsubscribe from "./main/newsletter/Unsubscribe";
+import NewsletterSignup from "./components/NewsletterSignup";
 import { AuthProvider } from "./auth/AuthContext";
 import ProtectedRoute from "./auth/ProtectedRoute";
 
@@ -109,6 +111,7 @@ function App() {
                   <Route path="/signup" element={<Signup />} />
                   <Route path="/confirm" element={<Confirm />} />
                   <Route path="/login" element={<Login />} />
+                  <Route path="/newsletter-unsubscribe" element={<Unsubscribe />} />
                   <Route
                     path="/account"
                     element={
@@ -124,6 +127,9 @@ function App() {
             </div>
           </main>
         <footer>
+          <div className="footer-link-container">
+            <NewsletterSignup />
+          </div>
           <div className="footer-link-container">
             <a className="footer-link" href="/contact">
               Contact Us Now

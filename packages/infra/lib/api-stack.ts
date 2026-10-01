@@ -21,8 +21,8 @@ export interface ApiStackProps extends StackProps {
 
 /**
  * HTTP API (cheaper than REST API, native JWT authorizer support for Cognito)
- * fronting one NodejsFunction per domain. Health and auth-sync are wired up through Phase 1 —
- * later phases add newsletter/catalog/orders/admin/webhook functions following this same pattern.
+ * fronting one NodejsFunction per domain. Health, auth-sync, and newsletter are wired up through
+ * Phase 2 — later phases add catalog/orders/admin/webhook functions following this same pattern.
  */
 export class ApiStack extends Stack {
   public readonly httpApi: apigwv2.HttpApi;
@@ -68,6 +68,14 @@ export class ApiStack extends Stack {
     });
     props.cluster.secret?.grantRead(authSyncFn);
 
+    const newsletterFn = new lambdaNode.NodejsFunction(this, 'NewsletterFn', {
+      entry: path.join(__dirname, '../../api/src/lambda.ts'),
+      handler: 'handler',
+      ...commonFnProps,
+      environment: commonEnv,
+    });
+    props.cluster.secret?.grantRead(newsletterFn);
+
     this.httpApi = new apigwv2.HttpApi(this, 'HttpApi', {
       apiName: `sugarsocietysc-${envConfig.envName}`,
       corsPreflight: {
@@ -100,6 +108,24 @@ export class ApiStack extends Stack {
       path: '/auth-sync/me',
       methods: [apigwv2.HttpMethod.GET],
       integration: new HttpLambdaIntegration('AuthSyncMeIntegration', authSyncFn),
+      authorizer: cognitoAuthorizer,
+    });
+
+    // Subscribe/unsubscribe are public (guest newsletter signup); preferences requires a signed-in user.
+    this.httpApi.addRoutes({
+      path: '/newsletter/subscribe',
+      methods: [apigwv2.HttpMethod.POST],
+      integration: new HttpLambdaIntegration('NewsletterSubscribeIntegration', newsletterFn),
+    });
+    this.httpApi.addRoutes({
+      path: '/newsletter/unsubscribe',
+      methods: [apigwv2.HttpMethod.POST],
+      integration: new HttpLambdaIntegration('NewsletterUnsubscribeIntegration', newsletterFn),
+    });
+    this.httpApi.addRoutes({
+      path: '/newsletter/preferences',
+      methods: [apigwv2.HttpMethod.PATCH],
+      integration: new HttpLambdaIntegration('NewsletterPreferencesIntegration', newsletterFn),
       authorizer: cognitoAuthorizer,
     });
   }
