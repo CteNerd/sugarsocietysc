@@ -7,6 +7,7 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as lambdaNode from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as rds from 'aws-cdk-lib/aws-rds';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 import * as path from 'path';
 import { EnvConfig } from './env-config';
@@ -76,6 +77,41 @@ export class ApiStack extends Stack {
     });
     props.cluster.secret?.grantRead(newsletterFn);
 
+    const catalogFn = new lambdaNode.NodejsFunction(this, 'CatalogFn', {
+      entry: path.join(__dirname, '../../api/src/lambda.ts'),
+      handler: 'handler',
+      ...commonFnProps,
+      environment: commonEnv,
+    });
+    props.cluster.secret?.grantRead(catalogFn);
+
+    // Populated out-of-band by a human (real Stripe API keys can't be generated/committed by CDK) —
+    // see packages/api/src/config/stripe-secret.ts and docs/ROADMAP.md deployment checkpoint.
+    const stripeSecret = secretsmanager.Secret.fromSecretNameV2(
+      this,
+      'StripeSecret',
+      `sugarsocietysc/${envConfig.envName}/stripe`,
+    );
+    const stripeEnv = { ...commonEnv, STRIPE_SECRET_ARN: stripeSecret.secretArn };
+
+    const ordersFn = new lambdaNode.NodejsFunction(this, 'OrdersFn', {
+      entry: path.join(__dirname, '../../api/src/lambda.ts'),
+      handler: 'handler',
+      ...commonFnProps,
+      environment: stripeEnv,
+    });
+    props.cluster.secret?.grantRead(ordersFn);
+    stripeSecret.grantRead(ordersFn);
+
+    const webhooksStripeFn = new lambdaNode.NodejsFunction(this, 'WebhooksStripeFn', {
+      entry: path.join(__dirname, '../../api/src/lambda.ts'),
+      handler: 'handler',
+      ...commonFnProps,
+      environment: stripeEnv,
+    });
+    props.cluster.secret?.grantRead(webhooksStripeFn);
+    stripeSecret.grantRead(webhooksStripeFn);
+
     this.httpApi = new apigwv2.HttpApi(this, 'HttpApi', {
       apiName: `sugarsocietysc-${envConfig.envName}`,
       corsPreflight: {
@@ -127,6 +163,100 @@ export class ApiStack extends Stack {
       methods: [apigwv2.HttpMethod.PATCH],
       integration: new HttpLambdaIntegration('NewsletterPreferencesIntegration', newsletterFn),
       authorizer: cognitoAuthorizer,
+    });
+
+    // --- Catalog (Phase 3): public Pre-Sale browsing + admin event/design/packaging management.
+    // The Cognito authorizer only proves the caller is signed in; `requireAdminRole` in application
+    // code independently enforces the `admin` DB role — the authorizer is not the security boundary.
+    const catalogIntegration = new HttpLambdaIntegration('CatalogIntegration', catalogFn);
+    this.httpApi.addRoutes({
+      path: '/catalog/presale/active',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: catalogIntegration,
+    });
+    this.httpApi.addRoutes({
+      path: '/catalog/admin/presale-events',
+      methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST],
+      integration: catalogIntegration,
+      authorizer: cognitoAuthorizer,
+    });
+    this.httpApi.addRoutes({
+      path: '/catalog/admin/presale-events/{id}',
+      methods: [apigwv2.HttpMethod.PATCH],
+      integration: catalogIntegration,
+      authorizer: cognitoAuthorizer,
+    });
+    this.httpApi.addRoutes({
+      path: '/catalog/admin/cookie-designs',
+      methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST],
+      integration: catalogIntegration,
+      authorizer: cognitoAuthorizer,
+    });
+    this.httpApi.addRoutes({
+      path: '/catalog/admin/cookie-designs/{id}',
+      methods: [apigwv2.HttpMethod.PATCH],
+      integration: catalogIntegration,
+      authorizer: cognitoAuthorizer,
+    });
+    this.httpApi.addRoutes({
+      path: '/catalog/admin/packaging-options',
+      methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST],
+      integration: catalogIntegration,
+      authorizer: cognitoAuthorizer,
+    });
+    this.httpApi.addRoutes({
+      path: '/catalog/admin/packaging-options/{id}',
+      methods: [apigwv2.HttpMethod.PATCH],
+      integration: catalogIntegration,
+      authorizer: cognitoAuthorizer,
+    });
+
+    // --- Orders (Phase 4/6/7): guest-or-authenticated Pre-Sale checkout, authenticated order history,
+    // and admin order management. `/orders/presale` must stay public at the gateway (guest checkout is
+    // allowed); `optionalAuth` in application code still parses/validates a JWT when one is provided.
+    const ordersIntegration = new HttpLambdaIntegration('OrdersIntegration', ordersFn);
+    this.httpApi.addRoutes({
+      path: '/orders/presale',
+      methods: [apigwv2.HttpMethod.POST],
+      integration: ordersIntegration,
+    });
+    this.httpApi.addRoutes({
+      path: '/orders/me',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: ordersIntegration,
+      authorizer: cognitoAuthorizer,
+    });
+    this.httpApi.addRoutes({
+      path: '/orders/me/{id}',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: ordersIntegration,
+      authorizer: cognitoAuthorizer,
+    });
+    this.httpApi.addRoutes({
+      path: '/orders/admin',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: ordersIntegration,
+      authorizer: cognitoAuthorizer,
+    });
+    this.httpApi.addRoutes({
+      path: '/orders/admin/{id}',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: ordersIntegration,
+      authorizer: cognitoAuthorizer,
+    });
+    this.httpApi.addRoutes({
+      path: '/orders/admin/{id}/status',
+      methods: [apigwv2.HttpMethod.PATCH],
+      integration: ordersIntegration,
+      authorizer: cognitoAuthorizer,
+    });
+
+    // --- Stripe webhook (Phase 6): public (Stripe signs the request body; verified in application
+    // code via the webhook signing secret), never behind the Cognito authorizer.
+    this.httpApi.addRoutes({
+      path: '/webhooks/stripe',
+      methods: [apigwv2.HttpMethod.POST],
+      integration: new HttpLambdaIntegration('WebhooksStripeIntegration', webhooksStripeFn),
     });
   }
 }

@@ -7,6 +7,7 @@ import Specials from "./main/specials";
 import OurCookies from "./main/cookies";
 import CreateInvoice from "./main/invoice/create-invoice";
 import OrderNow from "./main/order-now";
+import PreSale from "./main/presale";
 import "./App.css";
 import SideNav from "./main/sideNav/sideNav";
 import Contact from "./main/contact";
@@ -78,6 +79,9 @@ function App() {
           <div key="order-now" className="menu-item col-1">
             <a href="/order-now">Order Now</a>
           </div>
+          <div key="pre-sale" className="menu-item col-1">
+            <a href="/pre-sale">Pre-Sale</a>
+          </div>
           <div key="account" className="menu-item col-1">
             <a href="/account">Account</a>
           </div>
@@ -105,6 +109,7 @@ function App() {
                   <Route path="/our-cookies" element={<OurCookies isMobile={isMobile} />} />
                   {/* <Route path="/pricing" element={<Pricing />} /> */}
                   <Route path="/order-now" element={<OrderNow />} />
+                  <Route path="/pre-sale" element={<PreSale />} />
                   <Route path="/order-form" element={<OrderForm />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/privacy" element={<PrivacyPolicy />} />

@@ -9,7 +9,8 @@
     "lint": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "migrate": "node-pg-migrate",
-    "seed:cognito": "tsx scripts/seed-cognito-local.ts"
+    "seed:cognito": "tsx scripts/seed-cognito-local.ts",
+    "seed:halloween-presale": "tsx scripts/seed-halloween-presale.ts"
   },
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.620.0",

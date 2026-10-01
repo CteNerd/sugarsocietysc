@@ -10,6 +10,9 @@
     "generate-sitemap": "node generate-sitemap.js"
   },
   "dependencies": {
+    "@stripe/react-stripe-js": "^6.12.0",
+    "@stripe/stripe-js": "^9.17.0",
+    "@sugarsocietysc/shared": "*",
     "amazon-cognito-identity-js": "^6.3.12",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
@@ -17,7 +20,6 @@
     "react-helmet-async": "^2.0.5",
     "react-router-dom": "^7.1.5",
     "react-scripts": "^5.0.1",
-    "@sugarsocietysc/shared": "*",
     "typescript": "^4.0.0"
   },
   "devDependencies": {

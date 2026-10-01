@@ -63,12 +63,35 @@ billing/resources and require explicit human approval.
   `packages/infra/cdk.json`); CI (`.github/workflows/infra-ci.yml`) runs `cdk synth` on PRs touching infra
   code.
 
+### Stripe test-mode setup (required for Phase 6 deposit payments)
+
+1. In the [Stripe Dashboard](https://dashboard.stripe.com), stay in **Test mode** and copy your test
+   **publishable** (`pk_test_...`) and **secret** (`sk_test_...`) keys from Developers → API keys.
+2. For local dev, run the [Stripe CLI](https://stripe.com/docs/stripe-cli) to forward webhooks and get a
+   local signing secret: `stripe listen --forward-to localhost:3001/webhooks/stripe`.
+3. Set `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` in `packages/api/.env.local` and
+   `REACT_APP_STRIPE_PUBLISHABLE_KEY` in `packages/web/.env.local`.
+4. For a deployed environment, populate the Secrets Manager secret `sugarsocietysc/<env>/stripe` (created
+   out-of-band, never by CDK) with `{ "secretKey": "sk_test_...", "webhookSecret": "whsec_..." }`, and add
+   a Stripe webhook endpoint pointing at `https://<api-domain>/webhooks/stripe` for the
+   `payment_intent.succeeded` event.
+
 ## Project Status
 
 See [docs/ROADMAP.md](docs/ROADMAP.md) for the full phase-by-phase plan and status. Summary:
 - [x] Phase 0 — Foundation (monorepo, CDK stack skeletons, local dev stack, repo AI tooling) — not yet deployed to AWS
 - [x] Phase 1 — Auth & Accounts, local-only (Cognito-compatible signup/login/JWT, account pages) — Google
   OAuth + first real AWS deploy intentionally deferred to a dedicated checkpoint
-- [ ] Phases 2–9 — newsletter, catalog, order workflows, payments, order management, newsletter sending,
-  hardening
+- [ ] Phase 2 — Newsletter signup (subscribe/unsubscribe/preferences) — mostly done; admin copy review and
+  real SES/SNS send verification deferred to the AWS checkpoint
+- [x] Phase 3 — Catalog (Pre-Sale events, cookie designs, packaging options) — backend + idempotent demo
+  seed script; admin CRUD UI deferred (seed script covers this demo)
+- [x] Phase 4 — Pre-Sale order workflow (browse → quantity → packaging → invoice → guest/authed checkout)
+  — full backend + web wizard, verified end-to-end locally
+- [ ] Phase 5 — Custom order workflow — intentionally skipped for this demo (needs more detail)
+- [x] Phase 6 — Payments (Stripe deposit via `IPaymentProvider`, webhook handling) — backend + Stripe
+  Elements web UI built; untested with real Stripe test keys (see setup above)
+- [x] Phase 7 — Order management (status state machine, admin list/update routes) — backend only; no
+  admin dashboard or customer order-history UI yet
+- [ ] Phases 8–9 — newsletter sending, hardening
 

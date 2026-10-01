@@ -120,10 +120,28 @@ checkpoints if cost-sensitive (snapshot first to keep data).
   - [x] Frontend: footer `NewsletterSignup` widget (guest subscribe + account-creation upsell on success),
     `/newsletter-unsubscribe` landing page, `Account` page email/SMS preference toggles.
   - [ ] Admin member upsell messaging/copy review, real SES/SNS send verification (deferred to AWS checkpoint).
-- [ ] **Phase 3 — Catalog & admin pricing**: migrate `cookies-json`, admin CRUD, `PreSaleEvent` management
-- [ ] **Phase 4 — Pre-sale order workflow**
-- [ ] **Phase 5 — Custom order workflow**
-- [ ] **Phase 6 — Payments**: Stripe deposit via `IPaymentProvider`, webhook handling
-- [ ] **Phase 7 — Order management**: status state machine, admin dashboard, customer read-only history
+- [ ] **Phase 3 — Catalog & admin pricing**: `PreSaleEvent`/`CookieDesign`/`PackagingOption` management
+  - [x] Migrations (`pre_sale_events`, `cookie_designs`, `packaging_options`), `catalog` domain
+    (repository/service/routes + tests), `GET /catalog/presale/active` (public), CDK `CatalogFn` + HTTP
+    API routes (local-only so far), idempotent `seed:halloween-presale` demo-data script.
+  - [ ] Admin CRUD UI for designs/events/packaging — **deferred**; demo data is loaded via the seed
+    script instead. Follow-up if ongoing catalog editing (vs. one-off seeding) is needed.
+- [x] **Phase 4 — Pre-sale order workflow**: browse active Pre-Sale → select quantity (multiples of 6,
+  oversell-guarded server-side) → select packaging (box + optional add-ons) → review invoice → guest or
+  authed contact capture. `orders`/`order_items` migrations, `orders` domain (repository/service/routes +
+  tests), 4-step web wizard (`packages/web/src/main/presale`), CDK `OrdersFn` + HTTP API routes. Verified
+  end-to-end in the browser against local Postgres (quantity → packaging → invoice → persisted order).
+  *(Explicitly excludes custom/Asana-based ordering — that's Phase 5.)*
+- [ ] **Phase 5 — Custom order workflow** *(intentionally skipped for this demo — more detail needed)*
+- [x] **Phase 6 — Payments**: Stripe deposit (50%) via `IPaymentProvider`/Stripe adapter, PaymentIntent
+  created on order creation, `payment_transactions` ledger, Stripe Elements (`PaymentElement`) on the web
+  wizard, `/webhooks/stripe` handling `payment_intent.succeeded`, CDK `WebhooksStripeFn` + Secrets
+  Manager-backed Stripe credentials (imported, not created, by CDK). **Untested with real Stripe test
+  keys** — verified up to the live Stripe API call locally (fails only on the placeholder key, as
+  expected); see README for the real test-key setup needed to complete this.
+- [x] **Phase 7 — Order management**: status state machine (repository/service + tests) covering
+  received → confirmed → ready → completed/cancelled transitions, admin list/update routes
+  (`/orders/admin`, `requireAdmin` middleware). **No admin dashboard or customer order-history UI built
+  yet** — deferred; demo relies on direct DB/API inspection. Follow-up if Ash's test needs a UI for this.
 - [ ] **Phase 8 — Newsletter sending**: admin composer, SQS fan-out, send log
 - [ ] **Phase 9 — Hardening**: WAF, CloudWatch, OWASP pass, domain cutover

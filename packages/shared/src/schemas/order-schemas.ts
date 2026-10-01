@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const guestContactSchema = z.object({
+export const guestContactSchema = z.object({
   guestEmail: z.string().email(),
   guestPhone: z.string().min(7).max(20),
 });

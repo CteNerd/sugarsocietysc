@@ -9,6 +9,8 @@ export interface PreSaleEvent {
   orderWindowStart: string;
   orderWindowEnd: string;
   pickupDate: string;
+  /** Percentage (whole number, e.g. 50 for 50%) of order subtotal collected as a deposit at checkout. */
+  depositPercent: number;
   isActive: boolean;
 }
 
@@ -16,12 +18,14 @@ export interface CookieDesign {
   id: string;
   name: string;
   imageUrls: string[];
+  /** Price per single cookie, in integer cents (never a float — avoids rounding error). */
   basePrice: number;
   preSaleEventId?: string;
   type: CookieDesignType;
   colors: string[];
   maxQuantity?: number;
   quantitySold: number;
+  isActive: boolean;
 }
 
 export interface BaseCookieOption {
@@ -41,6 +45,7 @@ export interface IcingOption {
 export interface PackagingOption {
   id: string;
   name: string;
+  /** Integer cents. */
   price: number;
   type: PackagingOptionType;
   isActive: boolean;

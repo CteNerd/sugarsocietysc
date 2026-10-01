@@ -2,11 +2,12 @@ import { handle } from 'hono/aws-lambda';
 import type { LambdaEvent, LambdaContext } from 'hono/aws-lambda';
 import { createApp } from './app';
 import { resolveDatabaseUrl } from './config/db-secret';
+import { resolveStripeSecrets } from './config/stripe-secret';
 
 let handlerPromise: ReturnType<typeof buildHandler> | undefined;
 
 async function buildHandler() {
-  await resolveDatabaseUrl();
+  await Promise.all([resolveDatabaseUrl(), resolveStripeSecrets()]);
   return handle(createApp());
 }
 
