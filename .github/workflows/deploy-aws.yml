@@ -143,4 +143,4 @@ jobs:
         run: aws cloudfront create-invalidation --distribution-id "$WEB_DISTRIBUTION_ID" --paths '/*'
 
       - name: Smoke-test API health
-        run: curl --fail --silent --show-error "${API_URL}health"
+        run: curl --fail --silent --show-error "${API_URL}/health"
