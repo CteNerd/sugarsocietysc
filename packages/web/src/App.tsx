@@ -172,6 +172,12 @@ function App() {
               Call Us Now
             </a>
           </div>
+          <div className="footer-link-container">
+            <p className="footer-copyright">
+              © 2025 Sugar Society Sugar Cookies | A Black-owned business in Rosharon, TX serving the greater
+              Houston area
+            </p>
+          </div>
         </footer>
       </div>
     </Router>

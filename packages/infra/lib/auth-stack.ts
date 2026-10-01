@@ -63,7 +63,9 @@ export class AuthStack extends Stack {
       googleProvider = new cognito.UserPoolIdentityProviderGoogle(this, 'GoogleIdP', {
         userPool: this.userPool,
         clientId: envConfig.googleOAuthClientId,
-        clientSecretValue: googleOAuthSecret.secretValue,
+        // Secret is stored as JSON ({"clientSecret": "..."}) — must extract the field, not the raw
+        // secretValue (which is the whole JSON blob and would get sent to Google as-is, failing auth).
+        clientSecretValue: googleOAuthSecret.secretValueFromJson('clientSecret'),
         scopes: ['profile', 'email', 'openid'],
         attributeMapping: {
           email: cognito.ProviderAttribute.GOOGLE_EMAIL,

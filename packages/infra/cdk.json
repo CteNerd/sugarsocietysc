@@ -11,7 +11,7 @@
         "domainName": "dev.sugarsocietysc.com",
         "guestPiiRetentionDays": 60,
         "googleOAuthClientId": "622792694552-1ilfi8dco17r69fiav2liu83ob8hqbv4.apps.googleusercontent.com",
-        "certificateArn": "arn:aws:acm:us-east-1:425061472162:certificate/b7105c7f-bdcc-41a2-a7e7-38988d521550"
+        "certificateArn": "arn:aws:acm:us-east-1:425061472162:certificate/90208d78-aa43-4d32-b341-409fb77ab504"
       },
       "prod": {
         "account": "425061472162",
@@ -22,7 +22,7 @@
         "domainName": "www.sugarsocietysc.com",
         "guestPiiRetentionDays": 60,
         "googleOAuthClientId": "",
-        "certificateArn": "arn:aws:acm:us-east-1:425061472162:certificate/b7105c7f-bdcc-41a2-a7e7-38988d521550"
+        "certificateArn": "arn:aws:acm:us-east-1:425061472162:certificate/90208d78-aa43-4d32-b341-409fb77ab504"
       }
     }
   }

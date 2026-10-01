@@ -39,7 +39,9 @@ export class WebStack extends Stack {
       },
       defaultRootObject: 'index.html',
       errorResponses: [
-        // React Router SPA fallback
+        // React Router SPA fallback — S3 (via OAC, no ListBucket grant) returns 403 for missing keys,
+        // not 404, so both must be mapped or every client-side route 403s instead of loading the app.
+        { httpStatus: 403, responseHttpStatus: 200, responsePagePath: '/index.html' },
         { httpStatus: 404, responseHttpStatus: 200, responsePagePath: '/index.html' },
       ],
     });
