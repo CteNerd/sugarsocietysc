@@ -43,8 +43,13 @@ Before the first workflow run, an AWS administrator must:
    invalidate its CloudFront distribution, invoke the migration Lambda, and query its AWS account
    identity. CDK bootstrap roles must trust this deploy role. Keep the production role/environment
    separately protected. The CDK CloudFormation execution policy also needs scoped service permissions
-   for resources in these stacks (including SQS, Lambda, SES `SendEmail`, SNS `Publish`, WAF,
-   CloudWatch, Cognito, Aurora, S3, and CloudFront).
+   for resources in these stacks (including SQS, Lambda, SES `SendEmail`, WAF, CloudWatch, Cognito,
+   Aurora, S3, and CloudFront), plus full lifecycle permissions — not just `sns:Publish` — for the
+   environment's alarm topic (`arn:aws:sns:<region>:<account>:sugarsocietysc-<env>-alarms`):
+   `sns:CreateTopic`, `sns:SetTopicAttributes`, `sns:GetTopicAttributes`, `sns:TagResource`,
+   `sns:Subscribe`, `sns:Unsubscribe`, `sns:ListSubscriptionsByTopic`, `sns:Publish`, and
+   `sns:DeleteTopic` — otherwise CDK fails to create/update the topic and its email subscription on
+   deploy.
 4. Bootstrap each account/region once with the repository's CDK version and approved CloudFormation
    execution policy. Review the policy and planned stack changes before the first deployment.
 5. Confirm the imported ACM certificate is issued in `us-east-1`, covers the environment's configured
@@ -124,7 +129,14 @@ never touches Route53 for it. After each environment's first successful deploy, 
 4. The Client ID goes into `environments.<env>.googleOAuthClientId` in `packages/infra/cdk.json`
    (not secret). The Client Secret must be put into the `GoogleOAuthClientSecret` Secrets Manager
    secret CDK creates (`sugarsocietysc/<env>/google-oauth-client-secret`) via
-   `aws secretsmanager put-secret-value`, never committed to source control.
+   `aws secretsmanager put-secret-value`, never committed to source control. The secret value must be
+   a JSON object with a single `clientSecret` key (not the raw secret string), since `auth-stack.ts`
+   reads it via `secretValueFromJson('clientSecret')`:
+   ```bash
+   aws secretsmanager put-secret-value \
+     --secret-id sugarsocietysc/<env>/google-oauth-client-secret \
+     --secret-string '{"clientSecret":"<google-client-secret>"}'
+   ```
 5. Redeploy the environment so Cognito picks up the non-empty client ID and enables the Google
    identity provider.
 
