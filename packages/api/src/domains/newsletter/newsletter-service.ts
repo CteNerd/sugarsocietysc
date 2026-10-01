@@ -22,12 +22,11 @@ export class NewsletterService {
     });
   }
 
-  async unsubscribe(input: NewsletterUnsubscribeRequest): Promise<NewsletterSubscriber> {
-    const subscriber = await this.repository.unsubscribeByEmail(input.email);
+  async unsubscribe(input: NewsletterUnsubscribeRequest): Promise<void> {
+    const subscriber = await this.repository.unsubscribeByToken(input.token);
     if (!subscriber) {
-      throw new NewsletterError('No subscriber found for this email');
+      throw new NewsletterError('Invalid unsubscribe link');
     }
-    return subscriber;
   }
 
   /** Account settings toggle: keeps `users.newsletter_opt_in_*` and the subscriber row in sync. */
@@ -35,17 +34,14 @@ export class NewsletterService {
     claims: AuthClaims,
     input: NewsletterPreferencesRequest,
   ): Promise<NewsletterSubscriber> {
-    const user = await this.repository.findUserByCognitoSub(claims.sub);
-    if (!user) {
+    const subscriber = await this.repository.updatePreferencesByCognitoSub(
+      claims.sub,
+      input.emailOptIn,
+      input.smsOptIn,
+    );
+    if (!subscriber) {
       throw new NewsletterError('User not yet synced');
     }
-    await this.repository.updateUserPreferences(user.id, input.emailOptIn, input.smsOptIn);
-    return this.repository.upsertSubscriber({
-      email: user.email,
-      userId: user.id,
-      emailOptIn: input.emailOptIn,
-      smsOptIn: input.smsOptIn,
-      source: 'account',
-    });
+    return subscriber;
   }
 }

@@ -69,7 +69,7 @@ export function ordersRoutes(pool: Pool, config: AppConfig): Hono<{ Variables: {
 
   app.get('/admin/:id', auth, adminOnly, async (c) => {
     try {
-      return c.json(await service.getOrderDetails(c.req.param('id')), 200);
+      return c.json(await service.getAdminOrderDetails(c.req.param('id')), 200);
     } catch (err) {
       return handleError(c, err);
     }
@@ -82,8 +82,7 @@ export function ordersRoutes(pool: Pool, config: AppConfig): Hono<{ Variables: {
     }
     try {
       const claims = c.get('authClaims') as AuthClaims;
-      const admin = await pool.query<{ id: string }>('SELECT id FROM users WHERE cognito_sub = $1', [claims.sub]);
-      const updated = await service.updateOrderStatus(c.req.param('id'), admin.rows[0]?.id, parsed.data);
+      const updated = await service.updateOrderStatusForAdmin(claims, c.req.param('id'), parsed.data);
       return c.json(updated, 200);
     } catch (err) {
       return handleError(c, err);

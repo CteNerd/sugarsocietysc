@@ -20,11 +20,11 @@ function fakeRepository(overrides: Partial<NewsletterRepository> = {}): Newslett
   return {
     upsertSubscriber: async (input: UpsertSubscriberInput) =>
       fakeSubscriber({ email: input.email, emailOptIn: input.emailOptIn, smsOptIn: input.smsOptIn }),
-    unsubscribeByEmail: async (email: string) =>
-      fakeSubscriber({ email, emailOptIn: false, smsOptIn: false, unsubscribedAt: new Date().toISOString() }),
+    unsubscribeByToken: async () =>
+      fakeSubscriber({ emailOptIn: false, smsOptIn: false, unsubscribedAt: new Date().toISOString() }),
     findByEmail: async () => undefined,
-    updateUserPreferences: async () => undefined,
-    findUserByCognitoSub: async () => ({ id: 'user-1', email: 'jane@example.com' }),
+    updatePreferencesByCognitoSub: async (_sub: string, emailOptIn: boolean, smsOptIn: boolean) =>
+      fakeSubscriber({ emailOptIn, smsOptIn, phone: '+15555550123', userId: 'user-1' }),
     ...overrides,
   } as unknown as NewsletterRepository;
 }
@@ -49,16 +49,13 @@ describe('NewsletterService', () => {
   it('unsubscribes an existing subscriber', async () => {
     const service = new NewsletterService(fakeRepository());
 
-    const result = await service.unsubscribe({ email: 'jane@example.com' });
-
-    expect(result.emailOptIn).toBe(false);
-    expect(result.unsubscribedAt).toBeDefined();
+    await expect(service.unsubscribe({ token: 'token' })).resolves.toBeUndefined();
   });
 
-  it('throws when unsubscribing an email that was never subscribed', async () => {
-    const service = new NewsletterService(fakeRepository({ unsubscribeByEmail: async () => undefined }));
+  it('throws when an unsubscribe token does not identify a subscriber', async () => {
+    const service = new NewsletterService(fakeRepository({ unsubscribeByToken: async () => undefined }));
 
-    await expect(service.unsubscribe({ email: 'missing@example.com' })).rejects.toThrow(NewsletterError);
+    await expect(service.unsubscribe({ token: 'invalid-token' })).rejects.toThrow(NewsletterError);
   });
 
   it('updates account preferences for the authenticated user', async () => {
@@ -71,7 +68,7 @@ describe('NewsletterService', () => {
   });
 
   it('throws when the authenticated user has not been synced yet', async () => {
-    const service = new NewsletterService(fakeRepository({ findUserByCognitoSub: async () => undefined }));
+    const service = new NewsletterService(fakeRepository({ updatePreferencesByCognitoSub: async () => undefined }));
 
     await expect(service.updatePreferences(claims, { emailOptIn: true, smsOptIn: false })).rejects.toThrow(
       NewsletterError,

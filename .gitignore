@@ -16,7 +16,6 @@ packages/infra/lib/*.js
 
 # CDK
 packages/infra/cdk.out/
-packages/infra/cdk.context.json
 
 # misc
 .DS_Store

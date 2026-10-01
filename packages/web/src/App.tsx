@@ -24,6 +24,9 @@ import Unsubscribe from "./main/newsletter/Unsubscribe";
 import NewsletterSignup from "./components/NewsletterSignup";
 import { AuthProvider } from "./auth/AuthContext";
 import ProtectedRoute from "./auth/ProtectedRoute";
+import AdminProtectedRoute from "./auth/AdminProtectedRoute";
+import AdminDashboard from "./main/AdminDashboard";
+import OrderHistory from "./main/OrderHistory";
 
 function App() {
   const breakpoint = window.matchMedia("(max-width: 1279px)");
@@ -125,6 +128,22 @@ function App() {
                       <ProtectedRoute>
                         <Account />
                       </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/orders"
+                    element={
+                      <ProtectedRoute>
+                        <OrderHistory />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin"
+                    element={
+                      <AdminProtectedRoute>
+                        <AdminDashboard />
+                      </AdminProtectedRoute>
                     }
                   />
                   <Route path="/" element={<Home isMobile={isMobile} />} />

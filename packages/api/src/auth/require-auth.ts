@@ -13,7 +13,12 @@ export function requireAuth(config: AppConfig) {
       return c.json({ error: 'Missing bearer token' }, 401);
     }
     try {
-      const claims = await verifyIdToken(token, config.cognitoJwksUri, config.cognitoIssuer);
+      const claims = await verifyIdToken(
+        token,
+        config.cognitoJwksUri,
+        config.cognitoIssuer,
+        config.cognitoClientId,
+      );
       c.set('authClaims', claims);
     } catch {
       return c.json({ error: 'Invalid or expired token' }, 401);

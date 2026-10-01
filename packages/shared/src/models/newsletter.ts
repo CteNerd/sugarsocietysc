@@ -1,6 +1,6 @@
 export type NotificationChannel = 'email' | 'sms';
-export type CampaignStatus = 'draft' | 'scheduled' | 'sent';
-export type SendStatus = 'sent' | 'failed' | 'bounced';
+export type CampaignStatus = 'draft' | 'sending' | 'sent' | 'failed';
+export type SendStatus = 'queued' | 'sending' | 'sent' | 'failed' | 'skipped';
 
 export interface NewsletterSubscriber {
   id: string;
@@ -18,10 +18,11 @@ export interface NewsletterCampaign {
   id: string;
   title: string;
   subject: string;
-  bodyHtml: string;
   bodyText: string;
   smsBody?: string;
-  scheduledAt?: string;
+  sendEmail: boolean;
+  sendSms: boolean;
+  createdAt: string;
   sentAt?: string;
   createdBy: string;
   status: CampaignStatus;
@@ -33,5 +34,7 @@ export interface NewsletterSendLog {
   subscriberId: string;
   channel: NotificationChannel;
   status: SendStatus;
-  sentAt: string;
+  errorMessage?: string;
+  createdAt: string;
+  sentAt?: string;
 }

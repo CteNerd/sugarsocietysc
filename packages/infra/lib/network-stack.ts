@@ -11,8 +11,8 @@ export class NetworkStack extends Stack {
     super(scope, id, props);
 
     this.vpc = new ec2.Vpc(this, 'Vpc', {
-      // Explicit AZs (rather than maxAzs) avoid an account/region context lookup at synth
-      // time, so `cdk synth`/`cdk diff` work without real AWS credentials configured.
+      // Explicit subnets keep the VPC layout stable; account-specific AZ lookup data is checked
+      // into cdk.context.json so synth and diff do not require AWS credentials.
       availabilityZones: [`${envConfig.region}a`, `${envConfig.region}b`],
       natGateways: envConfig.natGateways,
       subnetConfiguration: [

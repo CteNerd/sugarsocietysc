@@ -6,7 +6,7 @@ import { StripePaymentProvider } from './StripePaymentProvider';
 export function createPaymentProvider(config: AppConfig): IPaymentProvider {
   switch (config.paymentProvider) {
     case 'stripe':
-      return new StripePaymentProvider(config.stripeSecretKey);
+      return new StripePaymentProvider(config.stripeSecretKey, config.stripeWebhookSecret);
     default:
       throw new Error(`Unsupported payment provider: ${config.paymentProvider}`);
   }

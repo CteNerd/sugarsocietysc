@@ -1,6 +1,5 @@
 import { Hono } from 'hono';
 import { Pool } from 'pg';
-import Stripe from 'stripe';
 import { AppConfig } from '../../config/env';
 import { CatalogRepository } from '../catalog/catalog-repository';
 import { OrdersRepository } from '../orders/orders-repository';
@@ -14,8 +13,8 @@ import { createPaymentProvider } from '../../adapters/payment/payment-provider-f
  */
 export function webhooksStripeRoutes(pool: Pool, config: AppConfig): Hono {
   const app = new Hono();
-  const service = new OrdersService(new OrdersRepository(pool), new CatalogRepository(pool), createPaymentProvider(config));
-  const stripe = new Stripe(config.stripeSecretKey);
+  const paymentProvider = createPaymentProvider(config);
+  const service = new OrdersService(new OrdersRepository(pool), new CatalogRepository(pool), paymentProvider);
 
   app.post('/', async (c) => {
     const signature = c.req.header('stripe-signature');
@@ -24,16 +23,15 @@ export function webhooksStripeRoutes(pool: Pool, config: AppConfig): Hono {
     }
     const rawBody = await c.req.text();
 
-    let event: Stripe.Event;
+    let event;
     try {
-      event = stripe.webhooks.constructEvent(rawBody, signature, config.stripeWebhookSecret);
+      event = await paymentProvider.verifyWebhook(rawBody, signature);
     } catch {
-      return c.json({ error: 'Invalid Stripe signature' }, 400);
+      return c.json({ error: 'Invalid payment webhook signature' }, 400);
     }
 
-    if (event.type === 'payment_intent.succeeded') {
-      const intent = event.data.object as Stripe.PaymentIntent;
-      await service.handleDepositSucceeded(intent.id);
+    if (event.type === 'deposit_succeeded' && event.providerRef) {
+      await service.handleDepositSucceeded(event.providerRef);
     }
 
     return c.json({ received: true }, 200);

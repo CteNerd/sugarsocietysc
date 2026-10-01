@@ -3,6 +3,7 @@ import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import { Construct } from 'constructs';
 import { EnvConfig } from './env-config';
 
@@ -29,10 +30,54 @@ export class WebStack extends Stack {
     });
 
     const certificate = acm.Certificate.fromCertificateArn(this, 'WebCertificate', envConfig.certificateArn);
+    const webAcl = new wafv2.CfnWebACL(this, 'WebAcl', {
+      defaultAction: { allow: {} },
+      scope: 'CLOUDFRONT',
+      visibilityConfig: {
+        cloudWatchMetricsEnabled: true,
+        metricName: `SugarSocietyWebAcl-${envConfig.envName}`,
+        sampledRequestsEnabled: true,
+      },
+      rules: [
+        {
+          name: 'AWSManagedRulesCommonRuleSet',
+          priority: 10,
+          overrideAction: { none: {} },
+          statement: {
+            managedRuleGroupStatement: {
+              vendorName: 'AWS',
+              name: 'AWSManagedRulesCommonRuleSet',
+            },
+          },
+          visibilityConfig: {
+            cloudWatchMetricsEnabled: true,
+            metricName: `CommonRules-${envConfig.envName}`,
+            sampledRequestsEnabled: true,
+          },
+        },
+        {
+          name: 'AWSManagedRulesKnownBadInputsRuleSet',
+          priority: 20,
+          overrideAction: { none: {} },
+          statement: {
+            managedRuleGroupStatement: {
+              vendorName: 'AWS',
+              name: 'AWSManagedRulesKnownBadInputsRuleSet',
+            },
+          },
+          visibilityConfig: {
+            cloudWatchMetricsEnabled: true,
+            metricName: `KnownBadInputs-${envConfig.envName}`,
+            sampledRequestsEnabled: true,
+          },
+        },
+      ],
+    });
 
     this.distribution = new cloudfront.Distribution(this, 'WebDistribution', {
       domainNames: [envConfig.domainName],
       certificate,
+      webAclId: webAcl.attrArn,
       defaultBehavior: {
         origin: origins.S3BucketOrigin.withOriginAccessControl(this.bucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
@@ -49,6 +94,14 @@ export class WebStack extends Stack {
     new CfnOutput(this, 'WebDistributionDomain', {
       description: `Create a CNAME for ${envConfig.domainName} pointing here in the external DNS provider`,
       value: this.distribution.distributionDomainName,
+    });
+    new CfnOutput(this, 'WebDistributionId', {
+      description: 'CloudFront distribution ID used by the deployment workflow for invalidations',
+      value: this.distribution.distributionId,
+    });
+    new CfnOutput(this, 'WebBucketName', {
+      description: 'Private S3 bucket used by the deployment workflow for static assets',
+      value: this.bucket.bucketName,
     });
   }
 }

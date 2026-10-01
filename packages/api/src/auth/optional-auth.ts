@@ -13,7 +13,12 @@ export function optionalAuth(config: AppConfig) {
     const token = header?.startsWith('Bearer ') ? header.slice('Bearer '.length) : undefined;
     if (token) {
       try {
-        const claims = await verifyIdToken(token, config.cognitoJwksUri, config.cognitoIssuer);
+        const claims = await verifyIdToken(
+          token,
+          config.cognitoJwksUri,
+          config.cognitoIssuer,
+          config.cognitoClientId,
+        );
         c.set('authClaims', claims);
       } catch {
         // Invalid/expired token on an optional-auth route: treat the caller as a guest rather than

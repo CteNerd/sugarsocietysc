@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { User } from '@sugarsocietysc/shared';
 import { useAuth } from '../../auth/AuthContext';
 import { getCurrentUser } from '../../api/auth-client';
@@ -54,6 +55,8 @@ export default function Account() {
       </p>
       <p>{user.email}</p>
       <p>{user.phone}</p>
+      <p><Link to="/orders">View my orders</Link></p>
+      {user.role === 'admin' && <p><Link to="/admin">Open admin dashboard</Link></p>}
       <fieldset disabled={savingPrefs}>
         <legend>Newsletter Preferences</legend>
         <label>
@@ -79,4 +82,3 @@ export default function Account() {
     </div>
   );
 }
-

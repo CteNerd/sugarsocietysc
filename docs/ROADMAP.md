@@ -14,7 +14,7 @@ new session, read this file first.
 5. Newsletter sending (email + SMS, admin-composed)
 
 Plus: AWS (CDK) + CI/CD, ports-and-adapters/SOLID architecture, OAuth-ready Cognito auth, mature security
-posture.
+posture. Custom-order workflow remains future work and is excluded from the current completion scope.
 
 ## Key decisions
 
@@ -107,32 +107,31 @@ checkpoints if cost-sensitive (snapshot first to keep data).
 
 - [x] **Phase 0 — Foundation**: monorepo restructure, CDK stack skeletons (Network/Data/Auth/Api/Web,
   synth-validated, not deployed), local dev stack, repo AI tooling, README. *(not yet deployed to AWS)*
-- [x] **Phase 1 — Auth & Accounts (local-only)**: Cognito-compatible signup/login/JWT verification,
+- [x] **Phase 1 — Auth & Accounts**: Cognito-compatible signup/login/JWT verification,
   `auth-sync` domain (repository/service/routes + tests), `requireAuth` hono middleware (works with or
   without API Gateway's JWT authorizer), `users`/`holiday_preferences` migration, cognito-local seed
   script, frontend signup/confirm/login/account pages + `AuthContext` + `ProtectedRoute`.
-  **Remaining for this phase**: deploy `AuthStack` to a real AWS dev account, register a real Google OAuth
-  client, verify the federated login flow end-to-end (see checkpoint above) — intentionally deferred.
+  Google OAuth sign-in has been successfully verified by the owner. AWS environment deployment state
+  and production OAuth redirect configuration still need to be confirmed as part of the AWS rollout.
 - [ ] **Phase 2 — Newsletter signup**: subscribe/unsubscribe, optional member upsell, account settings toggle
   - [x] `newsletter_subscribers` migration, `newsletter` domain (repository/service/routes + tests),
     `/newsletter/subscribe` + `/newsletter/unsubscribe` (public), `/newsletter/preferences` (authed,
     keeps `users.newsletter_opt_in_*` in sync), CDK `NewsletterFn` + HTTP API routes (local-only so far).
   - [x] Frontend: footer `NewsletterSignup` widget (guest subscribe + account-creation upsell on success),
     `/newsletter-unsubscribe` landing page, `Account` page email/SMS preference toggles.
-  - [ ] Admin member upsell messaging/copy review, real SES/SNS send verification (deferred to AWS checkpoint).
-- [ ] **Phase 3 — Catalog & admin pricing**: `PreSaleEvent`/`CookieDesign`/`PackagingOption` management
+  - [ ] Admin member upsell messaging/copy review; real SES/SNS delivery verification is part of Phase 8/AWS dev.
+- [x] **Phase 3 — Catalog & admin pricing**: `PreSaleEvent`/`CookieDesign`/`PackagingOption` management
   - [x] Migrations (`pre_sale_events`, `cookie_designs`, `packaging_options`), `catalog` domain
     (repository/service/routes + tests), `GET /catalog/presale/active` (public), CDK `CatalogFn` + HTTP
     API routes (local-only so far), idempotent `seed:halloween-presale` demo-data script.
-  - [ ] Admin CRUD UI for designs/events/packaging — **deferred**; demo data is loaded via the seed
-    script instead. Follow-up if ongoing catalog editing (vs. one-off seeding) is needed.
+  - [x] Admin CRUD UI for events/designs/packaging.
 - [x] **Phase 4 — Pre-sale order workflow**: browse active Pre-Sale → select quantity (multiples of 6,
   oversell-guarded server-side) → select packaging (box + optional add-ons) → review invoice → guest or
   authed contact capture. `orders`/`order_items` migrations, `orders` domain (repository/service/routes +
   tests), 4-step web wizard (`packages/web/src/main/presale`), CDK `OrdersFn` + HTTP API routes. Verified
   end-to-end in the browser against local Postgres (quantity → packaging → invoice → persisted order).
   *(Explicitly excludes custom/Asana-based ordering — that's Phase 5.)*
-- [ ] **Phase 5 — Custom order workflow** *(intentionally skipped for this demo — more detail needed)*
+- [ ] **Phase 5 — Custom order workflow** *(excluded from the current completion scope; retain as future work)*
 - [x] **Phase 6 — Payments**: Stripe deposit (50%) via `IPaymentProvider`/Stripe adapter, PaymentIntent
   created on order creation, `payment_transactions` ledger, Stripe Elements (`PaymentElement`) on the web
   wizard, `/webhooks/stripe` handling `payment_intent.succeeded`, CDK `WebhooksStripeFn` + Secrets
@@ -141,7 +140,16 @@ checkpoints if cost-sensitive (snapshot first to keep data).
   expected); see README for the real test-key setup needed to complete this.
 - [x] **Phase 7 — Order management**: status state machine (repository/service + tests) covering
   received → confirmed → ready → completed/cancelled transitions, admin list/update routes
-  (`/orders/admin`, `requireAdmin` middleware). **No admin dashboard or customer order-history UI built
-  yet** — deferred; demo relies on direct DB/API inspection. Follow-up if Ash's test needs a UI for this.
-- [ ] **Phase 8 — Newsletter sending**: admin composer, SQS fan-out, send log
-- [ ] **Phase 9 — Hardening**: WAF, CloudWatch, OWASP pass, domain cutover
+  (`/orders/admin`, `requireAdmin` middleware), admin catalog/order dashboard, and customer order history.
+- [x] **Phase 8 — Newsletter sending**: admin-composed plain-text content within the fixed branded email
+  template (logo/signature); simple SMS text with optional URLs; SQS fan-out, preference filtering,
+  idempotent send log, and admin campaign controls. Live SES/SNS delivery remains an AWS-dev validation.
+- [ ] **Phase 9 — Hardening and AWS release**: guest PII purge, OWASP pass, WAF/CloudWatch controls,
+  GitHub Actions OIDC-based deployment to AWS, SES/SNS and Stripe verification, and domain cutover.
+  Guest PII retention, CloudFront WAF, CloudWatch alarms, and the manual deployment workflow are
+  implemented. The WAF currently protects the CloudFront website only; API-edge protection/rate limits
+  and alarm notification destinations remain to be configured. The owner must configure GitHub
+  Environment variables, AWS OIDC trust/permissions, CDK bootstrap, runtime secrets, SES sender
+  verification, and external DNS/certificate prerequisites. The production Google OAuth client ID is
+  also blank in CDK configuration and must be verified before production sign-in. Real Stripe/SES/SNS
+  checks and production cutover remain; production changes require explicit approval.

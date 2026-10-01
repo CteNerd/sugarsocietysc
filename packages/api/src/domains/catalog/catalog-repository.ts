@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { Pool, PoolClient } from 'pg';
 import {
   CookieDesign,
   CreateCookieDesignRequest,
@@ -84,6 +84,21 @@ function toPackagingOption(row: PackagingOptionRow): PackagingOption {
 export class CatalogRepository {
   constructor(private readonly pool: Pool) {}
 
+  private async withTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const result = await fn(client);
+      await client.query('COMMIT');
+      return result;
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+  }
+
   // --- Public reads ---
 
   async getActivePreSaleEvent(): Promise<PreSaleEvent | undefined> {
@@ -124,16 +139,39 @@ export class CatalogRepository {
 
   /** Atomically reserves `quantity` units of a design, never exceeding `max_quantity`. Returns the
    * updated design, or undefined if the reservation would oversell (caller should fail the order). */
-  async reserveCookieDesignQuantity(id: string, quantity: number): Promise<CookieDesign | undefined> {
-    const result = await this.pool.query<CookieDesignRow>(
-      `UPDATE cookie_designs
-       SET quantity_sold = quantity_sold + $2
-       WHERE id = $1 AND type = 'presale' AND is_active = true
-         AND (max_quantity IS NULL OR quantity_sold + $2 <= max_quantity)
-       RETURNING *`,
-      [id, quantity],
+  async reserveCookieDesignQuantity(
+    client: PoolClient,
+    orderId: string,
+    id: string,
+    quantity: number,
+  ): Promise<boolean> {
+    const design = await client.query<{ max_quantity: number | null; quantity_sold: number; is_active: boolean; type: string }>(
+      'SELECT max_quantity, quantity_sold, is_active, type FROM cookie_designs WHERE id = $1 FOR UPDATE',
+      [id],
     );
-    return result.rows[0] ? toCookieDesign(result.rows[0]) : undefined;
+    const row = design.rows[0];
+    if (!row || row.type !== 'presale' || !row.is_active) return false;
+
+    await client.query(
+      `UPDATE order_inventory_holds SET status = 'expired'
+       WHERE cookie_design_id = $1 AND status = 'held' AND expires_at <= now()`,
+      [id],
+    );
+    const activeHolds = await client.query<{ quantity: string }>(
+      `SELECT COALESCE(SUM(quantity), 0) AS quantity
+       FROM order_inventory_holds WHERE cookie_design_id = $1 AND status = 'held' AND expires_at > now()`,
+      [id],
+    );
+    const reserved = Number(activeHolds.rows[0].quantity);
+    if (row.max_quantity !== null && row.quantity_sold + reserved + quantity > row.max_quantity) {
+      return false;
+    }
+    await client.query(
+      `INSERT INTO order_inventory_holds (order_id, cookie_design_id, quantity, expires_at)
+       VALUES ($1, $2, $3, now() + interval '30 minutes')`,
+      [orderId, id, quantity],
+    );
+    return true;
   }
 
   // --- Admin: Pre-Sale events ---
@@ -144,7 +182,8 @@ export class CatalogRepository {
   }
 
   async createPreSaleEvent(input: CreatePreSaleEventRequest): Promise<PreSaleEvent> {
-    const result = await this.pool.query<PreSaleEventRow>(
+    const create = async (client: Pool | PoolClient) => {
+      const result = await client.query<PreSaleEventRow>(
       `INSERT INTO pre_sale_events
          (name, holiday_tag, order_window_start, order_window_end, pickup_date, deposit_percent, is_active)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -158,12 +197,19 @@ export class CatalogRepository {
         input.depositPercent,
         input.isActive,
       ],
-    );
-    return toPreSaleEvent(result.rows[0]);
+      );
+      return toPreSaleEvent(result.rows[0]);
+    };
+    if (!input.isActive) return create(this.pool);
+    return this.withTransaction(async (client) => {
+      await client.query('UPDATE pre_sale_events SET is_active = false WHERE is_active = true');
+      return create(client);
+    });
   }
 
   async updatePreSaleEvent(id: string, input: UpdatePreSaleEventRequest): Promise<PreSaleEvent | undefined> {
-    const result = await this.pool.query<PreSaleEventRow>(
+    const update = async (client: Pool | PoolClient) => {
+      const result = await client.query<PreSaleEventRow>(
       `UPDATE pre_sale_events SET
          name = COALESCE($2, name),
          holiday_tag = COALESCE($3, holiday_tag),
@@ -184,8 +230,16 @@ export class CatalogRepository {
         input.depositPercent ?? null,
         input.isActive ?? null,
       ],
-    );
-    return result.rows[0] ? toPreSaleEvent(result.rows[0]) : undefined;
+      );
+      return result.rows[0] ? toPreSaleEvent(result.rows[0]) : undefined;
+    };
+    if (input.isActive !== true) return update(this.pool);
+    return this.withTransaction(async (client) => {
+      const existing = await client.query('SELECT id FROM pre_sale_events WHERE id = $1 FOR UPDATE', [id]);
+      if (existing.rowCount !== 1) return undefined;
+      await client.query('UPDATE pre_sale_events SET is_active = false WHERE is_active = true AND id <> $1', [id]);
+      return update(client);
+    });
   }
 
   // --- Admin: Cookie designs ---

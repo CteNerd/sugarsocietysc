@@ -92,3 +92,12 @@ export interface OrderWithDetails {
   packaging: OrderPackaging | null;
   statusHistory: OrderStatusHistoryEntry[];
 }
+
+export interface AdminOrderWithDetails extends OrderWithDetails {
+  customer?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+  };
+}

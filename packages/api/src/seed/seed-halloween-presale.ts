@@ -13,9 +13,10 @@ import { Pool } from 'pg';
  */
 export async function seedHalloweenPresale(pool: Pool): Promise<string> {
   const now = new Date();
+  const year = now.getUTCFullYear();
   const orderWindowStart = now;
-  const orderWindowEnd = new Date(now.getFullYear(), 9, 29); // Oct 29
-  const pickupDate = new Date(now.getFullYear(), 9, 31); // Oct 31 (Halloween)
+  const orderWindowEnd = new Date(`${year}-10-29T23:59:59.999-05:00`);
+  const pickupDate = new Date(`${year}-10-31T12:00:00-05:00`);
 
   const existingEvent = await pool.query(
     `SELECT id FROM pre_sale_events WHERE name = 'Halloween' ORDER BY created_at DESC LIMIT 1`,
@@ -32,7 +33,7 @@ export async function seedHalloweenPresale(pool: Pool): Promise<string> {
   } else {
     const inserted = await pool.query(
       `INSERT INTO pre_sale_events (name, holiday_tag, order_window_start, order_window_end, pickup_date, deposit_percent, is_active)
-       VALUES ($1, 'halloween', $2, $3, $4, 50, true)
+       VALUES ($1, 'halloween', $2, $3, $4, 50, false)
        RETURNING id`,
       ['Halloween', orderWindowStart, orderWindowEnd, pickupDate],
     );

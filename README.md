@@ -54,14 +54,22 @@ npm run diff:dev --workspace=@sugarsocietysc/infra      # CDK diff against the d
 `cdk deploy` is intentionally not run automatically by AI agents in this repo — deploys touch real AWS
 billing/resources and require explicit human approval.
 
+### AWS deployment via GitHub Actions
+
+The manual-only `Deploy to AWS` workflow uses GitHub OIDC, deploys CDK and publishes the frontend to
+S3 + CloudFront. Configure environment-specific GitHub variables and AWS OIDC/CDK bootstrap first;
+production should require GitHub Environment approval. See [docs/AWS-DEPLOYMENT.md](docs/AWS-DEPLOYMENT.md)
+for the exact setup and rollback/cutover checklist. Runtime credentials remain in AWS Secrets Manager.
+
 ## Deployment
 
 - **Frontend**: currently deployed to GitHub Pages via [.github/workflows/deploy.yml](.github/workflows/deploy.yml)
-  on push to `main`. Will migrate to S3 + CloudFront (`packages/infra` `WebStack`) as part of the AWS
-  cutover.
-- **Backend/Infra**: not yet deployed to AWS. `packages/infra` defines `dev` and `prod` environments (see
-  `packages/infra/cdk.json`); CI (`.github/workflows/infra-ci.yml`) runs `cdk synth` on PRs touching infra
-  code.
+  on push to `main`; migrate to S3 + CloudFront (`packages/infra` `WebStack`) after the AWS deployment
+  workflow and cutover are verified.
+- **Backend/Infra**: successful Google OAuth sign-in confirms the Cognito Hosted UI path has been used;
+  deployment state of the remaining stacks is not assumed. `packages/infra` defines `dev` and `prod`
+  environments; existing infra CI runs `cdk synth` on PRs touching infra code. The new manual AWS
+  workflow is documented in [docs/AWS-DEPLOYMENT.md](docs/AWS-DEPLOYMENT.md).
 
 ### Stripe test-mode setup (required for Phase 6 deposit payments)
 
@@ -80,18 +88,21 @@ billing/resources and require explicit human approval.
 
 See [docs/ROADMAP.md](docs/ROADMAP.md) for the full phase-by-phase plan and status. Summary:
 - [x] Phase 0 — Foundation (monorepo, CDK stack skeletons, local dev stack, repo AI tooling) — not yet deployed to AWS
-- [x] Phase 1 — Auth & Accounts, local-only (Cognito-compatible signup/login/JWT, account pages) — Google
-  OAuth + first real AWS deploy intentionally deferred to a dedicated checkpoint
+- [x] Phase 1 — Auth & Accounts (Cognito-compatible signup/login/JWT, account pages); Google OAuth sign-in
+  successfully verified by the owner. AWS environment rollout remains a separate checkpoint.
 - [ ] Phase 2 — Newsletter signup (subscribe/unsubscribe/preferences) — mostly done; admin copy review and
-  real SES/SNS send verification deferred to the AWS checkpoint
-- [x] Phase 3 — Catalog (Pre-Sale events, cookie designs, packaging options) — backend + idempotent demo
-  seed script; admin CRUD UI deferred (seed script covers this demo)
+  real SES/SNS delivery verification remain.
+- [x] Phase 3 — Catalog (Pre-Sale events, cookie designs, packaging options) — backend, idempotent demo
+  seed script, and admin CRUD UI.
 - [x] Phase 4 — Pre-Sale order workflow (browse → quantity → packaging → invoice → guest/authed checkout)
   — full backend + web wizard, verified end-to-end locally
-- [ ] Phase 5 — Custom order workflow — intentionally skipped for this demo (needs more detail)
+- [ ] Phase 5 — Custom order workflow — excluded from the current completion scope; retained as future work
 - [x] Phase 6 — Payments (Stripe deposit via `IPaymentProvider`, webhook handling) — backend + Stripe
   Elements web UI built; untested with real Stripe test keys (see setup above)
-- [x] Phase 7 — Order management (status state machine, admin list/update routes) — backend only; no
-  admin dashboard or customer order-history UI yet
-- [ ] Phases 8–9 — newsletter sending, hardening
-
+- [x] Phase 7 — Order management — backend, admin order dashboard, and customer order history.
+- [x] Phase 8 — Newsletter campaigns — admin drafts, fixed branded email rendering, SMS, SQS fan-out,
+  preference rechecks, and delivery logs. Real AWS delivery verification remains.
+- [ ] Phase 9 — Hardening and AWS release — guest PII retention, CloudFront WAF/CloudWatch alarms, and
+  manual OIDC deployment workflow are implemented. API-edge protection/rate limits, alarm destinations,
+  real-provider checks, GitHub/AWS setup, and production cutover remain. Configure GitHub Environment
+  **variables** and AWS OIDC as documented; GitHub secrets are not required by the deployment workflow.

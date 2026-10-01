@@ -39,7 +39,11 @@ exports.up = (pgm) => {
   pgm.addConstraint(
     'orders',
     'orders_contact_check',
-    'CHECK ((user_id IS NOT NULL) OR (guest_email IS NOT NULL AND guest_phone IS NOT NULL))',
+    `CHECK (
+      user_id IS NOT NULL
+      OR (guest_email IS NOT NULL AND guest_phone IS NOT NULL)
+      OR (status IN ('complete', 'cancelled') AND guest_email IS NULL AND guest_phone IS NULL)
+    )`,
   );
   pgm.createIndex('orders', 'user_id');
   pgm.createIndex('orders', 'stripe_payment_intent_id');
@@ -47,7 +51,7 @@ exports.up = (pgm) => {
   pgm.createTable('order_items', {
     id: { type: 'uuid', primaryKey: true, default: pgm.func('gen_random_uuid()') },
     order_id: { type: 'uuid', notNull: true, references: 'orders', onDelete: 'CASCADE' },
-    cookie_design_id: { type: 'uuid', notNull: true, references: 'cookie_designs' },
+    cookie_design_id: { type: 'uuid', notNull: true, references: 'cookie_designs', onDelete: 'RESTRICT' },
     quantity: { type: 'integer', notNull: true },
     unit_price: { type: 'integer', notNull: true },
     line_total: { type: 'integer', notNull: true },
@@ -58,7 +62,7 @@ exports.up = (pgm) => {
   pgm.createTable('order_packaging', {
     id: { type: 'uuid', primaryKey: true, default: pgm.func('gen_random_uuid()') },
     order_id: { type: 'uuid', notNull: true, references: 'orders', onDelete: 'CASCADE' },
-    packaging_option_id: { type: 'uuid', notNull: true, references: 'packaging_options' },
+    packaging_option_id: { type: 'uuid', notNull: true, references: 'packaging_options', onDelete: 'RESTRICT' },
     add_on_option_ids: { type: 'uuid[]', notNull: true, default: '{}' },
     quantity: { type: 'integer', notNull: true, default: 1 },
     price: { type: 'integer', notNull: true },

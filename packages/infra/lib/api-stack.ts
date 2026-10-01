@@ -1,13 +1,20 @@
-import { Duration, Stack, StackProps } from 'aws-cdk-lib';
+import { CfnOutput, Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
+import * as events from 'aws-cdk-lib/aws-events';
+import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpJwtAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
+import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as eventSources from 'aws-cdk-lib/aws-lambda-event-sources';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambdaNode from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as rds from 'aws-cdk-lib/aws-rds';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import * as logs from 'aws-cdk-lib/aws-logs';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Construct } from 'constructs';
 import * as path from 'path';
 import { EnvConfig } from './env-config';
@@ -22,8 +29,7 @@ export interface ApiStackProps extends StackProps {
 
 /**
  * HTTP API (cheaper than REST API, native JWT authorizer support for Cognito)
- * fronting one NodejsFunction per domain. Health, auth-sync, and newsletter are wired up through
- * Phase 2 — later phases add catalog/orders/admin/webhook functions following this same pattern.
+ * fronting NodejsFunctions for the API domains and scheduled/queue-driven maintenance workers.
  */
 export class ApiStack extends Stack {
   public readonly httpApi: apigwv2.HttpApi;
@@ -49,14 +55,22 @@ export class ApiStack extends Stack {
       DB_NAME: 'sugarsocietysc',
       GUEST_PII_RETENTION_DAYS: envConfig.guestPiiRetentionDays.toString(),
       SMS_PROVIDER: 'sns',
+      NEWSLETTER_FROM_EMAIL: process.env.NEWSLETTER_FROM_EMAIL ?? '',
+      NEWSLETTER_SITE_URL: `https://${envConfig.domainName}`,
+      NEWSLETTER_SIGNATURE: process.env.NEWSLETTER_SIGNATURE || 'Sugar Society Sugar Cookies',
       COGNITO_ISSUER_URL: props.userPool.userPoolProviderUrl,
       COGNITO_CLIENT_ID: props.userPoolClient.userPoolClientId,
     };
+    const functionLogGroup = (name: string) => new logs.LogGroup(this, `${name}Logs`, {
+      retention: logs.RetentionDays.ONE_MONTH,
+      removalPolicy: envConfig.envName === 'prod' ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+    });
 
     const healthFn = new lambdaNode.NodejsFunction(this, 'HealthFn', {
       entry: path.join(__dirname, '../../api/src/lambda.ts'),
       handler: 'handler',
       ...commonFnProps,
+      logGroup: functionLogGroup('HealthFn'),
       environment: commonEnv,
     });
     props.cluster.secret?.grantRead(healthFn);
@@ -69,6 +83,7 @@ export class ApiStack extends Stack {
       entry: path.join(__dirname, '../../api/src/migrate-lambda.ts'),
       handler: 'handler',
       ...commonFnProps,
+      logGroup: functionLogGroup('MigrateFn'),
       timeout: Duration.seconds(60),
       environment: commonEnv,
       bundling: {
@@ -89,15 +104,74 @@ export class ApiStack extends Stack {
       entry: path.join(__dirname, '../../api/src/seed-lambda.ts'),
       handler: 'handler',
       ...commonFnProps,
+      logGroup: functionLogGroup('SeedFn'),
       timeout: Duration.seconds(60),
       environment: commonEnv,
     });
     props.cluster.secret?.grantRead(seedFn);
 
+    const newsletterDeadLetterQueue = new sqs.Queue(this, 'NewsletterDeadLetterQueue', {
+      encryption: sqs.QueueEncryption.SQS_MANAGED,
+      retentionPeriod: Duration.days(14),
+    });
+    const newsletterQueue = new sqs.Queue(this, 'NewsletterQueue', {
+      encryption: sqs.QueueEncryption.SQS_MANAGED,
+      retentionPeriod: Duration.days(4),
+      visibilityTimeout: Duration.seconds(360),
+      deadLetterQueue: {
+        queue: newsletterDeadLetterQueue,
+        maxReceiveCount: 5,
+      },
+    });
+
+    const guestPiiRetentionFn = new lambdaNode.NodejsFunction(this, 'GuestPiiRetentionFn', {
+      entry: path.join(__dirname, '../../api/src/guest-pii-retention-lambda.ts'),
+      handler: 'handler',
+      ...commonFnProps,
+      logGroup: functionLogGroup('GuestPiiRetentionFn'),
+      timeout: Duration.seconds(60),
+      environment: commonEnv,
+    });
+    props.cluster.secret?.grantRead(guestPiiRetentionFn);
+    new events.Rule(this, 'GuestPiiRetentionSchedule', {
+      description: `Purge guest contact details after ${envConfig.guestPiiRetentionDays} days in terminal order states`,
+      schedule: events.Schedule.cron({ minute: '0', hour: '3' }),
+      targets: [new targets.LambdaFunction(guestPiiRetentionFn)],
+    });
+    const inventoryHoldExpiryFn = new lambdaNode.NodejsFunction(this, 'InventoryHoldExpiryFn', {
+      entry: path.join(__dirname, '../../api/src/inventory-hold-expiry-lambda.ts'),
+      handler: 'handler',
+      ...commonFnProps,
+      logGroup: functionLogGroup('InventoryHoldExpiryFn'),
+      timeout: Duration.seconds(60),
+      environment: commonEnv,
+    });
+    props.cluster.secret?.grantRead(inventoryHoldExpiryFn);
+    new events.Rule(this, 'InventoryHoldExpirySchedule', {
+      description: 'Release cookie inventory held by unpaid checkouts after 30 minutes',
+      schedule: events.Schedule.rate(Duration.minutes(5)),
+      targets: [new targets.LambdaFunction(inventoryHoldExpiryFn)],
+    });
+    new cloudwatch.Alarm(this, 'InventoryHoldExpiryErrorsAlarm', {
+      alarmDescription: 'Investigate failures in the scheduled unpaid inventory hold expiry job.',
+      metric: inventoryHoldExpiryFn.metricErrors({ period: Duration.minutes(5), statistic: 'Sum' }),
+      threshold: 1,
+      evaluationPeriods: 1,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    });
+    new cloudwatch.Alarm(this, 'GuestPiiRetentionErrorsAlarm', {
+      alarmDescription: 'Investigate failures in the scheduled guest-contact purge.',
+      metric: guestPiiRetentionFn.metricErrors({ period: Duration.minutes(5), statistic: 'Sum' }),
+      threshold: 1,
+      evaluationPeriods: 1,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    });
+
     const authSyncFn = new lambdaNode.NodejsFunction(this, 'AuthSyncFn', {
       entry: path.join(__dirname, '../../api/src/lambda.ts'),
       handler: 'handler',
       ...commonFnProps,
+      logGroup: functionLogGroup('AuthSyncFn'),
       environment: commonEnv,
     });
     props.cluster.secret?.grantRead(authSyncFn);
@@ -106,14 +180,57 @@ export class ApiStack extends Stack {
       entry: path.join(__dirname, '../../api/src/lambda.ts'),
       handler: 'handler',
       ...commonFnProps,
-      environment: commonEnv,
+      logGroup: functionLogGroup('NewsletterFn'),
+      environment: { ...commonEnv, NEWSLETTER_QUEUE_URL: newsletterQueue.queueUrl },
     });
     props.cluster.secret?.grantRead(newsletterFn);
+    newsletterQueue.grantSendMessages(newsletterFn);
+
+    const newsletterWorkerFn = new lambdaNode.NodejsFunction(this, 'NewsletterWorkerFn', {
+      entry: path.join(__dirname, '../../api/src/domains/newsletter/newsletter-worker.ts'),
+      handler: 'handler',
+      ...commonFnProps,
+      logGroup: functionLogGroup('NewsletterWorkerFn'),
+      timeout: Duration.seconds(60),
+      environment: { ...commonEnv, NEWSLETTER_QUEUE_URL: newsletterQueue.queueUrl },
+    });
+    props.cluster.secret?.grantRead(newsletterWorkerFn);
+    newsletterQueue.grantConsumeMessages(newsletterWorkerFn);
+    newsletterWorkerFn.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['ses:SendEmail'],
+      resources: ['*'],
+    }));
+    newsletterWorkerFn.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['sns:Publish'],
+      resources: ['*'],
+    }));
+    newsletterWorkerFn.addEventSource(new eventSources.SqsEventSource(newsletterQueue, {
+      batchSize: 10,
+      reportBatchItemFailures: true,
+    }));
+    new cloudwatch.Alarm(this, 'NewsletterWorkerErrorsAlarm', {
+      alarmDescription: 'Investigate newsletter delivery worker failures and inspect the SQS dead-letter queue.',
+      metric: newsletterWorkerFn.metricErrors({ period: Duration.minutes(5), statistic: 'Sum' }),
+      threshold: 1,
+      evaluationPeriods: 1,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    });
+    new cloudwatch.Alarm(this, 'NewsletterDeadLetterQueueAlarm', {
+      alarmDescription: 'Redrive or investigate failed newsletter messages before retrying the campaign.',
+      metric: newsletterDeadLetterQueue.metricApproximateNumberOfMessagesVisible({
+        period: Duration.minutes(5),
+        statistic: 'Maximum',
+      }),
+      threshold: 1,
+      evaluationPeriods: 1,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    });
 
     const catalogFn = new lambdaNode.NodejsFunction(this, 'CatalogFn', {
       entry: path.join(__dirname, '../../api/src/lambda.ts'),
       handler: 'handler',
       ...commonFnProps,
+      logGroup: functionLogGroup('CatalogFn'),
       environment: commonEnv,
     });
     props.cluster.secret?.grantRead(catalogFn);
@@ -131,6 +248,7 @@ export class ApiStack extends Stack {
       entry: path.join(__dirname, '../../api/src/lambda.ts'),
       handler: 'handler',
       ...commonFnProps,
+      logGroup: functionLogGroup('OrdersFn'),
       environment: stripeEnv,
     });
     props.cluster.secret?.grantRead(ordersFn);
@@ -140,6 +258,7 @@ export class ApiStack extends Stack {
       entry: path.join(__dirname, '../../api/src/lambda.ts'),
       handler: 'handler',
       ...commonFnProps,
+      logGroup: functionLogGroup('WebhooksStripeFn'),
       environment: stripeEnv,
     });
     props.cluster.secret?.grantRead(webhooksStripeFn);
@@ -195,6 +314,24 @@ export class ApiStack extends Stack {
       path: '/newsletter/preferences',
       methods: [apigwv2.HttpMethod.PATCH],
       integration: new HttpLambdaIntegration('NewsletterPreferencesIntegration', newsletterFn),
+      authorizer: cognitoAuthorizer,
+    });
+    this.httpApi.addRoutes({
+      path: '/newsletter/admin/campaigns',
+      methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST],
+      integration: new HttpLambdaIntegration('NewsletterAdminCampaignsIntegration', newsletterFn),
+      authorizer: cognitoAuthorizer,
+    });
+    this.httpApi.addRoutes({
+      path: '/newsletter/admin/campaigns/{id}/send',
+      methods: [apigwv2.HttpMethod.POST],
+      integration: new HttpLambdaIntegration('NewsletterSendCampaignIntegration', newsletterFn),
+      authorizer: cognitoAuthorizer,
+    });
+    this.httpApi.addRoutes({
+      path: '/newsletter/admin/campaigns/{id}/logs',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: new HttpLambdaIntegration('NewsletterCampaignLogsIntegration', newsletterFn),
       authorizer: cognitoAuthorizer,
     });
 
@@ -290,6 +427,25 @@ export class ApiStack extends Stack {
       path: '/webhooks/stripe',
       methods: [apigwv2.HttpMethod.POST],
       integration: new HttpLambdaIntegration('WebhooksStripeIntegration', webhooksStripeFn),
+    });
+
+    new CfnOutput(this, 'HttpApiUrl', {
+      description: 'Base URL for the deployed HTTP API',
+      value: this.httpApi.apiEndpoint,
+    });
+    new CfnOutput(this, 'MigrateFunctionArn', {
+      description: 'One-off database migration Lambda invoked by the deployment workflow',
+      value: migrateFn.functionArn,
+    });
+    new cloudwatch.Alarm(this, 'HttpApiServerErrorsAlarm', {
+      alarmDescription: 'Investigate repeated 5xx responses from the public API.',
+      metric: this.httpApi.metricServerError({
+        period: Duration.minutes(5),
+        statistic: 'Sum',
+      }),
+      threshold: 5,
+      evaluationPeriods: 1,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
     });
   }
 }

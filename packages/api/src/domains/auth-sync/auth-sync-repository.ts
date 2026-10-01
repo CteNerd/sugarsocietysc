@@ -37,8 +37,8 @@ export interface UpsertUserInput {
   firstName: string;
   lastName: string;
   phone: string;
-  newsletterOptInEmail: boolean;
-  newsletterOptInSms: boolean;
+  newsletterOptInEmail?: boolean;
+  newsletterOptInSms?: boolean;
 }
 
 export class AuthSyncRepository {
@@ -48,14 +48,14 @@ export class AuthSyncRepository {
     const result = await this.pool.query<UserRow>(
       `INSERT INTO users
          (cognito_sub, email, first_name, last_name, phone, newsletter_opt_in_email, newsletter_opt_in_sms)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       VALUES ($1, $2, $3, $4, $5, COALESCE($6, false), COALESCE($7, false))
        ON CONFLICT (cognito_sub) DO UPDATE SET
          email = EXCLUDED.email,
          first_name = EXCLUDED.first_name,
          last_name = EXCLUDED.last_name,
          phone = EXCLUDED.phone,
-         newsletter_opt_in_email = EXCLUDED.newsletter_opt_in_email,
-         newsletter_opt_in_sms = EXCLUDED.newsletter_opt_in_sms
+         newsletter_opt_in_email = COALESCE($6, users.newsletter_opt_in_email),
+         newsletter_opt_in_sms = COALESCE($7, users.newsletter_opt_in_sms)
        RETURNING *`,
       [
         input.cognitoSub,
@@ -63,8 +63,8 @@ export class AuthSyncRepository {
         input.firstName,
         input.lastName,
         input.phone,
-        input.newsletterOptInEmail,
-        input.newsletterOptInSms,
+        input.newsletterOptInEmail ?? null,
+        input.newsletterOptInSms ?? null,
       ],
     );
     return toUser(result.rows[0]);

@@ -100,6 +100,9 @@ function fakeOrdersRepository(overrides: Partial<OrdersRepository> = {}): Orders
     updateOrderStatus: async () => fakeOrder({ status: 'payment_received' }),
     markDepositPaid: async () => fakeOrder({ status: 'payment_received' }),
     markPaymentTransactionSucceeded: async () => undefined,
+    applyDepositPaymentSucceeded: async () => 'applied',
+    markPaymentTransactionRefunded: async () => undefined,
+    cancelUnpaidOrder: async () => undefined,
     ...overrides,
   } as unknown as OrdersRepository;
 }
@@ -120,6 +123,7 @@ function fakePaymentProvider(overrides: Partial<IPaymentProvider> = {}): IPaymen
     createPaymentIntent: async () => ({ providerRef: 'pi_123', clientSecret: 'secret_123' }),
     confirmPayment: async () => true,
     refund: async () => undefined,
+    verifyWebhook: async () => ({ type: 'ignored' as const }),
     ...overrides,
   };
 }
@@ -206,7 +210,7 @@ describe('OrdersService.createPresaleOrder', () => {
   it('fails the whole order when stock reservation fails (sold out during checkout)', async () => {
     const service = new OrdersService(
       fakeOrdersRepository(),
-      fakeCatalogRepository({ reserveCookieDesignQuantity: async () => undefined }),
+      fakeCatalogRepository({ reserveCookieDesignQuantity: async () => false }),
       fakePaymentProvider(),
     );
 
@@ -265,31 +269,46 @@ describe('OrdersService status transitions', () => {
 
 describe('OrdersService.handleDepositSucceeded', () => {
   it('marks the order payment_received when found and still in received status', async () => {
-    const markDepositPaid = vi.fn(async () => fakeOrder({ status: 'payment_received' }));
+    const applyDepositPaymentSucceeded = vi.fn(async () => 'applied' as const);
     const service = new OrdersService(
-      fakeOrdersRepository({ markDepositPaid: markDepositPaid as never }),
+      fakeOrdersRepository({ applyDepositPaymentSucceeded }),
       fakeCatalogRepository(),
       fakePaymentProvider(),
     );
 
     await service.handleDepositSucceeded('pi_123');
 
-    expect(markDepositPaid).toHaveBeenCalledWith('order-1');
+    expect(applyDepositPaymentSucceeded).toHaveBeenCalledWith('pi_123');
   });
 
   it('is a no-op when the order is already past received (idempotent against webhook retries)', async () => {
-    const markDepositPaid = vi.fn(async () => fakeOrder());
+    const applyDepositPaymentSucceeded = vi.fn(async () => 'duplicate' as const);
     const service = new OrdersService(
-      fakeOrdersRepository({
-        findOrderByPaymentIntentId: async () => fakeOrder({ status: 'payment_received' }),
-        markDepositPaid: markDepositPaid as never,
-      }),
+      fakeOrdersRepository({ applyDepositPaymentSucceeded }),
       fakeCatalogRepository(),
       fakePaymentProvider(),
     );
 
     await service.handleDepositSucceeded('pi_123');
 
-    expect(markDepositPaid).not.toHaveBeenCalled();
+    expect(applyDepositPaymentSucceeded).toHaveBeenCalledOnce();
+  });
+
+  it('refunds a payment that arrives after its inventory hold expired', async () => {
+    const refund = vi.fn(async () => undefined);
+    const markPaymentTransactionRefunded = vi.fn(async () => undefined);
+    const service = new OrdersService(
+      fakeOrdersRepository({
+        applyDepositPaymentSucceeded: async () => 'expired',
+        markPaymentTransactionRefunded,
+      }),
+      fakeCatalogRepository(),
+      fakePaymentProvider({ refund }),
+    );
+
+    await service.handleDepositSucceeded('pi_123');
+
+    expect(refund).toHaveBeenCalledWith('pi_123', undefined, 'late-payment-refund-pi_123');
+    expect(markPaymentTransactionRefunded).toHaveBeenCalledWith('pi_123');
   });
 });

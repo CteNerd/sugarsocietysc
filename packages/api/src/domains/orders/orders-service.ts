@@ -1,12 +1,13 @@
 import {
   CreatePresaleOrderRequest,
+  AdminOrderWithDetails,
   OrderStatus,
   OrderWithDetails,
   PresaleOrderCreateResult,
   UpdateOrderStatusRequest,
 } from '@sugarsocietysc/shared';
 import { AuthClaims } from '../../auth/verify-jwt';
-import { IPaymentProvider } from '../../ports/payment/IPaymentProvider';
+import { IPaymentProvider, PaymentIntentResult } from '../../ports/payment/IPaymentProvider';
 import { CatalogRepository } from '../catalog/catalog-repository';
 import { OrdersRepository } from './orders-repository';
 
@@ -105,12 +106,6 @@ export class OrdersService {
     const total = subtotal + tax;
 
     const { order, items, packaging } = await this.repository.withTransaction(async (client) => {
-      for (const item of itemsWithPricing) {
-        const reserved = await this.catalogRepository.reserveCookieDesignQuantity(item.cookieDesignId, item.quantity);
-        if (!reserved) {
-          throw new OrdersError('One or more cookie designs sold out during checkout', 409);
-        }
-      }
       const createdOrder = await this.repository.createOrder(client, {
         userId,
         guestEmail: input.guestContact?.guestEmail,
@@ -121,6 +116,17 @@ export class OrdersService {
         depositAmount,
         total,
       });
+      for (const item of itemsWithPricing) {
+        const reserved = await this.catalogRepository.reserveCookieDesignQuantity(
+          client,
+          createdOrder.id,
+          item.cookieDesignId,
+          item.quantity,
+        );
+        if (!reserved) {
+          throw new OrdersError('One or more cookie designs sold out during checkout', 409);
+        }
+      }
       const createdItems = [];
       for (const item of itemsWithPricing) {
         createdItems.push(await this.repository.createOrderItem(client, createdOrder.id, item));
@@ -134,11 +140,17 @@ export class OrdersService {
       return { order: createdOrder, items: createdItems, packaging: createdPackaging };
     });
 
-    const paymentIntent = await this.paymentProvider.createPaymentIntent({
-      amount: depositAmount,
-      currency: 'usd',
-      orderId: order.id,
-    });
+    let paymentIntent: PaymentIntentResult;
+    try {
+      paymentIntent = await this.paymentProvider.createPaymentIntent({
+        amount: depositAmount,
+        currency: 'usd',
+        orderId: order.id,
+      });
+    } catch (err) {
+      await this.repository.cancelUnpaidOrder(order.id, 'Payment setup failed; inventory hold released');
+      throw err;
+    }
     await this.repository.setStripePaymentIntent(this.repository.pool, order.id, paymentIntent.providerRef);
     // These two writes happen after the order transaction already committed — Stripe needs a
     // persisted order id for its metadata, so they run as standalone statements against the pool.
@@ -181,6 +193,17 @@ export class OrdersService {
     return details;
   }
 
+  async getAdminOrderDetails(orderId: string): Promise<AdminOrderWithDetails> {
+    const details = await this.getOrderDetails(orderId);
+    if (!details.order.userId) {
+      return details;
+    }
+    return {
+      ...details,
+      customer: await this.repository.findCustomerContact(details.order.userId),
+    };
+  }
+
   async updateOrderStatus(
     orderId: string,
     adminUserId: string,
@@ -198,21 +221,25 @@ export class OrdersService {
     return updated!;
   }
 
+  async updateOrderStatusForAdmin(
+    claims: AuthClaims,
+    orderId: string,
+    input: UpdateOrderStatusRequest,
+  ): Promise<OrderWithDetails['order']> {
+    const adminId = await this.repository.findAdminUserIdByCognitoSub(claims.sub);
+    if (!adminId) {
+      throw new OrdersError('Administrator profile not found', 404);
+    }
+    return this.updateOrderStatus(orderId, adminId, input);
+  }
+
   /** Called by the Stripe webhook handler once a deposit PaymentIntent succeeds. Idempotent: if the
    * order is already past `received`, this is a no-op (webhook retries must not double-transition). */
   async handleDepositSucceeded(providerRef: string): Promise<void> {
-    const order = await this.repository.findOrderByPaymentIntentId(providerRef);
-    if (!order || order.status !== 'received') {
-      return;
+    const result = await this.repository.applyDepositPaymentSucceeded(providerRef);
+    if (result === 'expired') {
+      await this.paymentProvider.refund(providerRef, undefined, `late-payment-refund-${providerRef}`);
+      await this.repository.markPaymentTransactionRefunded(providerRef);
     }
-    await this.repository.markPaymentTransactionSucceeded(providerRef);
-    await this.repository.markDepositPaid(order.id);
-    await this.repository.recordStatusHistory(
-      this.repository.pool,
-      order.id,
-      'payment_received',
-      undefined,
-      'Stripe deposit payment confirmed',
-    );
   }
 }

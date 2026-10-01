@@ -18,9 +18,14 @@ function getJwks(jwksUri: string) {
 }
 
 /** Verifies a Cognito-issued ID token against the pool's JWKS (works for cognito-local and real Cognito). */
-export async function verifyIdToken(token: string, jwksUri: string, issuer: string): Promise<AuthClaims> {
+export async function verifyIdToken(
+  token: string,
+  jwksUri: string,
+  issuer: string,
+  clientId: string,
+): Promise<AuthClaims> {
   const jwks = getJwks(jwksUri);
-  const { payload } = await jwtVerify(token, jwks, { issuer });
+  const { payload } = await jwtVerify(token, jwks, { issuer, audience: clientId });
   if (typeof payload.sub !== 'string' || typeof payload.email !== 'string') {
     throw new Error('Token missing required sub/email claims');
   }

@@ -1,4 +1,9 @@
-import { NewsletterSubscriber } from '@sugarsocietysc/shared';
+import {
+  CreateNewsletterCampaignRequest,
+  NewsletterCampaign,
+  NewsletterSendLog,
+  NewsletterSubscriber,
+} from '@sugarsocietysc/shared';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL ?? 'http://localhost:3001';
 
@@ -32,13 +37,13 @@ export async function subscribe(input: SubscribeInput): Promise<NewsletterSubscr
   return parseJson(res);
 }
 
-export async function unsubscribe(email: string): Promise<NewsletterSubscriber> {
+export async function unsubscribe(token: string): Promise<void> {
   const res = await fetch(`${API_BASE_URL}/newsletter/unsubscribe`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ token }),
   });
-  return parseJson(res);
+  await parseJson(res);
 }
 
 export async function updatePreferences(idToken: string, input: PreferencesInput): Promise<NewsletterSubscriber> {
@@ -46,6 +51,40 @@ export async function updatePreferences(idToken: string, input: PreferencesInput
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
     body: JSON.stringify(input),
+  });
+  return parseJson(res);
+}
+
+export async function listNewsletterCampaigns(idToken: string): Promise<NewsletterCampaign[]> {
+  const res = await fetch(`${API_BASE_URL}/newsletter/admin/campaigns`, {
+    headers: { Authorization: `Bearer ${idToken}` },
+  });
+  return parseJson(res);
+}
+
+export async function createNewsletterCampaign(
+  idToken: string,
+  input: CreateNewsletterCampaignRequest,
+): Promise<NewsletterCampaign> {
+  const res = await fetch(`${API_BASE_URL}/newsletter/admin/campaigns`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+    body: JSON.stringify(input),
+  });
+  return parseJson(res);
+}
+
+export async function sendNewsletterCampaign(idToken: string, campaignId: string): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/newsletter/admin/campaigns/${campaignId}/send`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${idToken}` },
+  });
+  await parseJson(res);
+}
+
+export async function getNewsletterCampaignLogs(idToken: string, campaignId: string): Promise<NewsletterSendLog[]> {
+  const res = await fetch(`${API_BASE_URL}/newsletter/admin/campaigns/${campaignId}/logs`, {
+    headers: { Authorization: `Bearer ${idToken}` },
   });
   return parseJson(res);
 }

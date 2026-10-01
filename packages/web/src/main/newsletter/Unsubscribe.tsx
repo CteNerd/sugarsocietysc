@@ -2,26 +2,26 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { unsubscribe } from '../../api/newsletter-client';
 
-/** Landing page for the unsubscribe link sent in newsletter emails: /newsletter-unsubscribe?email=... */
+/** Landing page for the opaque, per-subscriber unsubscribe link sent in campaign emails. */
 export default function Unsubscribe() {
   const [searchParams] = useSearchParams();
-  const email = searchParams.get('email') ?? '';
+  const token = searchParams.get('token') ?? '';
   const [status, setStatus] = useState<'pending' | 'done' | 'error'>('pending');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!email) {
+    if (!token) {
       setStatus('error');
-      setError('Missing email address');
+      setError('Invalid unsubscribe link');
       return;
     }
-    unsubscribe(email)
+    unsubscribe(token)
       .then(() => setStatus('done'))
       .catch((err) => {
         setStatus('error');
         setError(err instanceof Error ? err.message : 'Could not unsubscribe');
       });
-  }, [email]);
+  }, [token]);
 
   if (status === 'pending') {
     return <p>Unsubscribing…</p>;

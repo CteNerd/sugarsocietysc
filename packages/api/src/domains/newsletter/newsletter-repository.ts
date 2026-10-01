@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { Pool, PoolClient } from 'pg';
 import { NewsletterSubscriber } from '@sugarsocietysc/shared';
 
 interface NewsletterSubscriberRow {
@@ -39,8 +39,8 @@ export interface UpsertSubscriberInput {
 export class NewsletterRepository {
   constructor(private readonly pool: Pool) {}
 
-  async upsertSubscriber(input: UpsertSubscriberInput): Promise<NewsletterSubscriber> {
-    const result = await this.pool.query<NewsletterSubscriberRow>(
+  async upsertSubscriber(input: UpsertSubscriberInput, client: Pool | PoolClient = this.pool): Promise<NewsletterSubscriber> {
+    const result = await client.query<NewsletterSubscriberRow>(
       `INSERT INTO newsletter_subscribers
          (email, phone, user_id, email_opt_in, sms_opt_in, source)
        VALUES ($1, $2, $3, $4, $5, $6)
@@ -57,15 +57,32 @@ export class NewsletterRepository {
     return toSubscriber(result.rows[0]);
   }
 
-  async unsubscribeByEmail(email: string): Promise<NewsletterSubscriber | undefined> {
-    const result = await this.pool.query<NewsletterSubscriberRow>(
-      `UPDATE newsletter_subscribers
-       SET email_opt_in = false, sms_opt_in = false, unsubscribed_at = now()
-       WHERE email = $1
-       RETURNING *`,
-      [email],
-    );
-    return result.rows[0] ? toSubscriber(result.rows[0]) : undefined;
+  async unsubscribeByToken(token: string): Promise<NewsletterSubscriber | undefined> {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const result = await client.query<NewsletterSubscriberRow>(
+        `UPDATE newsletter_subscribers
+         SET email_opt_in = false, sms_opt_in = false, unsubscribed_at = now()
+         WHERE unsubscribe_token = $1
+         RETURNING *`,
+        [token],
+      );
+      const row = result.rows[0];
+      if (row?.user_id) {
+        await client.query(
+          `UPDATE users SET newsletter_opt_in_email = false, newsletter_opt_in_sms = false WHERE id = $1`,
+          [row.user_id],
+        );
+      }
+      await client.query('COMMIT');
+      return row ? toSubscriber(row) : undefined;
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
   }
 
   async findByEmail(email: string): Promise<NewsletterSubscriber | undefined> {
@@ -76,18 +93,42 @@ export class NewsletterRepository {
     return result.rows[0] ? toSubscriber(result.rows[0]) : undefined;
   }
 
-  async updateUserPreferences(userId: string, emailOptIn: boolean, smsOptIn: boolean): Promise<void> {
-    await this.pool.query(
-      `UPDATE users SET newsletter_opt_in_email = $2, newsletter_opt_in_sms = $3 WHERE id = $1`,
-      [userId, emailOptIn, smsOptIn],
-    );
-  }
-
-  async findUserByCognitoSub(cognitoSub: string): Promise<{ id: string; email: string } | undefined> {
-    const result = await this.pool.query<{ id: string; email: string }>(
-      'SELECT id, email FROM users WHERE cognito_sub = $1',
-      [cognitoSub],
-    );
-    return result.rows[0];
+  async updatePreferencesByCognitoSub(
+    cognitoSub: string,
+    emailOptIn: boolean,
+    smsOptIn: boolean,
+  ): Promise<NewsletterSubscriber | undefined> {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const result = await client.query<{ id: string; email: string; phone: string }>(
+        'SELECT id, email, phone FROM users WHERE cognito_sub = $1 FOR UPDATE',
+        [cognitoSub],
+      );
+      const user = result.rows[0];
+      if (!user) {
+        await client.query('COMMIT');
+        return undefined;
+      }
+      await client.query(
+        `UPDATE users SET newsletter_opt_in_email = $2, newsletter_opt_in_sms = $3 WHERE id = $1`,
+        [user.id, emailOptIn, smsOptIn],
+      );
+      const subscriber = await this.upsertSubscriber({
+        email: user.email,
+        phone: user.phone,
+        userId: user.id,
+        emailOptIn,
+        smsOptIn,
+        source: 'account',
+      }, client);
+      await client.query('COMMIT');
+      return subscriber;
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
   }
 }
