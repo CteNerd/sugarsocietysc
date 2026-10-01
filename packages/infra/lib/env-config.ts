@@ -7,6 +7,9 @@ export interface EnvConfig {
   auroraMaxCapacity: number;
   domainName: string;
   guestPiiRetentionDays: number;
+  /** Google OAuth client ID (not secret — the client secret lives in Secrets Manager). Empty string
+   * disables Google federation until a real client has been registered in Google Cloud Console. */
+  googleOAuthClientId: string;
 }
 
 /** Reads the `environments.<env>` block from cdk.json context (pass -c env=dev|prod). */
