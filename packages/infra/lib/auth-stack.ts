@@ -18,7 +18,9 @@ export class AuthStack extends Stack {
   constructor(scope: Construct, id: string, envConfig: EnvConfig, props?: StackProps) {
     super(scope, id, props);
 
-    this.userPool = new cognito.UserPool(this, 'UserPool', {
+    // Logical ID bumped to UserPoolV2: Cognito's schema `Required` flags are immutable in-place —
+    // changing phoneNumber to not-required forces a full replacement, not an update.
+    this.userPool = new cognito.UserPool(this, 'UserPoolV2', {
       userPoolName: `sugarsocietysc-${envConfig.envName}`,
       selfSignUpEnabled: true,
       signInAliases: { email: true },
@@ -33,13 +35,18 @@ export class AuthStack extends Stack {
       standardAttributes: {
         givenName: { required: true, mutable: true },
         familyName: { required: true, mutable: true },
-        phoneNumber: { required: true, mutable: true },
+        // Not required at the Cognito level: Google's basic OAuth scopes don't supply a phone
+        // number, which blocks federation if this is a required attribute. Our own signup flow
+        // (auth-sync) still requires and collects it application-side.
+        phoneNumber: { required: false, mutable: true },
       },
       accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
     });
 
+    // New prefix (not just reusing the nested logical ID) avoids a naming collision with the old
+    // domain while the replacement User Pool is being created.
     this.userPoolDomain = this.userPool.addDomain('CognitoDomain', {
-      cognitoDomain: { domainPrefix: `sugarsocietysc-cookies-${envConfig.envName}` },
+      cognitoDomain: { domainPrefix: `sugarsocietysc-auth-${envConfig.envName}` },
     });
 
     // Placeholder at creation time only (CloudFormation does not reset GenerateSecretString on
