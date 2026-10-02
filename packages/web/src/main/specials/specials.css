@@ -6,9 +6,14 @@
 
 .card-img-container {
   padding: 0px 0px !important;
+  cursor: pointer;
 }
 
-.card-img-container:hover,
+.card-img-container:focus-visible {
+  outline: 3px solid #1a73e8;
+  outline-offset: 2px;
+}
+
 .card-img-container.card-expanded {
   z-index: var(--z-hover-card);
   position: relative;
@@ -16,12 +21,10 @@
   display: flex;
 }
 
-.card-img-container:hover [class*="special-cookie-"],
 .card-img-container.card-expanded [class*="special-cookie-"] {
   display: none;
 }
 
-.card-img:hover,
 .card-expanded .card-img {
   height: 50vh;
   width: 50vw;
@@ -31,6 +34,30 @@
   /* cookies.css ships a global (unscoped) max-height:10vh rule for .card-img at
      narrower widths that would otherwise clip this enlarged state; override it. */
   max-height: none;
+}
+
+/* Only genuinely hover-capable pointers (mouse/trackpad) get the hover-triggered
+   expansion. Touch devices rely exclusively on the tap-driven "card-expanded" class
+   above/below; some touch browsers synthesize a "sticky" :hover state after a tap that
+   never clears, which would otherwise leave the card stuck open or fight the toggle. */
+@media (hover: hover) and (pointer: fine) {
+  .card-img-container:hover {
+    z-index: var(--z-hover-card);
+    position: relative;
+    text-align: center;
+    display: flex;
+  }
+
+  .card-img-container:hover [class*="special-cookie-"] {
+    display: none;
+  }
+
+  .card-img:hover {
+    height: 50vh;
+    width: 50vw;
+    flex-shrink: 0;
+    max-height: none;
+  }
 }
 
 [class*="special-cookie-"] {
@@ -44,19 +71,30 @@
 }
 
 @media only screen and (max-width: 600px) {
-  /* :hover doesn't fire reliably on touch devices, so tapping a card toggles the
-     "card-expanded" class (see specials/index.tsx) to reproduce the desktop enlarge-on-hover
-     effect, sized to fit narrow screens instead of 50vw/50vh. */
-  .card-img-container:hover,
+  /* :hover doesn't fire reliably (and can get "stuck") on touch devices, so tapping a
+     card toggles the "card-expanded" class (see specials/index.tsx) to reproduce the
+     desktop enlarge-on-hover effect, sized to fit narrow screens instead of 50vw/50vh. */
   .card-img-container.card-expanded {
     justify-content: center;
   }
 
-  .card-img:hover,
   .card-expanded .card-img {
     width: 90vw;
     height: 40vh;
     flex-shrink: 0;
     max-height: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .card-img-container:hover {
+      justify-content: center;
+    }
+
+    .card-img:hover {
+      width: 90vw;
+      height: 40vh;
+      flex-shrink: 0;
+      max-height: none;
+    }
   }
 }
