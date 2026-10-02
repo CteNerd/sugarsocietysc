@@ -1,39 +1,23 @@
 import React from "react";
-// import moment from "moment";
+import { Link } from "react-router-dom";
 import "./order-now.css";
 
 export default function OrderNow() {
   return (
     <div className="order-now-page-container">
-      <div>
+      <div className="order-now-intro">
         <h1>Order Now</h1>
         <p>
-          Please complete the short form below and attach a completed order form
-          to your submission. We strive to respond within 3 business days to all
-          order request
+          For custom cookie orders, use our Contact form and tell us the occasion,
+          quantity, requested date, and design details. We strive to respond
+          within 3 business days.
         </p>
       </div>
-      <div>
-        {/* <div>
-          <a href="https://form.asana.com/?k=sqIbI7gwO8vlHmCyYiD05Q&d=1203037369805982&embed=true">
-            <button>Custom Order Form</button>
-          </a>
-        </div>
-        <div hidden={moment().isAfter('2024-05-02T10:00')}>
-          <a href="https://form.asana.com/?k=owkK4jB4PDvEKDLF8yLKPw&d=1203037369805982&embed=true">
-            <button>Teacher Appreciation Order Form</button>
-          </a>
-        </div>
-        <div hidden={moment().isAfter('2024-05-02T10:00')}>
-          <a href="https://form.asana.com/?k=jGSIiPTFw-L9E4WDOHPjoQ&d=1203037369805982&embed=true">
-            <button>Nurse Appreciation Order Form</button>
-          </a>
-        </div>
-        <div hidden={moment().isAfter('2024-05-21T10:00')}>
-          <a href="https://form.asana.com/?k=3yWhVUKnVtUMRxnXin66Hw&d=1203037369805982&embed=true">
-            <button>'24 Graduation Order Form</button>
-          </a>
-        </div> */}
+      <div className="order-now-instructions">
+        <p>
+          Ready to discuss a custom order?{' '}
+          <Link to="/contact">Send us your order details</Link> and we&apos;ll be happy to help.
+        </p>
       </div>
     </div>
   );

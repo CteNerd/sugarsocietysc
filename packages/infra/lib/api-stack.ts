@@ -1,4 +1,4 @@
-import { CfnOutput, Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
+import { ArnFormat, CfnOutput, Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import * as events from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
@@ -61,10 +61,11 @@ export class ApiStack extends Stack {
       UPLOADS_BUCKET_NAME: props.uploadsBucket.bucketName,
       UPLOADS_PUBLIC_BASE_URL: `https://${envConfig.domainName}`,
       GUEST_PII_RETENTION_DAYS: envConfig.guestPiiRetentionDays.toString(),
+      CONTACT_SUBMISSION_RETENTION_DAYS: '365',
       ADMIN_EMAILS: envConfig.adminEmails.join(','),
       ADMIN_EMAIL_DOMAIN: envConfig.adminEmailDomain,
       SMS_PROVIDER: 'sns',
-      NEWSLETTER_FROM_EMAIL: process.env.NEWSLETTER_FROM_EMAIL ?? '',
+      NEWSLETTER_FROM_EMAIL: process.env.NEWSLETTER_FROM_EMAIL || 'newsletter@sugarsocietysc.com',
       NEWSLETTER_SITE_URL: `https://${envConfig.domainName}`,
       NEWSLETTER_SIGNATURE: process.env.NEWSLETTER_SIGNATURE || 'Sugar Society Sugar Cookies',
       COGNITO_ISSUER_URL: props.userPool.userPoolProviderUrl,
@@ -141,6 +142,19 @@ export class ApiStack extends Stack {
         maxReceiveCount: 5,
       },
     });
+    const contactDeadLetterQueue = new sqs.Queue(this, 'ContactDeadLetterQueue', {
+      encryption: sqs.QueueEncryption.SQS_MANAGED,
+      retentionPeriod: Duration.days(14),
+    });
+    const contactQueue = new sqs.Queue(this, 'ContactQueue', {
+      encryption: sqs.QueueEncryption.SQS_MANAGED,
+      retentionPeriod: Duration.days(4),
+      visibilityTimeout: Duration.seconds(360),
+      deadLetterQueue: {
+        queue: contactDeadLetterQueue,
+        maxReceiveCount: 5,
+      },
+    });
 
     const guestPiiRetentionFn = new lambdaNode.NodejsFunction(this, 'GuestPiiRetentionFn', {
       entry: path.join(__dirname, '../../api/src/guest-pii-retention-lambda.ts'),
@@ -152,7 +166,7 @@ export class ApiStack extends Stack {
     });
     props.cluster.secret?.grantRead(guestPiiRetentionFn);
     new events.Rule(this, 'GuestPiiRetentionSchedule', {
-      description: `Purge guest contact details after ${envConfig.guestPiiRetentionDays} days in terminal order states`,
+      description: `Purge terminal-order guest contact details after ${envConfig.guestPiiRetentionDays} days and contact submissions after 365 days`,
       schedule: events.Schedule.cron({ minute: '0', hour: '3' }),
       targets: [new targets.LambdaFunction(guestPiiRetentionFn)],
     });
@@ -179,7 +193,7 @@ export class ApiStack extends Stack {
     });
     inventoryHoldExpiryErrorsAlarm.addAlarmAction(alarmAction);
     const guestPiiRetentionErrorsAlarm = new cloudwatch.Alarm(this, 'GuestPiiRetentionErrorsAlarm', {
-      alarmDescription: 'Investigate failures in the scheduled guest-contact purge.',
+      alarmDescription: 'Investigate failures in scheduled guest-order and contact-submission retention.',
       metric: guestPiiRetentionFn.metricErrors({ period: Duration.minutes(5), statistic: 'Sum' }),
       threshold: 1,
       evaluationPeriods: 1,
@@ -205,6 +219,72 @@ export class ApiStack extends Stack {
     });
     props.cluster.secret?.grantRead(newsletterFn);
     newsletterQueue.grantSendMessages(newsletterFn);
+
+    const googleRecaptchaSecret = secretsmanager.Secret.fromSecretNameV2(
+      this,
+      'GoogleRecaptchaSecret',
+      `sugarsocietysc/${envConfig.envName}/google-recaptcha`,
+    );
+    const contactFn = new lambdaNode.NodejsFunction(this, 'ContactFn', {
+      entry: path.join(__dirname, '../../api/src/lambda.ts'),
+      handler: 'handler',
+      ...commonFnProps,
+      timeout: Duration.seconds(20),
+      logGroup: functionLogGroup('ContactFn'),
+      environment: {
+        ...commonEnv,
+        CONTACT_QUEUE_URL: contactQueue.queueUrl,
+        GOOGLE_RECAPTCHA_SECRET_ARN: googleRecaptchaSecret.secretArn,
+      },
+    });
+    props.cluster.secret?.grantRead(contactFn);
+    googleRecaptchaSecret.grantRead(contactFn);
+    contactQueue.grantSendMessages(contactFn);
+
+    const contactWorkerFn = new lambdaNode.NodejsFunction(this, 'ContactWorkerFn', {
+      entry: path.join(__dirname, '../../api/src/domains/contact/contact-worker.ts'),
+      handler: 'handler',
+      ...commonFnProps,
+      logGroup: functionLogGroup('ContactWorkerFn'),
+      timeout: Duration.seconds(60),
+      environment: { ...commonEnv, CONTACT_QUEUE_URL: contactQueue.queueUrl },
+    });
+    props.cluster.secret?.grantRead(contactWorkerFn);
+    contactQueue.grantConsumeMessages(contactWorkerFn);
+    contactWorkerFn.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['ses:SendEmail'],
+      resources: [
+        this.formatArn({
+          service: 'ses',
+          resource: 'identity',
+          resourceName: commonEnv.NEWSLETTER_FROM_EMAIL,
+          arnFormat: ArnFormat.SLASH_RESOURCE_NAME,
+        }),
+      ],
+    }));
+    contactWorkerFn.addEventSource(new eventSources.SqsEventSource(contactQueue, {
+      batchSize: 10,
+      reportBatchItemFailures: true,
+    }));
+    const contactDeadLetterQueueAlarm = new cloudwatch.Alarm(this, 'ContactDeadLetterQueueAlarm', {
+      alarmDescription: 'Investigate and redrive contact notification emails that exhausted SQS retries.',
+      metric: contactDeadLetterQueue.metricApproximateNumberOfMessagesVisible({
+        period: Duration.minutes(5),
+        statistic: 'Maximum',
+      }),
+      threshold: 1,
+      evaluationPeriods: 1,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    });
+    contactDeadLetterQueueAlarm.addAlarmAction(alarmAction);
+    const contactWorkerErrorsAlarm = new cloudwatch.Alarm(this, 'ContactWorkerErrorsAlarm', {
+      alarmDescription: 'Investigate contact notification worker delivery failures.',
+      metric: contactWorkerFn.metricErrors({ period: Duration.minutes(5), statistic: 'Sum' }),
+      threshold: 1,
+      evaluationPeriods: 1,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    });
+    contactWorkerErrorsAlarm.addAlarmAction(alarmAction);
 
     const newsletterWorkerFn = new lambdaNode.NodejsFunction(this, 'NewsletterWorkerFn', {
       entry: path.join(__dirname, '../../api/src/domains/newsletter/newsletter-worker.ts'),
@@ -345,6 +425,11 @@ export class ApiStack extends Stack {
       path: '/newsletter/subscribe',
       methods: [apigwv2.HttpMethod.POST],
       integration: new HttpLambdaIntegration('NewsletterSubscribeIntegration', newsletterFn),
+    });
+    this.httpApi.addRoutes({
+      path: '/contact',
+      methods: [apigwv2.HttpMethod.POST],
+      integration: new HttpLambdaIntegration('ContactIntegration', contactFn),
     });
     this.httpApi.addRoutes({
       path: '/newsletter/unsubscribe',

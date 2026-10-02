@@ -1,10 +1,11 @@
 import React from "react";
+import "./privacy-policy.css";
 
 export default function PrivacyPolicy() {
   return (
     <div className="privacy-policy">
       <h1>Privacy Policy</h1>
-      <p>Last updated: May 24, 2022</p>
+      <p className="privacy-policy-updated">Last updated: October 2, 2026</p>
       
       <section className="introduction">
         <p>
@@ -19,14 +20,14 @@ export default function PrivacyPolicy() {
         </p>
       </section>
 
-      <h1>Interpretation and Definitions</h1>
-      <h2>Interpretation</h2>
+      <h2>Interpretation and Definitions</h2>
+      <h3>Interpretation</h3>
       <p>
         Words with initial capital letters have meanings defined under the
         following conditions. These definitions shall have the same meaning
         regardless of whether they appear in singular or plural.
       </p>
-      <h2>Definitions</h2>
+      <h3>Definitions</h3>
       <p>For the purposes of this Privacy Policy:</p>
       <ul>
         <li>
@@ -109,9 +110,9 @@ export default function PrivacyPolicy() {
           </p>
         </li>
       </ul>
-      <h1>Collecting and Using Your Personal Data</h1>
-      <h2>Types of Data Collected</h2>
-      <h3>Personal Data</h3>
+      <h2>Collecting and Using Your Personal Data</h2>
+      <h3>Types of Data Collected</h3>
+      <h4>Personal Data</h4>
       <p>
         While using Our Service, We may ask You to provide Us with certain
         personally identifiable information that can be used to contact or
@@ -129,13 +130,16 @@ export default function PrivacyPolicy() {
           <p>Phone number</p>
         </li>
         <li>
+          <p>Contact-form subject and message</p>
+        </li>
+        <li>
           <p>Address, State, Province, ZIP/Postal code, City</p>
         </li>
         <li>
           <p>Usage Data</p>
         </li>
       </ul>
-      <h3>Usage Data</h3>
+      <h4>Usage Data</h4>
       <p>Usage Data is collected automatically when using the Service.</p>
       <p>
         Usage Data may include information such as Your Device's Internet
@@ -157,7 +161,7 @@ export default function PrivacyPolicy() {
         visit our Service or when You access the Service by or through a mobile
         device.
       </p>
-      <h3>Tracking Technologies and Cookies</h3>
+      <h4>Tracking Technologies and Cookies</h4>
       <p>
         We use Cookies and similar tracking technologies to track the activity
         on Our Service and store certain information. Tracking technologies used
@@ -264,7 +268,7 @@ export default function PrivacyPolicy() {
         cookies, please visit our Cookies Policy or the Cookies section of our
         Privacy Policy.
       </p>
-      <h2>Use of Your Personal Data</h2>
+      <h3>Use of Your Personal Data</h3>
       <p>The Company may use Personal Data for the following purposes:</p>
       <ul>
         <li>
@@ -371,7 +375,7 @@ export default function PrivacyPolicy() {
           information for any other purpose with Your consent.
         </li>
       </ul>
-      <h2>Retention of Your Personal Data</h2>
+      <h3>Retention of Your Personal Data</h3>
       <p>
         The Company will retain Your Personal Data only for as long as is
         necessary for the purposes set out in this Privacy Policy. We will
@@ -381,13 +385,20 @@ export default function PrivacyPolicy() {
         legal agreements and policies.
       </p>
       <p>
+        Contact-form submissions are stored in our database so we can respond
+        and follow up. A daily job deletes those submissions from the database
+        once they are at least 365 days old. Email notifications delivered to
+        our business inboxes are subject to the retention practices of those
+        email services.
+      </p>
+      <p>
         The Company will also retain Usage Data for internal analysis purposes.
         Usage Data is generally retained for a shorter period of time, except
         when this data is used to strengthen the security or to improve the
         functionality of Our Service, or We are legally obligated to retain this
         data for longer time periods.
       </p>
-      <h2>Transfer of Your Personal Data</h2>
+      <h3>Transfer of Your Personal Data</h3>
       <p>
         Your information, including Personal Data, is processed at the Company's
         operating offices and in any other places where the parties involved in
@@ -407,21 +418,21 @@ export default function PrivacyPolicy() {
         a country unless there are adequate controls in place including the
         security of Your data and other personal information.
       </p>
-      <h2>Disclosure of Your Personal Data</h2>
-      <h3>Business Transactions</h3>
+      <h3>Disclosure of Your Personal Data</h3>
+      <h4>Business Transactions</h4>
       <p>
         If the Company is involved in a merger, acquisition or asset sale, Your
         Personal Data may be transferred. We will provide notice before Your
         Personal Data is transferred and becomes subject to a different Privacy
         Policy.
       </p>
-      <h3>Law enforcement</h3>
+      <h4>Law enforcement</h4>
       <p>
         Under certain circumstances, the Company may be required to disclose
         Your Personal Data if required to do so by law or in response to valid
         requests by public authorities (e.g. a court or a government agency).
       </p>
-      <h3>Other legal requirements</h3>
+      <h4>Other legal requirements</h4>
       <p>
         The Company may disclose Your Personal Data in the good faith belief
         that such action is necessary to:
@@ -438,7 +449,7 @@ export default function PrivacyPolicy() {
         </li>
         <li>Protect against legal liability</li>
       </ul>
-      <h2>Security of Your Personal Data</h2>
+      <h3>Security of Your Personal Data</h3>
       <p>
         The security of Your Personal Data is important to Us, but remember that
         no method of transmission over the Internet, or method of electronic
@@ -446,14 +457,14 @@ export default function PrivacyPolicy() {
         means to protect Your Personal Data, We cannot guarantee its absolute
         security.
       </p>
-      <h1>Detailed Information on the Processing of Your Personal Data</h1>
+      <h2>Detailed Information on the Processing of Your Personal Data</h2>
       <p>
         The Service Providers We use may have access to Your Personal Data.
         These third-party vendors collect, store, use, process and transfer
         information about Your activity on Our Service in accordance with their
         Privacy Policies.
       </p>
-      <h2>Email Marketing</h2>
+      <h3>Email Marketing</h3>
       <p>
         We may use Your Personal Data to contact You with newsletters, marketing
         or promotional materials and other information that may be of interest
@@ -468,21 +479,21 @@ export default function PrivacyPolicy() {
       <ul>
         <li>
           <p>
-            <strong>Twilio</strong>
+            <strong>Amazon Simple Email Service (Amazon SES)</strong>
           </p>
           <p>
             Their Privacy Policy can be viewed at{" "}
             <a
-              href="https://www.twilio.com/legal/privacy"
+              href="https://aws.amazon.com/privacy/"
               rel="external nofollow noopener noreferrer"
               target="_blank"
             >
-              https://www.twilio.com/legal/privacy
+              https://aws.amazon.com/privacy/
             </a>
           </p>
         </li>
       </ul>
-      <h2>Payments</h2>
+      <h3>Payments</h3>
       <p>
         We may provide paid products and/or services within the Service. In that
         case, we may use third-party services for payment processing (e.g.
@@ -513,43 +524,23 @@ export default function PrivacyPolicy() {
             </a>
           </p>
         </li>
-        <li>
-          <p>
-            <strong>PayPal</strong>
-          </p>
-          <p>
-            Their Privacy Policy can be viewed at{" "}
-            <a
-              href="https://www.paypal.com/webapps/mpp/ua/privacy-full"
-              rel="external nofollow noopener noreferrer"
-              target="_blank"
-            >
-              https://www.paypal.com/webapps/mpp/ua/privacy-full
-            </a>
-          </p>
-        </li>
-        <li>
-          <p>
-            <strong>Zelle</strong>
-          </p>
-          <p>
-            Their Privacy Policy can be viewed at{" "}
-            <a
-              href="https://www.zellepay.com/legal/website-privacy-notice"
-              rel="external nofollow noopener noreferrer"
-              target="_blank"
-            >
-              https://www.zellepay.com/legal/website-privacy-notice
-            </a>
-          </p>
-        </li>
       </ul>
-      <h2>Data Processing and Storage</h2>
+      <h3>Data Processing and Storage</h3>
       <p>
-        We utilize Amazon Web Services (AWS) infrastructure to process and store all data 
-        collected through our website. AWS provides industry-leading security measures 
-        and compliance certifications to ensure your data remains protected. All data is 
-        processed within the United States in accordance with applicable data protection laws.
+        We use Amazon Web Services (AWS) for website hosting, application
+        services, and database storage. We also use Google reCAPTCHA to help
+        protect the contact form from automated submissions. Payment information
+        is handled by Stripe and is not stored in our application database.
+        Google may process device and interaction information when you use the
+        reCAPTCHA checkbox under its own privacy practices. Read the{" "}
+        <a
+          href="https://policies.google.com/privacy"
+          rel="external nofollow noopener noreferrer"
+          target="_blank"
+        >
+          Google Privacy Policy
+        </a>
+        .
       </p>
       <p>
         <strong>Important Notice Regarding Data Sales:</strong> We do not sell, trade, 
@@ -557,29 +548,25 @@ export default function PrivacyPolicy() {
         and we are committed to using your information solely for the purpose of providing 
         and improving our services.
       </p>
-      <h2>Social Media Integration</h2>
+      <h3>Social Media Links</h3>
       <p>
-        Our website integrates with Instagram to display our latest cookie creations 
-        and business updates. This integration allows us to showcase our products 
-        through our Instagram feed on our website. When you interact with our 
-        Instagram-sourced content:
+        Our website links to our Facebook, Instagram, and Google Business
+        pages. These are links to third-party services, not embedded social
+        media feeds. If you follow a link, that service's own privacy policy
+        applies to your activity there.
       </p>
-      <ul>
-        <li>We receive basic analytics about content interaction</li>
-        <li>Your viewing of our Instagram content is subject to Instagram's own privacy policy</li>
-        <li>We do not receive or store your Instagram credentials or personal information</li>
-      </ul>
-      <h2>Service Providers</h2>
+      <h3>Service Providers</h3>
       <p>
         We engage the following trusted service providers to operate our business:
       </p>
       <ul>
         <li>Amazon Web Services (AWS) for secure cloud infrastructure and hosting</li>
-        <li>Instagram (Meta Platforms, Inc.) for social media integration</li>
-        <li>Stripe, PayPal, and Zelle for payment processing</li>
-        <li>Twilio for communication services</li>
+        <li>Amazon Cognito for account sign-in and authentication</li>
+        <li>Amazon Simple Email Service (Amazon SES) for email delivery</li>
+        <li>Amazon Simple Notification Service (Amazon SNS) for text messaging</li>
+        <li>Google reCAPTCHA for contact-form abuse prevention</li>
       </ul>
-      <h1>Children's Privacy</h1>
+      <h2>Children's Privacy</h2>
       <p>
         Our Service does not address anyone under the age of 13. We do not
         knowingly collect personally identifiable information from anyone under
@@ -595,7 +582,7 @@ export default function PrivacyPolicy() {
         require Your parent's consent before We collect and use that
         information.
       </p>
-      <h1>Links to Other Websites</h1>
+      <h2>Links to Other Websites</h2>
       <p>
         Our Service may contain links to other websites that are not operated by
         Us. If You click on a third party link, You will be directed to that
@@ -606,7 +593,7 @@ export default function PrivacyPolicy() {
         We have no control over and assume no responsibility for the content,
         privacy policies or practices of any third party sites or services.
       </p>
-      <h1>Changes to this Privacy Policy</h1>
+      <h2>Changes to this Privacy Policy</h2>
       <p>
         We may update Our Privacy Policy from time to time. We will notify You
         of any changes by posting the new Privacy Policy on this page.
@@ -621,7 +608,7 @@ export default function PrivacyPolicy() {
         changes. Changes to this Privacy Policy are effective when they are
         posted on this page.
       </p>
-      <h1>Contact Us</h1>
+      <h2>Contact Us</h2>
       <p>
         If you have any questions about this Privacy Policy, You can contact us:
       </p>
@@ -642,7 +629,7 @@ export default function PrivacyPolicy() {
           </p>
         </li>
         <li>
-          <p>By mail: 13522 Ithaca Cresent Lane, Rosharon, TX, 77583</p>
+          <p>By mail: 13522 Ithaca Crescent Lane, Rosharon, TX, 77583</p>
         </li>
       </ul>
     </div>

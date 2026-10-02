@@ -14,6 +14,9 @@ export interface AppConfig {
   stripeSecretKey: string;
   stripeWebhookSecret: string;
   guestPiiRetentionDays: number;
+  contactRecipients: string[];
+  contactQueueUrl?: string;
+  googleRecaptchaSecret?: string;
   newsletterQueueUrl?: string;
   newsletterFromEmail?: string;
   newsletterSiteUrl?: string;
@@ -53,6 +56,13 @@ export function loadConfig(): AppConfig {
     stripeSecretKey: requireEnv('STRIPE_SECRET_KEY', 'sk_test_placeholder'),
     stripeWebhookSecret: requireEnv('STRIPE_WEBHOOK_SECRET', 'whsec_placeholder'),
     guestPiiRetentionDays,
+    contactRecipients: (process.env.CONTACT_RECIPIENTS
+      ?? 'ashuah.tomlin@sugarsocietysc.com,admin@sugarsocietysc.com')
+      .split(',')
+      .map((email) => email.trim())
+      .filter(Boolean),
+    contactQueueUrl: process.env.CONTACT_QUEUE_URL,
+    googleRecaptchaSecret: process.env.GOOGLE_RECAPTCHA_SECRET,
     newsletterQueueUrl: process.env.NEWSLETTER_QUEUE_URL,
     newsletterFromEmail: process.env.NEWSLETTER_FROM_EMAIL ?? 'newsletter@sugarsocietysc.com',
     newsletterSiteUrl: process.env.NEWSLETTER_SITE_URL ?? 'https://www.sugarsocietysc.com',

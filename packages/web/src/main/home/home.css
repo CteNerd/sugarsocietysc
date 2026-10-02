@@ -2,10 +2,6 @@
   font-family: AstralSisters;
 }
 
-.home-body {
-  font-family: Cream;
-}
-
 * {
   box-sizing: border-box;
 }
@@ -38,7 +34,6 @@
 
 .loading-container p {
   margin-top: 20px;
-  font-family: Cream;
   color: #333;
 }
 
@@ -237,6 +232,5 @@
   border: 1px dashed #ccc;
   border-radius: 8px;
   color: #666;
-  font-family: Cream;
   font-size: 1.2rem;
 }

@@ -161,6 +161,13 @@ button {
   line-height: 1.25;
 }
 
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
 :focus-visible {
   outline: 3px solid #7a3b2e;
   outline-offset: 3px;
@@ -313,8 +320,30 @@ footer {
 }
 
 .social-link {
-  padding: 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
   font-size: 20px;
+  color: #222;
+  text-decoration: none;
+}
+
+.social-link span:first-child {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.social-link:hover {
+  text-decoration: underline;
 }
 
 .footer-copyright {

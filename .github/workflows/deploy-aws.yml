@@ -32,6 +32,7 @@ jobs:
       STRIPE_PUBLISHABLE_KEY: ${{ vars.STRIPE_PUBLISHABLE_KEY }}
       NEWSLETTER_FROM_EMAIL: ${{ vars.NEWSLETTER_FROM_EMAIL }}
       NEWSLETTER_SIGNATURE: ${{ vars.NEWSLETTER_SIGNATURE }}
+      RECAPTCHA_SITE_KEY: ${{ vars.RECAPTCHA_SITE_KEY }}
 
     steps:
       - name: Check out source
@@ -66,8 +67,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [[ -z "$AWS_REGION" || -z "$AWS_ACCOUNT_ID" || -z "$AWS_DEPLOY_ROLE_ARN" || -z "$WEB_DOMAIN_NAME" || -z "$STRIPE_PUBLISHABLE_KEY" || -z "$NEWSLETTER_FROM_EMAIL" ]]; then
-            echo "::error::Configure AWS_REGION, AWS_ACCOUNT_ID, AWS_DEPLOY_ROLE_ARN, WEB_DOMAIN_NAME, STRIPE_PUBLISHABLE_KEY, and NEWSLETTER_FROM_EMAIL in the selected GitHub Environment."
+          if [[ -z "$AWS_REGION" || -z "$AWS_ACCOUNT_ID" || -z "$AWS_DEPLOY_ROLE_ARN" || -z "$WEB_DOMAIN_NAME" || -z "$STRIPE_PUBLISHABLE_KEY" || -z "$NEWSLETTER_FROM_EMAIL" || -z "$RECAPTCHA_SITE_KEY" ]]; then
+            echo "::error::Configure AWS_REGION, AWS_ACCOUNT_ID, AWS_DEPLOY_ROLE_ARN, WEB_DOMAIN_NAME, STRIPE_PUBLISHABLE_KEY, NEWSLETTER_FROM_EMAIL, and RECAPTCHA_SITE_KEY in the selected GitHub Environment."
             exit 1
           fi
           node -e "const c=require('./packages/infra/cdk.json').context.environments[process.env.DEPLOY_ENV]; if (!c || c.account !== process.env.AWS_ACCOUNT_ID || c.region !== process.env.AWS_REGION || c.domainName !== process.env.WEB_DOMAIN_NAME) { console.error('GitHub AWS account, region, or web domain does not match packages/infra/cdk.json'); process.exit(1); }"
@@ -132,9 +133,11 @@ jobs:
           REACT_APP_COGNITO_HOSTED_UI_DOMAIN="$COGNITO_HOSTED_UI" \
           REACT_APP_COGNITO_OAUTH_REDIRECT_URI="https://${WEB_DOMAIN_NAME}/auth/callback" \
           REACT_APP_STRIPE_PUBLISHABLE_KEY="$STRIPE_PUBLISHABLE_KEY" \
+          REACT_APP_RECAPTCHA_SITE_KEY="$RECAPTCHA_SITE_KEY" \
           npm run build --workspace=@sugarsocietysc/web
         env:
           STRIPE_PUBLISHABLE_KEY: ${{ vars.STRIPE_PUBLISHABLE_KEY }}
+          RECAPTCHA_SITE_KEY: ${{ vars.RECAPTCHA_SITE_KEY }}
 
       - name: Publish frontend assets
         run: aws s3 sync packages/web/build "s3://${WEB_BUCKET}" --delete --exclude "uploads/*"
