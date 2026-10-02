@@ -1,3 +1,16 @@
+/* Shared z-index scale. Keep every stacking-context value on this page tied to one of these
+   layers so new overlays (modals, dropdowns, toasts, etc.) can be slotted in predictably and the
+   mobile side nav always wins over in-page content while it's open. */
+:root {
+  --z-base: 0;
+  --z-header: 10;
+  --z-footer: 10;
+  --z-hover-card: 20;
+  --z-dropdown: 30;
+  --z-modal: 40;
+  --z-sidenav: 1000;
+}
+
 .App {
   text-align: center;
   /* background-image: url("https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/Landscape3.JPG"); */
@@ -5,7 +18,8 @@
   background-attachment: fixed;
   background-size: cover;
   min-height: 100vh;
-  display: block;
+  display: flex;
+  flex-direction: column;
 }
 
 .App-logo {
@@ -29,6 +43,8 @@
   font-size: calc(10px + 2vmin);
   color: #fff;
   position: relative;
+  flex-shrink: 0;
+  z-index: var(--z-header);
 }
 
 .nav-logo {
@@ -57,7 +73,7 @@
 
 .App-body-container {
   text-align: -webkit-center;
-  padding-bottom: 100px;
+  flex: 1 0 auto;
 }
 
 .App-body {
@@ -152,10 +168,10 @@ button:hover {
 
 footer {
   background-color: #fff;
-  width: 100vw;
-  bottom: 0;
-  position: fixed;
+  width: 100%;
   padding: 20px;
+  flex-shrink: 0;
+  z-index: var(--z-footer);
 }
 
 .col-33 {
@@ -165,9 +181,31 @@ footer {
 
 .App-header .menu-btn {
   vertical-align: middle;
-  float: left;
   padding: 1vh;
   min-height: 10vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Mobile header bar: logo and hamburger share the row so branding never disappears on small
+   screens (previously the mobile header rendered the hamburger only). */
+.mobile-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4vw;
+}
+
+.mobile-nav-logo-link {
+  display: flex;
+  align-items: center;
+}
+
+.mobile-nav-logo {
+  width: auto;
+  height: 7vh;
+  max-height: 60px;
 }
 
 .menu-btn:hover {
@@ -198,7 +236,9 @@ footer {
 @media only screen and (max-width: 600px) {
   .App-body {
     width: 80vw;
-    padding: 15vh 0vh 10vh 0vh;
+    /* Bottom padding no longer needed to clear a fixed footer now that the footer sits in normal
+       document flow (flexbox sticky footer). */
+    padding: 15vh 0vh 0vh 0vh;
   }
 
   .App {

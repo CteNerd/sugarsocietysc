@@ -3,7 +3,7 @@
   height: 100%; /* 100% Full-height */
   width: 0; /* 0 width - change this with JavaScript */
   position: fixed; /* Stay in place */
-  z-index: 2; /* Stay on top */
+  z-index: var(--z-sidenav); /* Always render above in-page content (carousels, modals, footer) while open */
   top: 0; /* Stay at the top */
   left: 0;
   background-color: #000;

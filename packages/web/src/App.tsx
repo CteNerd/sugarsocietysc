@@ -49,10 +49,19 @@ function App() {
   function Navigation() {
     if (isMobile) {
       return (
-        <div className="col-33 menu-btn" onClick={() => openNav()}>
-          <div className="menu-line"></div>
-          <div className="menu-line"></div>
-          <div className="menu-line"></div>
+        <div className="mobile-nav-bar">
+          <a href="/" className="mobile-nav-logo-link">
+            <img
+              className="nav-logo mobile-nav-logo"
+              src="https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/sugar-society-sugar-cookies.png"
+              alt="Sugar Society Sugar Cookies Logo"
+            />
+          </a>
+          <div className="menu-btn" onClick={() => openNav()}>
+            <div className="menu-line"></div>
+            <div className="menu-line"></div>
+            <div className="menu-line"></div>
+          </div>
         </div>
       );
     } else {
