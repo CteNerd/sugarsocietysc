@@ -33,7 +33,7 @@ function NavigationLinks({ mobile, onNavigate }: { mobile: boolean; onNavigate: 
   const { idToken, loading, user, profileLoading, profileError, signOut } = useAuth();
   const isAdmin = !loading && !profileLoading && !profileError && user?.isActive && user.role === 'admin';
   const accountLinks = idToken
-    ? [{ to: '/account', label: 'Account' }, ...(user?.isActive ? [{ to: '/orders', label: 'My Orders' }] : [])]
+    ? [{ to: '/account', label: 'Account' }, { to: '/orders', label: 'My Orders' }]
     : [{ to: '/login', label: 'Log In' }, { to: '/signup', label: 'Sign Up' }];
   const renderAdminLinks = () => adminLinks.map((link) => (
     <NavigationLink key={link.to} {...link} onNavigate={() => {

@@ -58,6 +58,20 @@ test.each([false, true])('exposes each admin destination (mobile=%s)', (mobile) 
   }
 });
 
+test.each([false, true])('keeps My Orders available regardless of profile eligibility (mobile=%s)', (mobile) => {
+  for (const overrides of [
+    { user: null, profileLoading: true },
+    { user: null, profileError: 'Network failure' },
+    { user: null },
+    { user: { ...admin, isActive: false } },
+  ]) {
+    const nav = render(mobile, { ...defaults, idToken: 'token', ...overrides });
+    expect(nav.querySelector('a[href="/orders"]')).not.toBeNull();
+    expect(nav.querySelector('a[href="/admin"]')).toBeNull();
+    if (mobile) act(() => Simulate.click(nav.querySelector('.closebtn')));
+  }
+});
+
 test.each([
   { loading: true }, { profileLoading: true }, { profileError: 'Network failure' },
   { user: { ...admin, isActive: false } },

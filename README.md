@@ -37,6 +37,8 @@ company domain alone never grants admin access.
 Mobile and desktop navigation share the same destinations: public pages (including Pre-Sale and
 Contact), guest Log In/Sign Up, and signed-in Account/My Orders/Log Out. Active, authorized admins also
 see Dashboard, Pre-Sale & Menus, Packaging, Orders, and Newsletter links to dashboard sections.
+My Orders remains available to every signed-in user, including while profile verification is pending
+or failed and when the profile is inactive; only admin destinations depend on active admin eligibility.
 Privacy Policy remains in the footer. The mobile drawer supports keyboard focus containment,
 Escape/backdrop dismissal, background scroll locking, and focus restoration.
 
