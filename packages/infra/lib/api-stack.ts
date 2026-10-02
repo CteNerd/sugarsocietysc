@@ -282,7 +282,6 @@ export class ApiStack extends Stack {
 
     this.httpApi = new apigwv2.HttpApi(this, 'HttpApi', {
       apiName: `sugarsocietysc-${envConfig.envName}`,
-      createDefaultStage: false,
       corsPreflight: {
         allowOrigins: [`https://${envConfig.domainName}`],
         allowMethods: [apigwv2.CorsHttpMethod.GET, apigwv2.CorsHttpMethod.POST, apigwv2.CorsHttpMethod.PATCH],
@@ -292,12 +291,11 @@ export class ApiStack extends Stack {
     // Account-level API Gateway throttling is a shared default across the whole AWS account — an
     // explicit per-stage limit here caps abuse/runaway-automation traffic to this API specifically,
     // ahead of exposing it to more automated/MCP-style callers.
-    new apigwv2.HttpStage(this, 'HttpApiDefaultStage', {
-      httpApi: this.httpApi,
-      stageName: '$default',
-      autoDeploy: true,
-      throttle: { rateLimit: 50, burstLimit: 100 },
-    });
+    // Throttling is set on the HttpApi's built-in default stage (not a separate HttpStage) so the
+    // stage keeps its original logical ID; a new logical ID makes CloudFormation create a second
+    // `$default` stage before deleting the old one, which fails with "already exists".
+    const defaultStage = this.httpApi.defaultStage?.node.defaultChild as apigwv2.CfnStage;
+    defaultStage.defaultRouteSettings = { throttlingRateLimit: 50, throttlingBurstLimit: 100 };
 
     this.httpApi.addRoutes({
       path: '/health',
