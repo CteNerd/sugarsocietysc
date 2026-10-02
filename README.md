@@ -104,6 +104,12 @@ S3 + CloudFront. Configure environment-specific GitHub variables and AWS OIDC/CD
 production should require GitHub Environment approval. See [docs/AWS-DEPLOYMENT.md](docs/AWS-DEPLOYMENT.md)
 for the exact setup and rollback/cutover checklist. Runtime credentials remain in AWS Secrets Manager.
 
+API Lambdas share the app composition root but receive domain-specific configuration and IAM grants.
+Contact queue initialization is deferred until notification delivery is requested, like newsletter
+queue initialization, so `/health` and other domains do not require `CONTACT_QUEUE_URL` or contact
+queue permissions. Contact submissions still require configured reCAPTCHA verification and a queue;
+missing configuration is surfaced as an error, not a successful submission.
+
 ## Deployment
 
 - **Frontend**: currently deployed to GitHub Pages via [.github/workflows/deploy.yml](.github/workflows/deploy.yml)
