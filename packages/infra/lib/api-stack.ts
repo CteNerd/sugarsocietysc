@@ -307,6 +307,11 @@ export class ApiStack extends Stack {
     // stage keeps its original logical ID; a new logical ID makes CloudFormation create a second
     // `$default` stage before deleting the old one, which fails with "already exists".
     const defaultStage = this.httpApi.defaultStage?.node.defaultChild as apigwv2.CfnStage;
+    // Prod was first deployed with the standalone HttpStage, unlike dev. Preserve its deployed
+    // logical ID so moving to the built-in stage updates it rather than creating a duplicate.
+    if (envConfig.envName === 'prod') {
+      defaultStage.overrideLogicalId('HttpApiDefaultStage439BF176');
+    }
     defaultStage.defaultRouteSettings = { throttlingRateLimit: 50, throttlingBurstLimit: 100 };
 
     this.httpApi.addRoutes({

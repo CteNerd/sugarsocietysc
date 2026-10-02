@@ -144,4 +144,6 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for the full phase-by-phase plan and stat
   for `www.sugarsocietysc.com`, switching Stripe to live keys/webhook, and confirming the existing
   Google OAuth secret and Cognito redirect URI. Configure the admin allowlist in `packages/infra/cdk.json`
   per environment. Configure GitHub Environment **variables** and AWS OIDC as documented; GitHub
-  secrets are not required by the deployment workflow.
+  secrets are not required by the deployment workflow. API stage updates preserve each environment's
+  deployed CloudFormation logical ID to avoid duplicate `$default` stages; see
+  [AWS deployment setup](docs/AWS-DEPLOYMENT.md#api-default-stage-logical-ids).
