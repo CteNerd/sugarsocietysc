@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import "./specials.css";
 import Cookies from "../cookies/cookies-json/2023-valentines-cookies.json";
 
@@ -7,6 +7,10 @@ interface Props {
 }
 
 export default function Specials(props: Props) {
+  // `:hover` doesn't fire reliably on touch devices, so tapping a card toggles the same
+  // enlarge-on-hover effect via this class instead (see specials.css).
+  const [expandedUrl, setExpandedUrl] = useState<string | null>(null);
+
   function SpecialCookies() {
     let content: JSX.Element[] = [];
 
@@ -14,8 +18,16 @@ export default function Specials(props: Props) {
       content.push(
         <div
           key={cookie.url}
-          className={"card-img-container"}
+          className={
+            "card-img-container" +
+            (expandedUrl === cookie.url ? " card-expanded" : "")
+          }
           style={{ width: props.isMobile ? "50%" : "33%" }}
+          onClick={() =>
+            setExpandedUrl((current) =>
+              current === cookie.url ? null : cookie.url
+            )
+          }
         >
           <img
             src={cookie.url}

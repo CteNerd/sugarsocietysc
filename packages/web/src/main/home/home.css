@@ -14,6 +14,10 @@
 .slideshow-container {
   height: 50vh;
   position: relative;
+  /* Establishes its own stacking context (scoped to the shared "hover-card" layer) so the
+     internal 1/2/5/10 z-index ordering below (slides, caption, dots, arrows) stays local and can
+     never escape above the modal or side-nav layers elsewhere on the page. */
+  z-index: var(--z-hover-card);
   margin: auto;
   background-color: white;
   overflow: hidden; /* Prevent any content from spilling out */

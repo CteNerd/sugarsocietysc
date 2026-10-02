@@ -127,7 +127,7 @@
 .modal-opened {
   display: block; /* Hidden by default */
   position: fixed; /* Stay in place */
-  z-index: 1; /* Sit on top */
+  z-index: var(--z-modal); /* Sit above in-page content, but below the side nav */
   left: 0;
   top: 0;
   width: 100%; /* Full width */

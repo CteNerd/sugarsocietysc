@@ -37,26 +37,26 @@ export default function SideNav() {
       <div className="closebtn" onClick={closeNav}>
         &times;
       </div>
-      <a href="/">
+      <a href="/" onClick={closeNav}>
         {/* <HomeOutlined />  */}
         Home
       </a>
-      <a href="/our-story">
+      <a href="/our-story" onClick={closeNav}>
         {/* <BookOutlined />  */}
         Our Story
       </a>
-      <a href="/specials">
+      <a href="/specials" onClick={closeNav}>
         {/* <StarOutlined />  */}
         Specials
       </a>
-      <a href="/our-cookies">
+      <a href="/our-cookies" onClick={closeNav}>
         {/* <PieChartOutlined />  */}
         Our Cookies
       </a>
       {/* <a href="/pricing">
         <ShoppingCartOutlined /> Pricing
       </a> */}
-      <a href="/order-now">
+      <a href="/order-now" onClick={closeNav}>
         {/* <AlertOutlined />  */}
         Order Now
       </a>
