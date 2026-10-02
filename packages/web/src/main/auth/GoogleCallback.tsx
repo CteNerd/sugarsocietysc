@@ -1,14 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
-import { getCurrentUser, syncProfile } from '../../api/auth-client';
 import LoadingSpinner from '../../components/LoadingSpinner';
 
 /** Handles the Cognito Hosted UI redirect after a Google sign-in: exchanges the authorization code
  * for tokens, then either goes straight to the account page (already-synced user) or asks for a phone
  * number first (new Google sign-ups don't have one — Google's basic scopes don't supply it). */
 export default function GoogleCallback() {
-  const { exchangeGoogleCode } = useAuth();
+  const { exchangeGoogleCode, user, profileLoading, profileError, syncUserProfile } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [error, setError] = useState<string | null>(null);
@@ -25,26 +24,24 @@ export default function GoogleCallback() {
     }
     exchanged.current = true;
     exchangeGoogleCode(code)
-      .then(async ({ idToken: token, claims }) => {
+      .then(({ idToken: token, claims }) => {
         setIdTokenLocal(token);
-        const existing = await getCurrentUser(token).catch(() => null);
-        if (existing?.phone) {
-          await syncProfile(token, {
-            firstName: existing.firstName,
-            lastName: existing.lastName,
-            phone: existing.phone,
-            newsletterOptInEmail: existing.newsletterOptInEmail,
-            newsletterOptInSms: existing.newsletterOptInSms,
-          });
-          navigate('/account');
-          return;
-        }
         setProfile({ firstName: claims.firstName, lastName: claims.lastName, phone: '' });
-        setNeedsPhone(true);
       })
       .catch((err) => setError(err instanceof Error ? err.message : 'Google sign-in failed'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!idToken || profileLoading) return;
+    if (profileError) {
+      setError(profileError);
+    } else if (user?.phone) {
+      navigate('/account', { replace: true });
+    } else {
+      setNeedsPhone(true);
+    }
+  }, [idToken, profileLoading, profileError, user, navigate]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -53,7 +50,7 @@ export default function GoogleCallback() {
     }
     setSubmitting(true);
     try {
-      await syncProfile(idToken, profile);
+      await syncUserProfile(profile);
       navigate('/account');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not save profile');

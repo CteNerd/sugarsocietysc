@@ -3,6 +3,7 @@
   margin: 0 auto;
   padding: 24px;
   text-align: left;
+  overflow-wrap: anywhere;
 }
 
 .admin-page section {
@@ -12,9 +13,32 @@
   border-radius: 8px;
 }
 
+.admin-page section[id] {
+  scroll-margin-top: 16px;
+}
+
+.admin-page .admin-menu-management {
+  padding: 0;
+}
+
+.admin-menu-management > label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-menu-management > label select {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 10px;
+  font: inherit;
+}
+
 .admin-form {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
   align-items: center;
   gap: 12px;
   margin: 12px 0 20px;
@@ -27,6 +51,7 @@
   min-width: 0;
   padding: 10px;
   font: inherit;
+  min-height: 44px;
 }
 
 .admin-form textarea {
@@ -37,6 +62,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+  min-height: 44px;
 }
 
 .admin-form button,
@@ -52,6 +80,8 @@
 .admin-record-list summary {
   cursor: pointer;
   font-size: 16px;
+  min-height: 44px;
+  overflow-wrap: anywhere;
 }
 
 .campaign-preview {
@@ -70,6 +100,11 @@
   padding: 12px;
   text-align: left;
   font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.admin-order-row > * {
+  min-width: 0;
 }
 
 .admin-order-detail {
@@ -80,6 +115,9 @@
 
 .order-history ul {
   padding-left: 20px;
+  width: 100%;
+  text-align: left;
+  overflow-wrap: anywhere;
 }
 
 .order-history button {
@@ -93,6 +131,10 @@
 
   .admin-page section {
     padding: 12px;
+  }
+
+  .admin-page .admin-menu-management {
+    padding: 0;
   }
 
   .admin-order-row {

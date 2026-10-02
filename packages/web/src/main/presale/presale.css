@@ -1,7 +1,7 @@
 .presale-page {
   max-width: 900px;
   margin: 0 auto;
-  padding: 1.5rem;
+  padding: clamp(0px, 2vw, 20px);
 }
 
 .presale-header {
@@ -17,7 +17,7 @@
 
 .presale-event-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   gap: 1.25rem;
 }
 
@@ -53,6 +53,7 @@
   padding: 0.6rem 0;
   border-top: 1px solid #eee2d9;
   text-align: left;
+  flex-wrap: wrap;
 }
 
 .presale-variant-row p {
@@ -71,7 +72,7 @@
 
 .presale-design-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
   gap: 1.25rem;
 }
 
@@ -80,6 +81,8 @@
   border-radius: 8px;
   padding: 1rem;
   text-align: center;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .presale-design-card.sold-out {
@@ -104,24 +107,35 @@
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
+  flex-shrink: 0;
 }
 
 .presale-quantity-stepper button {
-  width: 2rem;
-  height: 2rem;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 50%;
   border: 1px solid #333;
   background: #fff;
+  color: #222;
+  font-family: system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1;
   cursor: pointer;
 }
 
 .presale-quantity-stepper button:disabled {
-  opacity: 0.4;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
 .presale-quantity-value {
-  min-width: 2rem;
+  min-width: 1.5rem;
   font-weight: 600;
 }
 
@@ -136,6 +150,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-height: 44px;
 }
 
 .presale-invoice {
@@ -148,6 +163,16 @@
   display: flex;
   justify-content: space-between;
   padding: 0.25rem 0;
+  gap: 1rem;
+}
+
+.presale-invoice-line span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.presale-invoice-line span:last-child {
+  flex-shrink: 0;
 }
 
 .presale-invoice-subtotal {
@@ -174,12 +199,21 @@
   gap: 0.25rem;
 }
 
+.presale-guest-contact input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px;
+  font-size: 16px;
+}
+
 .presale-actions {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
   margin-top: 1rem;
+  flex-wrap: wrap;
 }
 
 .presale-total-cookies {
@@ -207,4 +241,23 @@
   border-radius: 6px;
   padding: 0.6rem 1.25rem;
   cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  .presale-actions {
+    align-items: stretch;
+  }
+
+  .presale-actions button {
+    flex: 1 1 180px;
+  }
+
+  .presale-total-cookies {
+    flex-basis: 100%;
+    margin: 0;
+  }
+
+  .presale-invoice {
+    padding: 12px;
+  }
 }

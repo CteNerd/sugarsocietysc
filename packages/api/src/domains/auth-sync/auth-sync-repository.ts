@@ -79,4 +79,12 @@ export class AuthSyncRepository {
     ]);
     return result.rows[0] ? toUser(result.rows[0]) : undefined;
   }
+
+  async updateIdentity(cognitoSub: string, email: string, role: User['role']): Promise<User | undefined> {
+    const result = await this.pool.query<UserRow>(
+      'UPDATE users SET email = $2, role = $3 WHERE cognito_sub = $1 RETURNING *',
+      [cognitoSub, email, role],
+    );
+    return result.rows[0] ? toUser(result.rows[0]) : undefined;
+  }
 }

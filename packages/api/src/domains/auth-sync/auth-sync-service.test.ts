@@ -21,13 +21,16 @@ function fakeUser(overrides: Partial<User> = {}): User {
   };
 }
 
-function fakeRepository(overrides: Partial<AuthSyncRepository> = {}): AuthSyncRepository {
+function fakeRepository(
+  overrides: Partial<AuthSyncRepository> = {},
+): Pick<AuthSyncRepository, 'upsertFromCognito' | 'findByCognitoSub' | 'updateIdentity'> {
   return {
     upsertFromCognito: async (input: UpsertUserInput) =>
       fakeUser({ cognitoSub: input.cognitoSub, email: input.email, role: input.role }),
     findByCognitoSub: async () => undefined,
+    updateIdentity: async (sub, email, role) => fakeUser({ cognitoSub: sub, email, role }),
     ...overrides,
-  } as unknown as AuthSyncRepository;
+  };
 }
 
 const claims: AuthClaims = { sub: 'sub-1', email: 'jane@example.com' };
@@ -41,6 +44,13 @@ const profile: AuthSyncRequest = {
   phone: '+15555550123',
   newsletterOptInEmail: true,
   newsletterOptInSms: false,
+};
+
+const googleAdminClaims: AuthClaims = {
+  sub: 'admin-sub',
+  email: 'admin@sugarsocietysc.com',
+  email_verified: true,
+  identities: [{ providerName: 'Google' }],
 };
 
 describe('AuthSyncService', () => {
@@ -108,5 +118,62 @@ describe('AuthSyncService', () => {
     }, profile);
 
     expect(requestedRole).toBe('customer');
+  });
+
+  it.each([
+    { identities: JSON.stringify([{ providerName: 'Google' }]), email_verified: 'true' },
+    { email: ' ADMIN@SUGARSOCIETYSC.COM ', hd: 'SugarSocietySc.com' },
+  ])('accepts supported verified Google claim formats: %j', (overrides) => {
+    expect(isAllowlistedGoogleAdmin({ ...googleAdminClaims, ...overrides }, config)).toBe(true);
+  });
+
+  it.each([
+    { email_verified: false },
+    { email_verified: undefined },
+    { identities: undefined },
+    { identities: '{invalid' },
+    { identities: [{ providerName: 'Facebook' }] },
+    { hd: 'another-company.com' },
+    { email: 'customer@sugarsocietysc.com' },
+    { email: 'admin@another-company.com' },
+  ])('rejects ineligible identities: %j', (overrides) => {
+    expect(isAllowlistedGoogleAdmin({ ...googleAdminClaims, ...overrides }, config)).toBe(false);
+  });
+
+  it('reconciles an existing customer on session restoration without rewriting contact or preferences', async () => {
+    const existing = fakeUser({ email: googleAdminClaims.email, newsletterOptInSms: true });
+    let update: { sub: string; email: string; role: User['role'] } | undefined;
+    const repository = fakeRepository({
+      findByCognitoSub: async () => existing,
+      updateIdentity: async (sub, email, role) => {
+        update = { sub, email, role };
+        return { ...existing, email, role };
+      },
+      upsertFromCognito: async () => { throw new Error('Must not rewrite the profile'); },
+    });
+    const result = await new AuthSyncService(repository, config).getCurrentUser(googleAdminClaims);
+    expect(update).toEqual({ sub: googleAdminClaims.sub, email: googleAdminClaims.email, role: 'admin' });
+    expect(result).toEqual({ ...existing, role: 'admin' });
+  });
+
+  it('reconciles removed admins and non-Google sessions to customers', async () => {
+    const existing = fakeUser({ role: 'admin', email: googleAdminClaims.email });
+    const repository = fakeRepository({ findByCognitoSub: async () => existing });
+    expect((await new AuthSyncService(repository, { ...config, adminEmails: [] })
+      .getCurrentUser(googleAdminClaims))?.role).toBe('customer');
+    expect((await new AuthSyncService(repository, config)
+      .getCurrentUser({ sub: googleAdminClaims.sub, email: googleAdminClaims.email }))?.role).toBe('customer');
+  });
+
+  it('does not grant inactive users admin access on sync or restoration', async () => {
+    const existing = fakeUser({ role: 'admin', isActive: false, email: googleAdminClaims.email });
+    const repository = fakeRepository({
+      findByCognitoSub: async () => existing,
+      upsertFromCognito: async (input) => ({ ...existing, role: input.role }),
+      updateIdentity: async (_sub, _email, role) => ({ ...existing, role }),
+    });
+    const service = new AuthSyncService(repository, config);
+    expect(await service.getCurrentUser(googleAdminClaims)).toMatchObject({ role: 'customer', isActive: false });
+    expect(await service.syncUser(googleAdminClaims, profile)).toMatchObject({ role: 'customer', isActive: false });
   });
 });

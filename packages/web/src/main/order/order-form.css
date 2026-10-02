@@ -1,8 +1,9 @@
 .asana-embed-iframe {
-  min-height: 100%;
+  width: 100%;
+  min-height: 533px;
 }
 
-.page-content-container {
-  height: 100%;
-  min-height: auto;
+.asana-embed-container {
+  width: 100%;
+  min-width: 0;
 }

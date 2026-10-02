@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
 import Home from "./main/home";
 import OurStory from "./main/story";
@@ -10,7 +10,7 @@ import OrderNow from "./main/order-now";
 import PreSale from "./main/presale";
 import EventOrder from "./main/presale/EventOrder";
 import "./App.css";
-import SideNav from "./main/sideNav/sideNav";
+import Navigation from "./components/Navigation";
 import Contact from "./main/contact";
 import PrivacyPolicy from "./main/privacy/privacy-policy";
 import OrderForm from "./main/order/order-form";
@@ -40,80 +40,14 @@ function App() {
     return () => breakpoint.removeEventListener("change", updateIsMobile);
   }, []);
 
-  /* Set the width of the side navigation to 250px */
-  function openNav() {
-    if (document.getElementById("mySidenav")) {
-      document.getElementById("mySidenav")!.style.width = "250px";
-    }
-  }
-
-  function Navigation() {
-    if (isMobile) {
-      return (
-        <div className="mobile-nav-bar">
-          <a href="/" className="mobile-nav-logo-link">
-            <img
-              className="nav-logo mobile-nav-logo"
-              src="https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/sugar-society-sugar-cookies.png"
-              alt="Sugar Society Sugar Cookies Logo"
-            />
-          </a>
-          <div className="menu-btn" onClick={() => openNav()}>
-            <div className="menu-line"></div>
-            <div className="menu-line"></div>
-            <div className="menu-line"></div>
-          </div>
-        </div>
-      );
-    } else {
-      return (
-        <nav className="main-nav">
-          <div key="home" className="menu-item col-1">
-            <a href="/">Home</a>
-          </div>
-          <div key="story" className="menu-item col-1">
-            <a href="/our-story">Our Story</a>
-          </div>
-          <div key="specials" className="menu-item col-1">
-            <a href="/specials">Specials</a>
-          </div>
-          <div key="logo" className="menu-item col-3">
-            <a href="/">
-              <img
-                className="nav-logo"
-                src="https://wellcall-app-cdk.s3.amazonaws.com/sugar-society/photos/sugar-society-sugar-cookies.png"
-                alt="Sugar Society Sugar Cookies Logo"
-              />
-            </a>
-          </div>
-          <div key="cookies" className="menu-item col-1">
-            <a href="/our-cookies">Our Cookies</a>
-          </div>
-          {/* <div key="order" className="menu-item col-1">
-            <a href="/pricing">Pricing</a>
-          </div> */}
-          <div key="order-now" className="menu-item col-1">
-            <a href="/order-now">Order Now</a>
-          </div>
-          <div key="pre-sale" className="menu-item col-1">
-            <a href="/pre-sale">Pre-Sale</a>
-          </div>
-          <div key="account" className="menu-item col-1">
-            <a href="/account">Account</a>
-          </div>
-        </nav>
-      );
-    }
-  }
   return (
     <HelmetProvider>
       <AuthProvider>
       <Router>
         <div className="App">
-          <SideNav />
           <header className="App-header">
             <div className="main-nav-container">
-              <Navigation />
+              <Navigation isMobile={isMobile} />
             </div>
           </header>
           <main className="App-body-container">
@@ -209,6 +143,9 @@ function App() {
             <a className="footer-link" href="tel:+1254-313-3972">
               Call Us Now
             </a>
+          </div>
+          <div className="footer-link-container">
+            <Link className="footer-link" to="/privacy">Privacy Policy</Link>
           </div>
           <div className="footer-link-container">
             <p className="footer-copyright">

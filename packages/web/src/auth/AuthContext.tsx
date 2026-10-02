@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AuthenticationDetails,
   CognitoUser,
@@ -6,7 +6,8 @@ import {
 } from 'amazon-cognito-identity-js';
 import { hostedUiDomain, oauthRedirectUri, userPool } from './cognito-config';
 import { generateCodeChallenge, generateCodeVerifier } from './pkce';
-import { syncProfile } from '../api/auth-client';
+import { User } from '@sugarsocietysc/shared';
+import { AuthApiError, getCurrentUser, syncProfile, SyncProfileInput } from '../api/auth-client';
 
 export interface SignUpInput {
   email: string;
@@ -25,6 +26,11 @@ export interface GoogleTokenClaims {
 interface AuthContextValue {
   idToken: string | null;
   loading: boolean;
+  user: User | null;
+  profileLoading: boolean;
+  profileError: string | null;
+  refreshProfile: () => Promise<void>;
+  syncUserProfile: (input: SyncProfileInput) => Promise<void>;
   signUp: (input: SignUpInput) => Promise<void>;
   confirmSignUp: (email: string, code: string) => Promise<void>;
   resendConfirmationCode: (email: string) => Promise<void>;
@@ -99,6 +105,73 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [idToken, setIdToken] = useState<string | null>(null);
   const [googleSession, setGoogleSession] = useState<GoogleOAuthSession | null>(null);
   const [loading, setLoading] = useState(true);
+  const tokenRef = useRef<string | null>(null);
+  const sessionRevision = useRef(0);
+  const profileRequest = useRef(0);
+  const [profile, setProfile] = useState<{
+    token: string | null;
+    user: User | null;
+    error: string | null;
+    loading: boolean;
+  }>({ token: null, user: null, error: null, loading: false });
+
+  const refreshProfile = useCallback(async () => {
+    const token = tokenRef.current;
+    if (!token) return;
+    const request = ++profileRequest.current;
+    setProfile({ token, user: null, error: null, loading: true });
+    try {
+      const user = await getCurrentUser(token);
+      if (request === profileRequest.current && token === tokenRef.current) {
+        setProfile({ token, user, error: null, loading: false });
+      }
+    } catch (err) {
+      if (request !== profileRequest.current || token !== tokenRef.current) return;
+      const missing = err instanceof AuthApiError && err.status === 404;
+      setProfile({
+        token,
+        user: null,
+        error: missing ? null : err instanceof Error ? err.message : 'Could not verify your account',
+        loading: false,
+      });
+    }
+  }, []);
+
+  const setAuthenticationToken = useCallback((token: string | null, user?: User) => {
+    tokenRef.current = token;
+    sessionRevision.current += 1;
+    profileRequest.current += 1;
+    setIdToken(token);
+    setProfile({ token, user: user ?? null, error: null, loading: Boolean(token) && !user });
+    if (token && !user) void refreshProfile();
+  }, [refreshProfile]);
+
+  const syncUserProfile = useCallback(async (input: SyncProfileInput) => {
+    const token = tokenRef.current;
+    if (!token) throw new Error('Sign in before saving your profile');
+    const request = ++profileRequest.current;
+    setProfile({ token, user: null, error: null, loading: true });
+    try {
+      const user = await syncProfile(token, input);
+      if (request === profileRequest.current && token === tokenRef.current) {
+        setProfile({ token, user, error: null, loading: false });
+      }
+    } catch (err) {
+      if (request === profileRequest.current && token === tokenRef.current) {
+        setProfile({
+          token,
+          user: null,
+          error: err instanceof Error ? err.message : 'Could not save profile',
+          loading: false,
+        });
+      }
+      throw err;
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => { profileRequest.current += 1; };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -116,7 +189,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (active) {
             sessionStorage.setItem(GOOGLE_SESSION_STORAGE_KEY, JSON.stringify(session));
             setGoogleSession(session);
-            setIdToken(session.idToken);
+            setAuthenticationToken(session.idToken);
           }
         } catch (err) {
           sessionStorage.removeItem(GOOGLE_SESSION_STORAGE_KEY);
@@ -135,37 +208,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     currentUser.getSession((err: Error | null, session: { getIdToken(): { getJwtToken(): string } } | null) => {
       if (active && !err && session) {
-        setIdToken(session.getIdToken().getJwtToken());
+        setAuthenticationToken(session.getIdToken().getJwtToken());
       }
       if (active) setLoading(false);
     });
     return () => { active = false; };
-  }, []);
+  }, [setAuthenticationToken]);
 
   useEffect(() => {
     if (!googleSession) return undefined;
+    let active = true;
+    let refreshing = false;
     const refreshIfNeeded = async () => {
-      if (googleSession.expiresAt > Date.now() + 60_000) return;
+      if (refreshing || googleSession.expiresAt > Date.now() + 60_000) return;
+      refreshing = true;
       try {
         const refreshed = await refreshGoogleSession(googleSession);
+        if (!active || tokenRef.current !== googleSession.idToken) return;
         sessionStorage.setItem(GOOGLE_SESSION_STORAGE_KEY, JSON.stringify(refreshed));
         setGoogleSession(refreshed);
-        setIdToken(refreshed.idToken);
+        setAuthenticationToken(refreshed.idToken);
       } catch (err) {
+        if (!active || tokenRef.current !== googleSession.idToken) return;
         console.error('Could not refresh Google sign-in session', err);
         sessionStorage.removeItem(GOOGLE_SESSION_STORAGE_KEY);
         setGoogleSession(null);
-        setIdToken(null);
+        setAuthenticationToken(null);
+      } finally {
+        refreshing = false;
       }
     };
     const timer = window.setInterval(() => { void refreshIfNeeded(); }, 30_000);
-    return () => window.clearInterval(timer);
-  }, [googleSession]);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [googleSession, setAuthenticationToken]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
       idToken,
       loading,
+      user: profile.token === idToken ? profile.user : null,
+      profileLoading: Boolean(idToken) && (profile.token !== idToken || profile.loading),
+      profileError: profile.token === idToken ? profile.error : null,
+      refreshProfile,
+      syncUserProfile,
       signUp: ({ email, password, firstName, lastName, phone }) =>
         new Promise((resolve, reject) => {
           const attributes = [
@@ -209,25 +294,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       signIn: (email, password) =>
         new Promise((resolve, reject) => {
+          const revision = sessionRevision.current;
           const cognitoUser = new CognitoUser({ Username: email, Pool: userPool });
           const authDetails = new AuthenticationDetails({ Username: email, Password: password });
           cognitoUser.authenticateUser(authDetails, {
             onSuccess: async (session) => {
               const token = session.getIdToken().getJwtToken();
-              setIdToken(token);
-              sessionStorage.removeItem(GOOGLE_SESSION_STORAGE_KEY);
-              setGoogleSession(null);
               try {
                 cognitoUser.getUserAttributes((attrErr, attributes) => {
                   if (attrErr || !attributes) {
-                    resolve();
+                    reject(attrErr ?? new Error('Could not read account attributes'));
                     return;
                   }
                   syncProfile(token, {
                     firstName: getAttribute(attributes, 'given_name'),
                     lastName: getAttribute(attributes, 'family_name'),
                     phone: getAttribute(attributes, 'phone_number'),
-                  }).then(() => resolve()).catch(reject);
+                  }).then((user) => {
+                    if (revision !== sessionRevision.current) {
+                      reject(new Error('Sign-in was cancelled because your session changed'));
+                      return;
+                    }
+                    sessionStorage.removeItem(GOOGLE_SESSION_STORAGE_KEY);
+                    setGoogleSession(null);
+                    setAuthenticationToken(token, user);
+                    resolve();
+                  }).catch(reject);
                 });
               } catch (err) {
                 reject(err);
@@ -254,6 +346,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
 
       exchangeGoogleCode: async (code) => {
+        const revision = sessionRevision.current;
         const verifier = sessionStorage.getItem(PKCE_VERIFIER_STORAGE_KEY) ?? '';
         sessionStorage.removeItem(PKCE_VERIFIER_STORAGE_KEY);
         const body = new URLSearchParams({
@@ -275,6 +368,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!tokens.id_token || !tokens.access_token || !tokens.expires_in) {
           throw new Error('Google sign-in returned an invalid token response');
         }
+        if (revision !== sessionRevision.current) {
+          throw new Error('Sign-in was cancelled because your session changed');
+        }
         const session: GoogleOAuthSession = {
           idToken: tokens.id_token,
           accessToken: tokens.access_token,
@@ -283,7 +379,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
         sessionStorage.setItem(GOOGLE_SESSION_STORAGE_KEY, JSON.stringify(session));
         setGoogleSession(session);
-        setIdToken(session.idToken);
+        setAuthenticationToken(session.idToken);
         return { idToken: session.idToken, claims: decodeIdTokenClaims(session.idToken) };
       },
 
@@ -291,10 +387,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         userPool.getCurrentUser()?.signOut();
         sessionStorage.removeItem(GOOGLE_SESSION_STORAGE_KEY);
         setGoogleSession(null);
-        setIdToken(null);
+        setAuthenticationToken(null);
       },
     }),
-    [idToken, loading],
+    [idToken, loading, profile, refreshProfile, syncUserProfile, setAuthenticationToken],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

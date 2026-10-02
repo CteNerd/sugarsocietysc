@@ -5,13 +5,13 @@ import { AppConfig } from '../../config/env';
 
 export class AuthSyncService {
   constructor(
-    private readonly repository: AuthSyncRepository,
+    private readonly repository: Pick<AuthSyncRepository, 'findByCognitoSub' | 'upsertFromCognito' | 'updateIdentity'>,
     private readonly config: Pick<AppConfig, 'adminEmails' | 'adminEmailDomain'>,
   ) {}
 
   async syncUser(claims: AuthClaims, profile: AuthSyncRequest): Promise<User> {
-    const role = isAllowlistedGoogleAdmin(claims, this.config) ? 'admin' : 'customer';
     const existing = await this.repository.findByCognitoSub(claims.sub);
+    const role = existing?.isActive === false ? 'customer' : this.roleFor(claims);
     if ((existing?.role ?? 'customer') !== role && (existing || role === 'admin')) {
       console.info('User role changed during auth sync', {
         cognitoSub: claims.sub,
@@ -32,7 +32,32 @@ export class AuthSyncService {
   }
 
   async getCurrentUser(claims: AuthClaims): Promise<User | undefined> {
-    return this.repository.findByCognitoSub(claims.sub);
+    const existing = await this.repository.findByCognitoSub(claims.sub);
+    if (!existing) return undefined;
+    const role = existing.isActive ? this.roleFor(claims) : 'customer';
+    if (existing.role === role && existing.email === claims.email) return existing;
+    if (existing.role !== role) {
+      console.info('User role changed during identity reconciliation', {
+        cognitoSub: claims.sub,
+        previousRole: existing.role,
+        newRole: role,
+      });
+    }
+    return this.repository.updateIdentity(claims.sub, claims.email, role);
+  }
+
+  private roleFor(claims: AuthClaims): User['role'] {
+    const eligible = isAllowlistedGoogleAdmin(claims, this.config);
+    if (!eligible && this.config.adminEmails.some(
+      (email) => email.trim().toLowerCase() === claims.email.trim().toLowerCase(),
+    )) {
+      console.warn('Allowlisted identity did not meet administrator requirements', {
+        verifiedEmail: claims.email_verified === true || claims.email_verified === 'true',
+        hasFederatedIdentity: claims.identities !== undefined,
+        hasHostedDomain: claims.hd !== undefined,
+      });
+    }
+    return eligible ? 'admin' : 'customer';
   }
 }
 
