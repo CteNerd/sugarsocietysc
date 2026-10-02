@@ -18,6 +18,7 @@ import * as logs from 'aws-cdk-lib/aws-logs';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import * as path from 'path';
 import { EnvConfig } from './env-config';
@@ -28,6 +29,7 @@ export interface ApiStackProps extends StackProps {
   cluster: rds.DatabaseCluster;
   userPool: cognito.UserPool;
   userPoolClient: cognito.UserPoolClient;
+  uploadsBucket: s3.IBucket;
 }
 
 /**
@@ -56,7 +58,11 @@ export class ApiStack extends Stack {
       DB_HOST: props.cluster.clusterEndpoint.hostname,
       DB_PORT: props.cluster.clusterEndpoint.port.toString(),
       DB_NAME: 'sugarsocietysc',
+      UPLOADS_BUCKET_NAME: props.uploadsBucket.bucketName,
+      UPLOADS_PUBLIC_BASE_URL: `https://${envConfig.domainName}`,
       GUEST_PII_RETENTION_DAYS: envConfig.guestPiiRetentionDays.toString(),
+      ADMIN_EMAILS: envConfig.adminEmails.join(','),
+      ADMIN_EMAIL_DOMAIN: envConfig.adminEmailDomain,
       SMS_PROVIDER: 'sns',
       NEWSLETTER_FROM_EMAIL: process.env.NEWSLETTER_FROM_EMAIL ?? '',
       NEWSLETTER_SITE_URL: `https://${envConfig.domainName}`,
@@ -250,6 +256,7 @@ export class ApiStack extends Stack {
       environment: commonEnv,
     });
     props.cluster.secret?.grantRead(catalogFn);
+    props.uploadsBucket.grantPut(catalogFn, 'uploads/menu-items/*');
 
     // Populated out-of-band by a human (real Stripe API keys can't be generated/committed by CDK) —
     // see packages/api/src/config/stripe-secret.ts and docs/ROADMAP.md deployment checkpoint.
@@ -282,22 +289,25 @@ export class ApiStack extends Stack {
 
     this.httpApi = new apigwv2.HttpApi(this, 'HttpApi', {
       apiName: `sugarsocietysc-${envConfig.envName}`,
-      createDefaultStage: false,
       corsPreflight: {
         allowOrigins: [`https://${envConfig.domainName}`],
-        allowMethods: [apigwv2.CorsHttpMethod.GET, apigwv2.CorsHttpMethod.POST, apigwv2.CorsHttpMethod.PATCH],
+        allowMethods: [
+          apigwv2.CorsHttpMethod.GET,
+          apigwv2.CorsHttpMethod.POST,
+          apigwv2.CorsHttpMethod.PATCH,
+          apigwv2.CorsHttpMethod.PUT,
+        ],
         allowHeaders: ['Authorization', 'Content-Type'],
       },
     });
     // Account-level API Gateway throttling is a shared default across the whole AWS account — an
     // explicit per-stage limit here caps abuse/runaway-automation traffic to this API specifically,
     // ahead of exposing it to more automated/MCP-style callers.
-    new apigwv2.HttpStage(this, 'HttpApiDefaultStage', {
-      httpApi: this.httpApi,
-      stageName: '$default',
-      autoDeploy: true,
-      throttle: { rateLimit: 50, burstLimit: 100 },
-    });
+    // Throttling is set on the HttpApi's built-in default stage (not a separate HttpStage) so the
+    // stage keeps its original logical ID; a new logical ID makes CloudFormation create a second
+    // `$default` stage before deleting the old one, which fails with "already exists".
+    const defaultStage = this.httpApi.defaultStage?.node.defaultChild as apigwv2.CfnStage;
+    defaultStage.defaultRouteSettings = { throttlingRateLimit: 50, throttlingBurstLimit: 100 };
 
     this.httpApi.addRoutes({
       path: '/health',
@@ -366,6 +376,16 @@ export class ApiStack extends Stack {
     // code independently enforces the `admin` DB role — the authorizer is not the security boundary.
     const catalogIntegration = new HttpLambdaIntegration('CatalogIntegration', catalogFn);
     this.httpApi.addRoutes({
+      path: '/catalog/presale/events',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: catalogIntegration,
+    });
+    this.httpApi.addRoutes({
+      path: '/catalog/presale/events/{id}',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: catalogIntegration,
+    });
+    this.httpApi.addRoutes({
       path: '/catalog/presale/active',
       methods: [apigwv2.HttpMethod.GET],
       integration: catalogIntegration,
@@ -391,6 +411,42 @@ export class ApiStack extends Stack {
     this.httpApi.addRoutes({
       path: '/catalog/admin/cookie-designs/{id}',
       methods: [apigwv2.HttpMethod.PATCH],
+      integration: catalogIntegration,
+      authorizer: cognitoAuthorizer,
+    });
+    this.httpApi.addRoutes({
+      path: '/catalog/admin/menu-categories',
+      methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST],
+      integration: catalogIntegration,
+      authorizer: cognitoAuthorizer,
+    });
+    this.httpApi.addRoutes({
+      path: '/catalog/admin/menu-item-images/upload-url',
+      methods: [apigwv2.HttpMethod.POST],
+      integration: catalogIntegration,
+      authorizer: cognitoAuthorizer,
+    });
+    this.httpApi.addRoutes({
+      path: '/catalog/admin/menu-categories/{id}',
+      methods: [apigwv2.HttpMethod.PATCH],
+      integration: catalogIntegration,
+      authorizer: cognitoAuthorizer,
+    });
+    this.httpApi.addRoutes({
+      path: '/catalog/admin/menu-variants',
+      methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST],
+      integration: catalogIntegration,
+      authorizer: cognitoAuthorizer,
+    });
+    this.httpApi.addRoutes({
+      path: '/catalog/admin/menu-variants/{id}',
+      methods: [apigwv2.HttpMethod.PATCH],
+      integration: catalogIntegration,
+      authorizer: cognitoAuthorizer,
+    });
+    this.httpApi.addRoutes({
+      path: '/catalog/admin/presale-events/{id}/packaging',
+      methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.PUT],
       integration: catalogIntegration,
       authorizer: cognitoAuthorizer,
     });

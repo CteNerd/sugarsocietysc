@@ -8,8 +8,33 @@ export class S3StorageProvider implements IStorageProvider {
   constructor(
     private readonly bucketName: string,
     region: string,
+    endpoint?: string,
   ) {
-    this.client = new S3Client({ region });
+    this.client = new S3Client({
+      region,
+      ...(endpoint
+        ? {
+            endpoint,
+            forcePathStyle: true,
+            credentials: { accessKeyId: 'test', secretAccessKey: 'test' },
+          }
+        : {}),
+    });
+  }
+
+  async getUploadUrl(
+    key: string,
+    contentType: string,
+    contentLength: number,
+    expiresInSeconds = 900,
+  ): Promise<string> {
+    const command = new PutObjectCommand({
+      Bucket: this.bucketName,
+      Key: key,
+      ContentType: contentType,
+      ContentLength: contentLength,
+    });
+    return getSignedUrl(this.client, command, { expiresIn: expiresInSeconds });
   }
 
   async uploadImage({ key, contentType, body }: UploadImageParams): Promise<string> {

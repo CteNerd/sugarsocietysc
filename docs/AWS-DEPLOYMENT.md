@@ -119,26 +119,35 @@ never touches Route53 for it. After each environment's first successful deploy, 
 
 ## Enabling Google sign-in for an environment
 
-1. In Google Cloud Console → APIs & Services → Credentials, create an OAuth 2.0 Client ID (type: Web
-   application) for this project, if one doesn't already exist for the target environment.
-2. Add authorized redirect URIs matching Cognito's hosted UI callback for that environment (found in
-   the deployed `Auth` stack's `CognitoHostedUiDomain` output, pattern
-   `https://<hosted-ui-domain>/oauth2/idpresponse`) and the app's own callback
-   (`https://<domainName>/auth/callback`).
-3. Provide the generated Client ID and Client Secret.
-4. The Client ID goes into `environments.<env>.googleOAuthClientId` in `packages/infra/cdk.json`
-   (not secret). The Client Secret must be put into the `GoogleOAuthClientSecret` Secrets Manager
-   secret CDK creates (`sugarsocietysc/<env>/google-oauth-client-secret`) via
-   `aws secretsmanager put-secret-value`, never committed to source control. The secret value must be
-   a JSON object with a single `clientSecret` key (not the raw secret string), since `auth-stack.ts`
-   reads it via `secretValueFromJson('clientSecret')`:
+The dev and prod Google OAuth Client IDs are already configured as
+`environments.<env>.googleOAuthClientId` in `packages/infra/cdk.json`. Before deploying, verify the
+existing Google OAuth clients and complete these environment-specific checks:
+
+1. In Google Cloud Console → APIs & Services → Credentials, confirm the authorized redirect URI
+   includes the exact Cognito callback shown by the `GoogleRedirectUri` output from the environment's
+   `Auth` stack (`https://<hosted-ui-domain>/oauth2/idpresponse`). The app callback
+   (`https://<domainName>/auth/callback`) is configured on the Cognito app client, not as Google's
+   provider callback.
+2. Confirm the matching client secret is present in the `GoogleOAuthClientSecret` Secrets Manager
+   secret (`sugarsocietysc/<env>/google-oauth-client-secret`). Its value must be a JSON object with a
+   `clientSecret` key because `auth-stack.ts` reads it via `secretValueFromJson('clientSecret')`:
    ```bash
    aws secretsmanager put-secret-value \
      --secret-id sugarsocietysc/<env>/google-oauth-client-secret \
      --secret-string '{"clientSecret":"<google-client-secret>"}'
    ```
-5. Redeploy the environment so Cognito picks up the non-empty client ID and enables the Google
-   identity provider.
+   Run that command yourself only if the secret needs to be populated or rotated; never paste the
+   secret into source control or chat.
+3. The dev and prod CDK contexts already include the `ADMIN_EMAILS` allowlist and
+   `ADMIN_EMAIL_DOMAIN=sugarsocietysc.com`. Keep the list restricted to individually approved
+   employees; the domain by itself does not grant admin access. The API promotes an account only when
+   it is on the allowlist, has a verified email on the configured domain, and its Cognito token
+   contains a Google federated identity. If Google supplies an `hd` claim, it must match the configured
+   domain as well. Removing an address from the allowlist demotes it on the next auth sync and blocks
+   admin requests immediately.
+4. Redeploy the environment only when the Cognito client/secret, redirect registration, or allowlist
+   configuration changes. Confirm an admin can sign in through the Google button and a non-allowlisted
+   user cannot access admin API routes.
 
 ## First dev run and production cutover
 

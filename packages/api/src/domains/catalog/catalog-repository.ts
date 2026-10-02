@@ -2,6 +2,12 @@ import { Pool, PoolClient } from 'pg';
 import {
   CookieDesign,
   CreateCookieDesignRequest,
+  CreateMenuCategoryRequest,
+  CreateMenuItemVariantRequest,
+  MenuCategory,
+  MenuItemVariant,
+  UpdateMenuCategoryRequest,
+  UpdateMenuItemVariantRequest,
   CreatePackagingOptionRequest,
   CreatePreSaleEventRequest,
   PackagingOption,
@@ -38,9 +44,11 @@ function toPreSaleEvent(row: PreSaleEventRow): PreSaleEvent {
 interface CookieDesignRow {
   id: string;
   name: string;
+  description: string | null;
   image_urls: string[];
-  base_price: number;
   pre_sale_event_id: string | null;
+  category_id: string | null;
+  sort_order: number;
   type: 'presale' | 'custom-catalog';
   colors: string[];
   max_quantity: number | null;
@@ -52,15 +60,65 @@ function toCookieDesign(row: CookieDesignRow): CookieDesign {
   return {
     id: row.id,
     name: row.name,
+    description: row.description ?? undefined,
     imageUrls: row.image_urls,
-    basePrice: row.base_price,
     preSaleEventId: row.pre_sale_event_id ?? undefined,
+    categoryId: row.category_id ?? undefined,
+    sortOrder: row.sort_order,
     type: row.type,
     colors: row.colors,
     maxQuantity: row.max_quantity ?? undefined,
     quantitySold: row.quantity_sold,
     isActive: row.is_active,
   };
+}
+
+interface MenuCategoryRow {
+  id: string;
+  pre_sale_event_id: string;
+  name: string;
+  description: string | null;
+  sort_order: number;
+  is_active: boolean;
+}
+
+function toMenuCategory(row: MenuCategoryRow): MenuCategory {
+  return {
+    id: row.id,
+    preSaleEventId: row.pre_sale_event_id,
+    name: row.name,
+    description: row.description ?? undefined,
+    sortOrder: row.sort_order,
+    isActive: row.is_active,
+  };
+}
+
+interface MenuItemVariantRow {
+  id: string;
+  cookie_design_id: string;
+  label: string | null;
+  pack_size: number;
+  price_cents: number;
+  sort_order: number;
+  is_active: boolean;
+}
+
+function toMenuItemVariant(row: MenuItemVariantRow): MenuItemVariant {
+  return {
+    id: row.id,
+    cookieDesignId: row.cookie_design_id,
+    label: row.label ?? undefined,
+    packSize: row.pack_size,
+    priceCents: row.price_cents,
+    sortOrder: row.sort_order,
+    isActive: row.is_active,
+  };
+}
+
+/** A variant joined with the item it belongs to — what checkout needs to validate and price a line. */
+export interface VariantWithItem {
+  variant: MenuItemVariant;
+  item: CookieDesign;
 }
 
 interface PackagingOptionRow {
@@ -101,28 +159,98 @@ export class CatalogRepository {
 
   // --- Public reads ---
 
-  async getActivePreSaleEvent(): Promise<PreSaleEvent | undefined> {
+  /** Active events whose ordering window hasn't ended yet (both open and upcoming), soonest first. */
+  async listPublicPreSaleEvents(): Promise<PreSaleEvent[]> {
     const result = await this.pool.query<PreSaleEventRow>(
-      'SELECT * FROM pre_sale_events WHERE is_active = true ORDER BY created_at DESC LIMIT 1',
+      `SELECT * FROM pre_sale_events
+       WHERE is_active = true AND order_window_end > now()
+       ORDER BY order_window_start, pickup_date, name`,
+    );
+    return result.rows.map(toPreSaleEvent);
+  }
+
+  async getPreSaleEventById(id: string): Promise<PreSaleEvent | undefined> {
+    const result = await this.pool.query<PreSaleEventRow>('SELECT * FROM pre_sale_events WHERE id = $1', [id]);
+    return result.rows[0] ? toPreSaleEvent(result.rows[0]) : undefined;
+  }
+
+  async getFirstOpenPreSaleEvent(): Promise<PreSaleEvent | undefined> {
+    const result = await this.pool.query<PreSaleEventRow>(
+      `SELECT * FROM pre_sale_events
+       WHERE is_active = true AND order_window_start <= now() AND order_window_end >= now()
+       ORDER BY order_window_start, pickup_date, name
+       LIMIT 1`,
     );
     return result.rows[0] ? toPreSaleEvent(result.rows[0]) : undefined;
+  }
+
+  async listActiveCategoriesForEvent(preSaleEventId: string): Promise<MenuCategory[]> {
+    const result = await this.pool.query<MenuCategoryRow>(
+      `SELECT * FROM menu_categories
+       WHERE pre_sale_event_id = $1 AND is_active = true
+       ORDER BY sort_order, name`,
+      [preSaleEventId],
+    );
+    return result.rows.map(toMenuCategory);
   }
 
   async listCookieDesignsForEvent(preSaleEventId: string): Promise<CookieDesign[]> {
     const result = await this.pool.query<CookieDesignRow>(
       `SELECT * FROM cookie_designs
        WHERE pre_sale_event_id = $1 AND type = 'presale' AND is_active = true
-       ORDER BY name`,
+       ORDER BY sort_order, name`,
       [preSaleEventId],
     );
     return result.rows.map(toCookieDesign);
   }
 
-  async listActivePackagingOptions(): Promise<PackagingOption[]> {
+  async listActiveVariantsForEvent(preSaleEventId: string): Promise<MenuItemVariant[]> {
+    const result = await this.pool.query<MenuItemVariantRow>(
+      `SELECT v.* FROM menu_item_variants v
+       JOIN cookie_designs d ON d.id = v.cookie_design_id
+       WHERE d.pre_sale_event_id = $1 AND v.is_active = true
+       ORDER BY v.sort_order, v.pack_size`,
+      [preSaleEventId],
+    );
+    return result.rows.map(toMenuItemVariant);
+  }
+
+  async listPackagingOptionsForEvent(preSaleEventId: string, activeOnly: boolean): Promise<PackagingOption[]> {
     const result = await this.pool.query<PackagingOptionRow>(
-      'SELECT * FROM packaging_options WHERE is_active = true ORDER BY type, name',
+      `SELECT p.* FROM packaging_options p
+       JOIN pre_sale_event_packaging ep ON ep.packaging_option_id = p.id
+       WHERE ep.pre_sale_event_id = $1 AND ($2::boolean = false OR p.is_active = true)
+       ORDER BY p.type, p.name`,
+      [preSaleEventId, activeOnly],
     );
     return result.rows.map(toPackagingOption);
+  }
+
+  async listAssignedPackagingOptions(preSaleEventId: string, ids: string[]): Promise<PackagingOption[]> {
+    if (ids.length === 0) return [];
+    const result = await this.pool.query<PackagingOptionRow>(
+      `SELECT p.* FROM packaging_options p
+       JOIN pre_sale_event_packaging ep ON ep.packaging_option_id = p.id
+       WHERE ep.pre_sale_event_id = $1 AND p.id = ANY($2::uuid[]) AND p.is_active = true`,
+      [preSaleEventId, ids],
+    );
+    return result.rows.map(toPackagingOption);
+  }
+
+  async getVariantsWithItems(variantIds: string[]): Promise<VariantWithItem[]> {
+    if (variantIds.length === 0) return [];
+    const result = await this.pool.query<MenuItemVariantRow & { item: CookieDesignRow }>(
+      `SELECT v.*, row_to_json(d.*) AS item
+       FROM menu_item_variants v
+       JOIN cookie_designs d ON d.id = v.cookie_design_id
+       WHERE v.id = ANY($1::uuid[])`,
+      [variantIds],
+    );
+    return result.rows.map((row) => ({ variant: toMenuItemVariant(row), item: toCookieDesign(row.item) }));
+  }
+
+  async getActivePreSaleEvent(): Promise<PreSaleEvent | undefined> {
+    return this.getFirstOpenPreSaleEvent();
   }
 
   async getCookieDesignById(id: string): Promise<CookieDesign | undefined> {
@@ -182,8 +310,7 @@ export class CatalogRepository {
   }
 
   async createPreSaleEvent(input: CreatePreSaleEventRequest): Promise<PreSaleEvent> {
-    const create = async (client: Pool | PoolClient) => {
-      const result = await client.query<PreSaleEventRow>(
+    const result = await this.pool.query<PreSaleEventRow>(
       `INSERT INTO pre_sale_events
          (name, holiday_tag, order_window_start, order_window_end, pickup_date, deposit_percent, is_active)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -197,19 +324,12 @@ export class CatalogRepository {
         input.depositPercent,
         input.isActive,
       ],
-      );
-      return toPreSaleEvent(result.rows[0]);
-    };
-    if (!input.isActive) return create(this.pool);
-    return this.withTransaction(async (client) => {
-      await client.query('UPDATE pre_sale_events SET is_active = false WHERE is_active = true');
-      return create(client);
-    });
+    );
+    return toPreSaleEvent(result.rows[0]);
   }
 
   async updatePreSaleEvent(id: string, input: UpdatePreSaleEventRequest): Promise<PreSaleEvent | undefined> {
-    const update = async (client: Pool | PoolClient) => {
-      const result = await client.query<PreSaleEventRow>(
+    const result = await this.pool.query<PreSaleEventRow>(
       `UPDATE pre_sale_events SET
          name = COALESCE($2, name),
          holiday_tag = COALESCE($3, holiday_tag),
@@ -230,16 +350,121 @@ export class CatalogRepository {
         input.depositPercent ?? null,
         input.isActive ?? null,
       ],
-      );
-      return result.rows[0] ? toPreSaleEvent(result.rows[0]) : undefined;
-    };
-    if (input.isActive !== true) return update(this.pool);
+    );
+    return result.rows[0] ? toPreSaleEvent(result.rows[0]) : undefined;
+  }
+
+  /** Replaces the packaging/add-on options offered for an event. Returns false if the event doesn't exist. */
+  async setEventPackaging(preSaleEventId: string, packagingOptionIds: string[]): Promise<boolean> {
     return this.withTransaction(async (client) => {
-      const existing = await client.query('SELECT id FROM pre_sale_events WHERE id = $1 FOR UPDATE', [id]);
-      if (existing.rowCount !== 1) return undefined;
-      await client.query('UPDATE pre_sale_events SET is_active = false WHERE is_active = true AND id <> $1', [id]);
-      return update(client);
+      const existing = await client.query('SELECT id FROM pre_sale_events WHERE id = $1 FOR UPDATE', [
+        preSaleEventId,
+      ]);
+      if (existing.rowCount !== 1) return false;
+      await client.query('DELETE FROM pre_sale_event_packaging WHERE pre_sale_event_id = $1', [preSaleEventId]);
+      if (packagingOptionIds.length > 0) {
+        await client.query(
+          `INSERT INTO pre_sale_event_packaging (pre_sale_event_id, packaging_option_id)
+           SELECT $1, unnest($2::uuid[])`,
+          [preSaleEventId, packagingOptionIds],
+        );
+      }
+      return true;
     });
+  }
+
+  async countPackagingOptions(ids: string[]): Promise<number> {
+    if (ids.length === 0) return 0;
+    const result = await this.pool.query<{ count: string }>(
+      'SELECT COUNT(*) AS count FROM packaging_options WHERE id = ANY($1::uuid[])',
+      [ids],
+    );
+    return Number(result.rows[0].count);
+  }
+
+  // --- Admin: Menu categories ---
+
+  async listCategoriesForEvent(preSaleEventId: string): Promise<MenuCategory[]> {
+    const result = await this.pool.query<MenuCategoryRow>(
+      'SELECT * FROM menu_categories WHERE pre_sale_event_id = $1 ORDER BY sort_order, name',
+      [preSaleEventId],
+    );
+    return result.rows.map(toMenuCategory);
+  }
+
+  async getCategoryById(id: string): Promise<MenuCategory | undefined> {
+    const result = await this.pool.query<MenuCategoryRow>('SELECT * FROM menu_categories WHERE id = $1', [id]);
+    return result.rows[0] ? toMenuCategory(result.rows[0]) : undefined;
+  }
+
+  async createCategory(input: CreateMenuCategoryRequest): Promise<MenuCategory> {
+    const result = await this.pool.query<MenuCategoryRow>(
+      `INSERT INTO menu_categories (pre_sale_event_id, name, description, sort_order, is_active)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      [input.preSaleEventId, input.name, input.description ?? null, input.sortOrder, input.isActive],
+    );
+    return toMenuCategory(result.rows[0]);
+  }
+
+  async updateCategory(id: string, input: UpdateMenuCategoryRequest): Promise<MenuCategory | undefined> {
+    const result = await this.pool.query<MenuCategoryRow>(
+      `UPDATE menu_categories SET
+         name = COALESCE($2, name),
+         description = COALESCE($3, description),
+         sort_order = COALESCE($4, sort_order),
+         is_active = COALESCE($5, is_active)
+       WHERE id = $1
+       RETURNING *`,
+      [id, input.name ?? null, input.description ?? null, input.sortOrder ?? null, input.isActive ?? null],
+    );
+    return result.rows[0] ? toMenuCategory(result.rows[0]) : undefined;
+  }
+
+  // --- Admin: Menu item variants (packs) ---
+
+  async listVariants(filter: { cookieDesignId?: string; preSaleEventId?: string }): Promise<MenuItemVariant[]> {
+    const result = await this.pool.query<MenuItemVariantRow>(
+      `SELECT v.* FROM menu_item_variants v
+       JOIN cookie_designs d ON d.id = v.cookie_design_id
+       WHERE ($1::uuid IS NULL OR v.cookie_design_id = $1)
+         AND ($2::uuid IS NULL OR d.pre_sale_event_id = $2)
+       ORDER BY v.sort_order, v.pack_size`,
+      [filter.cookieDesignId ?? null, filter.preSaleEventId ?? null],
+    );
+    return result.rows.map(toMenuItemVariant);
+  }
+
+  async createVariant(input: CreateMenuItemVariantRequest): Promise<MenuItemVariant> {
+    const result = await this.pool.query<MenuItemVariantRow>(
+      `INSERT INTO menu_item_variants (cookie_design_id, label, pack_size, price_cents, sort_order, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [input.cookieDesignId, input.label ?? null, input.packSize, input.priceCents, input.sortOrder, input.isActive],
+    );
+    return toMenuItemVariant(result.rows[0]);
+  }
+
+  async updateVariant(id: string, input: UpdateMenuItemVariantRequest): Promise<MenuItemVariant | undefined> {
+    const result = await this.pool.query<MenuItemVariantRow>(
+      `UPDATE menu_item_variants SET
+         label = COALESCE($2, label),
+         pack_size = COALESCE($3, pack_size),
+         price_cents = COALESCE($4, price_cents),
+         sort_order = COALESCE($5, sort_order),
+         is_active = COALESCE($6, is_active)
+       WHERE id = $1
+       RETURNING *`,
+      [
+        id,
+        input.label ?? null,
+        input.packSize ?? null,
+        input.priceCents ?? null,
+        input.sortOrder ?? null,
+        input.isActive ?? null,
+      ],
+    );
+    return result.rows[0] ? toMenuItemVariant(result.rows[0]) : undefined;
   }
 
   // --- Admin: Cookie designs ---
@@ -247,24 +472,26 @@ export class CatalogRepository {
   async listAllCookieDesigns(preSaleEventId?: string): Promise<CookieDesign[]> {
     const result = preSaleEventId
       ? await this.pool.query<CookieDesignRow>(
-          'SELECT * FROM cookie_designs WHERE pre_sale_event_id = $1 ORDER BY name',
+          'SELECT * FROM cookie_designs WHERE pre_sale_event_id = $1 ORDER BY sort_order, name',
           [preSaleEventId],
         )
-      : await this.pool.query<CookieDesignRow>('SELECT * FROM cookie_designs ORDER BY name');
+      : await this.pool.query<CookieDesignRow>('SELECT * FROM cookie_designs ORDER BY sort_order, name');
     return result.rows.map(toCookieDesign);
   }
 
   async createCookieDesign(input: CreateCookieDesignRequest): Promise<CookieDesign> {
     const result = await this.pool.query<CookieDesignRow>(
       `INSERT INTO cookie_designs
-         (name, image_urls, base_price, pre_sale_event_id, type, colors, max_quantity, is_active)
-       VALUES ($1, $2, $3, $4, 'presale', $5, $6, $7)
+         (name, description, image_urls, pre_sale_event_id, category_id, sort_order, type, colors, max_quantity, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, 'presale', $7, $8, $9)
        RETURNING *`,
       [
         input.name,
+        input.description ?? null,
         input.imageUrls,
-        input.basePrice,
         input.preSaleEventId,
+        input.categoryId ?? null,
+        input.sortOrder,
         input.colors,
         input.maxQuantity ?? null,
         input.isActive,
@@ -278,22 +505,29 @@ export class CatalogRepository {
       `UPDATE cookie_designs SET
          name = COALESCE($2, name),
          image_urls = COALESCE($3, image_urls),
-         base_price = COALESCE($4, base_price),
-         pre_sale_event_id = COALESCE($5, pre_sale_event_id),
-         colors = COALESCE($6, colors),
-         max_quantity = COALESCE($7, max_quantity),
-         is_active = COALESCE($8, is_active)
+         pre_sale_event_id = COALESCE($4, pre_sale_event_id),
+         colors = COALESCE($5, colors),
+         max_quantity = CASE WHEN $12::boolean THEN $13::integer ELSE max_quantity END,
+         is_active = COALESCE($7, is_active),
+         description = COALESCE($8, description),
+         sort_order = COALESCE($9, sort_order),
+         category_id = CASE WHEN $10::boolean THEN $11::uuid ELSE category_id END
        WHERE id = $1
        RETURNING *`,
       [
         id,
         input.name ?? null,
         input.imageUrls ?? null,
-        input.basePrice ?? null,
         input.preSaleEventId ?? null,
         input.colors ?? null,
         input.maxQuantity ?? null,
         input.isActive ?? null,
+        input.description ?? null,
+        input.sortOrder ?? null,
+        input.categoryId !== undefined,
+        input.categoryId ?? null,
+        input.maxQuantity !== undefined,
+        input.maxQuantity ?? null,
       ],
     );
     return result.rows[0] ? toCookieDesign(result.rows[0]) : undefined;

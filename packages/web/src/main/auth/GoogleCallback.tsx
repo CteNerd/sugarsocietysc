@@ -29,6 +29,13 @@ export default function GoogleCallback() {
         setIdTokenLocal(token);
         const existing = await getCurrentUser(token).catch(() => null);
         if (existing?.phone) {
+          await syncProfile(token, {
+            firstName: existing.firstName,
+            lastName: existing.lastName,
+            phone: existing.phone,
+            newsletterOptInEmail: existing.newsletterOptInEmail,
+            newsletterOptInSms: existing.newsletterOptInSms,
+          });
           navigate('/account');
           return;
         }

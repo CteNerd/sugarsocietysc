@@ -54,13 +54,15 @@ packages/
 - `NewsletterCampaign(id, title, subject, bodyHtml, bodyText, smsBody, scheduledAt?, sentAt?, createdBy, status[draft|scheduled|sent])`
 - `NewsletterSendLog(id, campaignId, subscriberId, channel[email|sms], status[sent|failed|bounced], sentAt)`
 - `PreSaleEvent(id, name, holidayTag, orderWindowStart, orderWindowEnd, pickupDate, isActive)`
-- `CookieDesign(id, name, imageUrls[], basePrice, preSaleEventId?, type[presale|custom-catalog], colors[], maxQuantity, quantitySold)`
+- `MenuCategory(id, preSaleEventId, name, description?, sortOrder, isActive)`
+- `CookieDesign(id, name, description?, imageUrls[], preSaleEventId?, categoryId?, sortOrder, type[presale|custom-catalog], colors[], maxQuantity, quantitySold)`
+- `MenuItemVariant(id, cookieDesignId, label?, packSize, priceCents, sortOrder, isActive)`
 - `BaseCookieOption(id, name, price, isActive)`
 - `IcingOption(id, type[solid-color|custom-print], name, price)`
 - `PackagingOption(id, name, price, type[box|addon], isActive)`
-- `Order(id, userId?, guestEmail?, guestPhone?, orderNumber, type[presale|custom], status[received|payment_received|ready_for_pickup|complete|cancelled], pickupDate, subtotal, tax, depositAmount, depositPaidAt?, total, stripePaymentIntentId, createdAt, updatedAt)`
-- `OrderItem(id, orderId, cookieDesignId?, baseCookieOptionId?, icingOptionId?, customDesignImageUrl?, colorSelection?, quantity, unitPrice, lineTotal)`
-- `OrderPackaging(id, orderId, packagingOptionId, addOnOptionIds[], quantity, price)`
+- `Order(id, userId?, guestEmail?, guestPhone?, orderNumber, type[presale|custom], preSaleEventId?, status[received|payment_received|ready_for_pickup|complete|cancelled], pickupDate, subtotal, tax, depositAmount, depositPaidAt?, total, stripePaymentIntentId, createdAt, updatedAt)`
+- `OrderItem(id, orderId, cookieDesignId?, variantId?, itemName?, variantLabel?, packSize?, baseCookieOptionId?, icingOptionId?, customDesignImageUrl?, colorSelection?, quantity[packs for new Pre-Sale orders], unitPrice, lineTotal)`
+- `OrderPackaging(id, orderId, packagingOptionId?, addOnOptionIds[], quantity, price)`
 - `OrderStatusHistory(id, orderId, status, changedByAdminId, changedAt, note)`
 - `PaymentTransaction(id, orderId, provider, providerRef, amount, type[deposit|balance], status, createdAt)`
 
@@ -120,16 +122,15 @@ checkpoints if cost-sensitive (snapshot first to keep data).
   - [x] Frontend: footer `NewsletterSignup` widget (guest subscribe + account-creation upsell on success),
     `/newsletter-unsubscribe` landing page, `Account` page email/SMS preference toggles.
   - [ ] Admin member upsell messaging/copy review; real SES/SNS delivery verification is part of Phase 8/AWS dev.
-- [x] **Phase 3 — Catalog & admin pricing**: `PreSaleEvent`/`CookieDesign`/`PackagingOption` management
-  - [x] Migrations (`pre_sale_events`, `cookie_designs`, `packaging_options`), `catalog` domain
-    (repository/service/routes + tests), `GET /catalog/presale/active` (public), CDK `CatalogFn` + HTTP
-    API routes (local-only so far), idempotent `seed:halloween-presale` demo-data script.
-  - [x] Admin CRUD UI for events/designs/packaging.
-- [x] **Phase 4 — Pre-sale order workflow**: browse active Pre-Sale → select quantity (multiples of 6,
-  oversell-guarded server-side) → select packaging (box + optional add-ons) → review invoice → guest or
-  authed contact capture. `orders`/`order_items` migrations, `orders` domain (repository/service/routes +
-  tests), 4-step web wizard (`packages/web/src/main/presale`), CDK `OrdersFn` + HTTP API routes. Verified
-  end-to-end in the browser against local Postgres (quantity → packaging → invoice → persisted order).
+- [x] **Phase 3 — Catalog & admin pricing**: concurrent Pre-Sale events, categories, cookie designs, fixed-price
+  pack variants, event-specific optional packaging/add-ons, API routes and admin CRUD UI. `GET
+  /catalog/presale/events` lists open/upcoming events; `/catalog/presale/events/:id` returns one categorized
+  menu. `GET /catalog/presale/active` remains a compatibility alias.
+- [x] **Phase 4 — Pre-sale order workflow**: choose an event → select pack variants and quantities → optional
+  packaging/add-ons → review invoice → guest or signed-in checkout. The API verifies event membership,
+  prices exclusively from database variants, and reserves `packs × packSize` units. Order lines preserve
+  item/variant labels, pack size and price snapshots; Stripe PaymentIntent descriptions and bounded metadata
+  include the event and itemization.
   *(Explicitly excludes custom/Asana-based ordering — that's Phase 5.)*
 - [ ] **Phase 5 — Custom order workflow** *(excluded from the current completion scope; retain as future work)*
 - [x] **Phase 6 — Payments**: Stripe deposit (50%) via `IPaymentProvider`/Stripe adapter, PaymentIntent
@@ -146,10 +147,12 @@ checkpoints if cost-sensitive (snapshot first to keep data).
   idempotent send log, and admin campaign controls. Live SES/SNS delivery remains an AWS-dev validation.
 - [ ] **Phase 9 — Hardening and AWS release**: guest PII purge, OWASP pass, WAF/CloudWatch controls,
   GitHub Actions OIDC-based deployment to AWS, SES/SNS and Stripe verification, and domain cutover.
-  Guest PII retention, CloudFront WAF, CloudWatch alarms, and the manual deployment workflow are
-  implemented. The WAF currently protects the CloudFront website only; API-edge protection/rate limits
-  and alarm notification destinations remain to be configured. The owner must configure GitHub
+  Guest PII retention, CloudFront WAF, CloudWatch alarms, API throttling, and the manual deployment
+  workflow are implemented. The WAF currently protects the CloudFront website only; the API has explicit
+  API Gateway throttling. The owner must configure GitHub
   Environment variables, AWS OIDC trust/permissions, CDK bootstrap, runtime secrets, SES sender
   verification, and external DNS/certificate prerequisites. The production Google OAuth client ID is
-  also blank in CDK configuration and must be verified before production sign-in. Real Stripe/SES/SNS
-  checks and production cutover remain; production changes require explicit approval.
+  client IDs are configured in CDK; verify the Google client secret and Cognito redirect URI before
+  production sign-in. Admin promotion is restricted to verified Google identities on the configured
+  email allowlist/domain. Real Stripe/SES/SNS checks and production cutover remain; production changes
+  require explicit approval.

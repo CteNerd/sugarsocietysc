@@ -47,8 +47,8 @@ export default function Login() {
           {submitting ? 'Logging in…' : 'Log In'}
         </button>
       </form>
-      <button type="button" onClick={signInWithGoogle}>
-        Continue with Google
+      <button type="button" onClick={() => { void signInWithGoogle(); }}>
+        Sign in with Google
       </button>
     </div>
   );

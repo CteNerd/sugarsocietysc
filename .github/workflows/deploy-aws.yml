@@ -137,7 +137,7 @@ jobs:
           STRIPE_PUBLISHABLE_KEY: ${{ vars.STRIPE_PUBLISHABLE_KEY }}
 
       - name: Publish frontend assets
-        run: aws s3 sync packages/web/build "s3://${WEB_BUCKET}" --delete
+        run: aws s3 sync packages/web/build "s3://${WEB_BUCKET}" --delete --exclude "uploads/*"
 
       - name: Invalidate CloudFront cache
         run: aws cloudfront create-invalidation --distribution-id "$WEB_DISTRIBUTION_ID" --paths '/*'

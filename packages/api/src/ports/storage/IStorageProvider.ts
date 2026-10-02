@@ -7,5 +7,6 @@ export interface UploadImageParams {
 /** Port for binary asset storage (customer-uploaded cookie design images, etc.). */
 export interface IStorageProvider {
   uploadImage(params: UploadImageParams): Promise<string>;
+  getUploadUrl(key: string, contentType: string, contentLength: number, expiresInSeconds?: number): Promise<string>;
   getSignedUrl(key: string, expiresInSeconds?: number): Promise<string>;
 }

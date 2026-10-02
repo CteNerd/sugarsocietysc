@@ -19,6 +19,7 @@ services:
       - '4566:4566'
     volumes:
       - sugarsocietysc-localstack-data:/var/lib/localstack
+      - ./scripts/localstack/init/ready.d:/etc/localstack/init/ready.d:ro
 
   cognito-local:
     image: jagregory/cognito-local:latest

@@ -1,16 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { CookieDesign, PackagingOption, PreSaleEvent } from '@sugarsocietysc/shared';
+import {
+  CookieDesign,
+  MenuCategory,
+  MenuItemVariant,
+  PackagingOption,
+  PreSaleEvent,
+  updateCookieDesignSchema,
+} from '@sugarsocietysc/shared';
 import { CatalogRepository } from './catalog-repository';
-import { CatalogError, CatalogService } from './catalog-service';
+import { CatalogError, CatalogService, CatalogValidationError } from './catalog-service';
 
 function fakeEvent(overrides: Partial<PreSaleEvent> = {}): PreSaleEvent {
   return {
     id: 'event-1',
-    name: 'Halloween 2025 Pre-Sale',
+    name: 'Halloween 2026 Pre-Sale',
     holidayTag: 'halloween',
-    orderWindowStart: '2025-10-01T00:00:00.000Z',
-    orderWindowEnd: '2025-10-20T00:00:00.000Z',
-    pickupDate: '2025-10-25T00:00:00.000Z',
+    orderWindowStart: '2026-10-01T00:00:00.000Z',
+    orderWindowEnd: '2026-10-20T00:00:00.000Z',
+    pickupDate: '2026-10-25T00:00:00.000Z',
     depositPercent: 50,
     isActive: true,
     ...overrides,
@@ -22,8 +29,9 @@ function fakeDesign(overrides: Partial<CookieDesign> = {}): CookieDesign {
     id: 'design-1',
     name: 'Spooky Ghost',
     imageUrls: ['https://example.com/ghost.png'],
-    basePrice: 400,
     preSaleEventId: 'event-1',
+    categoryId: 'category-1',
+    sortOrder: 0,
     type: 'presale',
     colors: ['white', 'black'],
     quantitySold: 0,
@@ -32,10 +40,33 @@ function fakeDesign(overrides: Partial<CookieDesign> = {}): CookieDesign {
   };
 }
 
+function fakeCategory(overrides: Partial<MenuCategory> = {}): MenuCategory {
+  return {
+    id: 'category-1',
+    preSaleEventId: 'event-1',
+    name: 'Classic cookies',
+    sortOrder: 0,
+    isActive: true,
+    ...overrides,
+  };
+}
+
+function fakeVariant(overrides: Partial<MenuItemVariant> = {}): MenuItemVariant {
+  return {
+    id: 'variant-1',
+    cookieDesignId: 'design-1',
+    packSize: 6,
+    priceCents: 1400,
+    sortOrder: 0,
+    isActive: true,
+    ...overrides,
+  };
+}
+
 function fakePackaging(overrides: Partial<PackagingOption> = {}): PackagingOption {
   return {
     id: 'pkg-1',
-    name: 'Dozen Box',
+    name: 'Gift box',
     price: 500,
     type: 'box',
     isActive: true,
@@ -45,9 +76,16 @@ function fakePackaging(overrides: Partial<PackagingOption> = {}): PackagingOptio
 
 function fakeRepository(overrides: Partial<CatalogRepository> = {}): CatalogRepository {
   return {
-    getActivePreSaleEvent: async () => fakeEvent(),
+    listPublicPreSaleEvents: async () => [fakeEvent()],
+    getFirstOpenPreSaleEvent: async () => fakeEvent(),
+    getPreSaleEventById: async () => fakeEvent(),
+    getCookieDesignById: async () => fakeDesign(),
+    getCategoryById: async () => fakeCategory(),
+    listAllPackagingOptions: async () => [fakePackaging()],
+    listActiveCategoriesForEvent: async () => [fakeCategory()],
     listCookieDesignsForEvent: async () => [fakeDesign()],
-    listActivePackagingOptions: async () => [fakePackaging()],
+    listActiveVariantsForEvent: async () => [fakeVariant()],
+    listPackagingOptionsForEvent: async () => [fakePackaging()],
     updatePreSaleEvent: async (id: string) => fakeEvent({ id }),
     updateCookieDesign: async (id: string) => fakeDesign({ id }),
     updatePackagingOption: async (id: string) => fakePackaging({ id }),
@@ -56,20 +94,62 @@ function fakeRepository(overrides: Partial<CatalogRepository> = {}): CatalogRepo
 }
 
 describe('CatalogService', () => {
-  it('returns the active Pre-Sale snapshot with designs and packaging', async () => {
+  it('groups active menu items and variants under their event category', async () => {
     const service = new CatalogService(fakeRepository());
 
-    const snapshot = await service.getActivePreSale();
+    const menu = await service.getEventMenu('event-1', new Date('2026-10-02T00:00:00Z'));
 
-    expect(snapshot?.event.id).toBe('event-1');
-    expect(snapshot?.designs).toHaveLength(1);
-    expect(snapshot?.packagingOptions).toHaveLength(1);
+    expect(menu?.event.status).toBe('open');
+    expect(menu?.categories[0].items[0].variants[0].priceCents).toBe(1400);
+    expect(menu?.packagingOptions).toHaveLength(1);
   });
 
-  it('returns undefined when no Pre-Sale event is active', async () => {
-    const service = new CatalogService(fakeRepository({ getActivePreSaleEvent: async () => undefined }));
+  it('marks an event before its order window as upcoming', async () => {
+    const service = new CatalogService(fakeRepository({
+      listPublicPreSaleEvents: async () => [fakeEvent({ orderWindowStart: '2026-11-01T00:00:00.000Z' })],
+    }));
 
-    expect(await service.getActivePreSale()).toBeUndefined();
+    const events = await service.listPublicEvents(new Date('2026-10-02T00:00:00Z'));
+
+    expect(events[0].status).toBe('upcoming');
+  });
+
+  it('hides inactive or ended events from the event menu', async () => {
+    const service = new CatalogService(fakeRepository({
+      getPreSaleEventById: async () => fakeEvent({ isActive: false }),
+    }));
+
+    expect(await service.getEventMenu('event-1', new Date('2026-10-02T00:00:00Z'))).toBeUndefined();
+  });
+
+  it('returns the first currently open event menu for the compatibility route', async () => {
+    const service = new CatalogService(fakeRepository());
+
+    expect((await service.getFirstOpenEventMenu(new Date('2026-10-02T00:00:00Z')))?.event.id).toBe('event-1');
+  });
+
+  it('keeps the legacy active Pre-Sale response shape', async () => {
+    const service = new CatalogService(fakeRepository());
+
+    const snapshot = await service.getActivePreSaleSnapshot();
+
+    expect(snapshot).toEqual({
+      event: fakeEvent(),
+      designs: [fakeDesign()],
+      packagingOptions: [fakePackaging()],
+    });
+    expect(snapshot?.event).not.toHaveProperty('status');
+  });
+
+  it('rejects moving an item when its existing category belongs to another event', async () => {
+    const service = new CatalogService(fakeRepository());
+
+    await expect(service.updateCookieDesign('design-1', { preSaleEventId: 'event-2' }))
+      .rejects.toThrow(CatalogValidationError);
+  });
+
+  it('accepts an explicit null to clear the menu item inventory cap', () => {
+    expect(updateCookieDesignSchema.parse({ maxQuantity: null })).toEqual({ maxQuantity: null });
   });
 
   it('throws when updating a Pre-Sale event that does not exist', async () => {

@@ -9,6 +9,7 @@ interface OrderRow {
   guest_phone: string | null;
   type: 'presale' | 'custom';
   status: OrderStatus;
+  pre_sale_event_id: string | null;
   pickup_date: Date;
   subtotal: number;
   tax: number;
@@ -29,6 +30,7 @@ function toOrder(row: OrderRow): Order {
     guestPhone: row.guest_phone ?? undefined,
     type: row.type,
     status: row.status,
+    preSaleEventId: row.pre_sale_event_id ?? undefined,
     pickupDate: row.pickup_date.toISOString(),
     subtotal: row.subtotal,
     tax: row.tax,
@@ -45,6 +47,10 @@ interface OrderItemRow {
   id: string;
   order_id: string;
   cookie_design_id: string | null;
+  variant_id: string | null;
+  item_name: string | null;
+  variant_label: string | null;
+  pack_size: number | null;
   quantity: number;
   unit_price: number;
   line_total: number;
@@ -55,6 +61,10 @@ function toOrderItem(row: OrderItemRow): OrderItem {
     id: row.id,
     orderId: row.order_id,
     cookieDesignId: row.cookie_design_id ?? undefined,
+    variantId: row.variant_id ?? undefined,
+    itemName: row.item_name ?? undefined,
+    variantLabel: row.variant_label ?? undefined,
+    packSize: row.pack_size ?? undefined,
     quantity: row.quantity,
     unitPrice: row.unit_price,
     lineTotal: row.line_total,
@@ -64,7 +74,7 @@ function toOrderItem(row: OrderItemRow): OrderItem {
 interface OrderPackagingRow {
   id: string;
   order_id: string;
-  packaging_option_id: string;
+  packaging_option_id: string | null;
   add_on_option_ids: string[];
   quantity: number;
   price: number;
@@ -74,7 +84,7 @@ function toOrderPackaging(row: OrderPackagingRow): OrderPackaging {
   return {
     id: row.id,
     orderId: row.order_id,
-    packagingOptionId: row.packaging_option_id,
+    packagingOptionId: row.packaging_option_id ?? undefined,
     addOnOptionIds: row.add_on_option_ids,
     quantity: row.quantity,
     price: row.price,
@@ -105,6 +115,7 @@ export interface NewOrderInput {
   userId?: string;
   guestEmail?: string;
   guestPhone?: string;
+  preSaleEventId: string;
   pickupDate: string;
   subtotal: number;
   tax: number;
@@ -114,13 +125,17 @@ export interface NewOrderInput {
 
 export interface NewOrderItemInput {
   cookieDesignId: string;
+  variantId: string;
+  itemName: string;
+  variantLabel: string;
+  packSize: number;
   quantity: number;
   unitPrice: number;
   lineTotal: number;
 }
 
 export interface NewOrderPackagingInput {
-  packagingOptionId: string;
+  packagingOptionId?: string;
   addOnOptionIds: string[];
   price: number;
 }
@@ -150,13 +165,14 @@ export class OrdersRepository {
   async createOrder(client: PoolClient, input: NewOrderInput): Promise<Order> {
     const result = await client.query<OrderRow>(
       `INSERT INTO orders
-         (user_id, guest_email, guest_phone, type, status, pickup_date, subtotal, tax, deposit_amount, total)
-       VALUES ($1, $2, $3, 'presale', 'received', $4, $5, $6, $7, $8)
+         (user_id, guest_email, guest_phone, type, status, pre_sale_event_id, pickup_date, subtotal, tax, deposit_amount, total)
+       VALUES ($1, $2, $3, 'presale', 'received', $4, $5, $6, $7, $8, $9)
        RETURNING *`,
       [
         input.userId ?? null,
         input.guestEmail ?? null,
         input.guestPhone ?? null,
+        input.preSaleEventId,
         input.pickupDate,
         input.subtotal,
         input.tax,
@@ -169,10 +185,21 @@ export class OrdersRepository {
 
   async createOrderItem(client: PoolClient, orderId: string, input: NewOrderItemInput): Promise<OrderItem> {
     const result = await client.query<OrderItemRow>(
-      `INSERT INTO order_items (order_id, cookie_design_id, quantity, unit_price, line_total)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO order_items
+         (order_id, cookie_design_id, variant_id, item_name, variant_label, pack_size, quantity, unit_price, line_total)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
-      [orderId, input.cookieDesignId, input.quantity, input.unitPrice, input.lineTotal],
+      [
+        orderId,
+        input.cookieDesignId,
+        input.variantId,
+        input.itemName,
+        input.variantLabel,
+        input.packSize,
+        input.quantity,
+        input.unitPrice,
+        input.lineTotal,
+      ],
     );
     return toOrderItem(result.rows[0]);
   }
@@ -186,7 +213,7 @@ export class OrdersRepository {
       `INSERT INTO order_packaging (order_id, packaging_option_id, add_on_option_ids, price)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [orderId, input.packagingOptionId, input.addOnOptionIds, input.price],
+      [orderId, input.packagingOptionId ?? null, input.addOnOptionIds, input.price],
     );
     return toOrderPackaging(result.rows[0]);
   }

@@ -52,7 +52,13 @@ export default function OrderHistory() {
           <p>Pickup: {new Date(selected.order.pickupDate).toLocaleString()}</p>
           <p>Total: ${(selected.order.total / 100).toFixed(2)}</p>
           <ul>
-            {selected.items.map((item) => <li key={item.id}>{item.quantity} cookies · ${(item.lineTotal / 100).toFixed(2)}</li>)}
+            {selected.items.map((item) => (
+              <li key={item.id}>
+                {item.itemName ?? 'Cookie'}{item.variantLabel ? ` · ${item.variantLabel}` : ''}
+                {item.packSize ? ` × ${item.quantity} pack${item.quantity === 1 ? '' : 's'} (${item.packSize} cookies each)` : ` · ${item.quantity} cookies`}
+                {' · '}${(item.lineTotal / 100).toFixed(2)}
+              </li>
+            ))}
           </ul>
           <h3>Status history</h3>
           <ul>

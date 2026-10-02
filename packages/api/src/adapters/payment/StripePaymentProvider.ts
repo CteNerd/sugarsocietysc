@@ -20,11 +20,16 @@ export class StripePaymentProvider implements IPaymentProvider {
     amount,
     currency,
     orderId,
+    description,
+    metadata,
+    receiptEmail,
   }: CreatePaymentIntentParams): Promise<PaymentIntentResult> {
     const intent = await this.client.paymentIntents.create({
       amount,
       currency,
-      metadata: { orderId },
+      description,
+      metadata: { ...metadata, orderId },
+      receipt_email: receiptEmail,
       // This is a single-page app with no dedicated redirect-return page, so disable
       // redirect-based payment methods (Klarna, Cash App, Amazon Pay, etc.) and keep
       // payment entirely in-page. Also avoids Stripe's return_url requirement.
