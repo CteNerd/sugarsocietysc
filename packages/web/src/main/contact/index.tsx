@@ -22,8 +22,28 @@ const emptyForm: ContactFormValues = {
   message: '',
 };
 
+function createRequestId(): string {
+  const cryptoApi = globalThis.crypto;
+  if (cryptoApi?.randomUUID) {
+    return cryptoApi.randomUUID();
+  }
+  const bytes = new Uint8Array(16);
+  if (cryptoApi?.getRandomValues) {
+    cryptoApi.getRandomValues(bytes);
+  } else {
+    bytes.forEach((_, index) => {
+      bytes[index] = Math.floor(Math.random() * 256);
+    });
+  }
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
 export default function Contact() {
   const [form, setForm] = useState(emptyForm);
+  const [requestId, setRequestId] = useState(createRequestId);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const [captchaGeneration, setCaptchaGeneration] = useState(0);
   const [submitting, setSubmitting] = useState(false);
@@ -44,9 +64,10 @@ export default function Contact() {
 
     setSubmitting(true);
     try {
-      await submitContact({ ...form, recaptchaToken });
+      await submitContact({ ...form, requestId, recaptchaToken });
       setSubmitted(true);
       setForm(emptyForm);
+      setRequestId(createRequestId());
       setRecaptchaToken(null);
       setCaptchaGeneration((generation) => generation + 1);
     } catch (err) {
@@ -73,7 +94,7 @@ export default function Contact() {
       {submitted ? (
         <div className="contact-success" role="status">
           <h2>Thank you for contacting us!</h2>
-          <p>Your message has been sent. We will be in touch as soon as we can.</p>
+          <p>Your message has been received and queued for delivery. We will be in touch as soon as we can.</p>
           <button type="button" onClick={() => setSubmitted(false)}>Send another message</button>
         </div>
       ) : (

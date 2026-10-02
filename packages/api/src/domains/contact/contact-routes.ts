@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { Pool } from 'pg';
 import { contactSubmissionSchema } from '@sugarsocietysc/shared';
-import { createEmailProvider } from '../../adapters/notification/email-provider-factory';
+import { createContactQueue } from '../../adapters/notification/contact-queue-factory';
 import { createHumanVerificationProvider } from '../../adapters/security/google-recaptcha-provider-factory';
 import { GoogleRecaptchaError } from '../../adapters/security/GoogleRecaptchaProvider';
 import { AppConfig } from '../../config/env';
@@ -12,9 +12,8 @@ export function contactRoutes(pool: Pool, config: AppConfig): Hono {
   const app = new Hono();
   const service = new ContactService(
     new ContactRepository(pool),
-    createEmailProvider(config),
     createHumanVerificationProvider(config),
-    config.contactRecipients,
+    createContactQueue(config),
   );
 
   app.post('/', async (c) => {
@@ -24,7 +23,7 @@ export function contactRoutes(pool: Pool, config: AppConfig): Hono {
     }
     try {
       await service.submit(parsed.data);
-      return c.json({ submitted: true }, 201);
+      return c.json({ submitted: true }, 202);
     } catch (err) {
       if (err instanceof ContactSubmissionError) {
         return c.json({ error: err.message }, err.statusCode);

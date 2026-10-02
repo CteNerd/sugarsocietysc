@@ -1,4 +1,4 @@
-import { CfnOutput, Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
+import { ArnFormat, CfnOutput, Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import * as events from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
@@ -65,7 +65,7 @@ export class ApiStack extends Stack {
       ADMIN_EMAILS: envConfig.adminEmails.join(','),
       ADMIN_EMAIL_DOMAIN: envConfig.adminEmailDomain,
       SMS_PROVIDER: 'sns',
-      NEWSLETTER_FROM_EMAIL: process.env.NEWSLETTER_FROM_EMAIL ?? '',
+      NEWSLETTER_FROM_EMAIL: process.env.NEWSLETTER_FROM_EMAIL || 'newsletter@sugarsocietysc.com',
       NEWSLETTER_SITE_URL: `https://${envConfig.domainName}`,
       NEWSLETTER_SIGNATURE: process.env.NEWSLETTER_SIGNATURE || 'Sugar Society Sugar Cookies',
       COGNITO_ISSUER_URL: props.userPool.userPoolProviderUrl,
@@ -139,6 +139,19 @@ export class ApiStack extends Stack {
       visibilityTimeout: Duration.seconds(360),
       deadLetterQueue: {
         queue: newsletterDeadLetterQueue,
+        maxReceiveCount: 5,
+      },
+    });
+    const contactDeadLetterQueue = new sqs.Queue(this, 'ContactDeadLetterQueue', {
+      encryption: sqs.QueueEncryption.SQS_MANAGED,
+      retentionPeriod: Duration.days(14),
+    });
+    const contactQueue = new sqs.Queue(this, 'ContactQueue', {
+      encryption: sqs.QueueEncryption.SQS_MANAGED,
+      retentionPeriod: Duration.days(4),
+      visibilityTimeout: Duration.seconds(360),
+      deadLetterQueue: {
+        queue: contactDeadLetterQueue,
         maxReceiveCount: 5,
       },
     });
@@ -220,15 +233,58 @@ export class ApiStack extends Stack {
       logGroup: functionLogGroup('ContactFn'),
       environment: {
         ...commonEnv,
+        CONTACT_QUEUE_URL: contactQueue.queueUrl,
         GOOGLE_RECAPTCHA_SECRET_ARN: googleRecaptchaSecret.secretArn,
       },
     });
     props.cluster.secret?.grantRead(contactFn);
     googleRecaptchaSecret.grantRead(contactFn);
-    contactFn.addToRolePolicy(new iam.PolicyStatement({
+    contactQueue.grantSendMessages(contactFn);
+
+    const contactWorkerFn = new lambdaNode.NodejsFunction(this, 'ContactWorkerFn', {
+      entry: path.join(__dirname, '../../api/src/domains/contact/contact-worker.ts'),
+      handler: 'handler',
+      ...commonFnProps,
+      logGroup: functionLogGroup('ContactWorkerFn'),
+      timeout: Duration.seconds(60),
+      environment: { ...commonEnv, CONTACT_QUEUE_URL: contactQueue.queueUrl },
+    });
+    props.cluster.secret?.grantRead(contactWorkerFn);
+    contactQueue.grantConsumeMessages(contactWorkerFn);
+    contactWorkerFn.addToRolePolicy(new iam.PolicyStatement({
       actions: ['ses:SendEmail'],
-      resources: ['*'],
+      resources: [
+        this.formatArn({
+          service: 'ses',
+          resource: 'identity',
+          resourceName: commonEnv.NEWSLETTER_FROM_EMAIL,
+          arnFormat: ArnFormat.SLASH_RESOURCE_NAME,
+        }),
+      ],
     }));
+    contactWorkerFn.addEventSource(new eventSources.SqsEventSource(contactQueue, {
+      batchSize: 10,
+      reportBatchItemFailures: true,
+    }));
+    const contactDeadLetterQueueAlarm = new cloudwatch.Alarm(this, 'ContactDeadLetterQueueAlarm', {
+      alarmDescription: 'Investigate and redrive contact notification emails that exhausted SQS retries.',
+      metric: contactDeadLetterQueue.metricApproximateNumberOfMessagesVisible({
+        period: Duration.minutes(5),
+        statistic: 'Maximum',
+      }),
+      threshold: 1,
+      evaluationPeriods: 1,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    });
+    contactDeadLetterQueueAlarm.addAlarmAction(alarmAction);
+    const contactWorkerErrorsAlarm = new cloudwatch.Alarm(this, 'ContactWorkerErrorsAlarm', {
+      alarmDescription: 'Investigate contact notification worker delivery failures.',
+      metric: contactWorkerFn.metricErrors({ period: Duration.minutes(5), statistic: 'Sum' }),
+      threshold: 1,
+      evaluationPeriods: 1,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    });
+    contactWorkerErrorsAlarm.addAlarmAction(alarmAction);
 
     const newsletterWorkerFn = new lambdaNode.NodejsFunction(this, 'NewsletterWorkerFn', {
       entry: path.join(__dirname, '../../api/src/domains/newsletter/newsletter-worker.ts'),

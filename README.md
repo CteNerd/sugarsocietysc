@@ -75,6 +75,8 @@ This single command starts:
 - The CRA frontend dev server (`packages/web`) on `http://localhost:3000`
 
 LocalStack creates the `local-uploads` S3 bucket and configures browser CORS on startup for menu-image uploads.
+It also creates the contact notification queue configured by `CONTACT_QUEUE_URL`. The local API accepts
+and queues contact submissions; the email-delivery worker runs in deployed AWS environments.
 No AWS account is required for day-to-day feature work.
 
 To test the Contact form locally, register a Google reCAPTCHA v2 checkbox key for `localhost` and set

@@ -8,16 +8,15 @@ export default function OrderNow() {
       <div className="order-now-intro">
         <h1>Order Now</h1>
         <p>
-          Please complete the short form below and attach a completed order form
-          to your submission. We strive to respond within 3 business days to all
-          order requests.
+          For custom cookie orders, use our Contact form and tell us the occasion,
+          quantity, requested date, and design details. We strive to respond
+          within 3 business days.
         </p>
       </div>
       <div className="order-now-instructions">
         <p>
-          Have a question about a custom order or need help with your submission?
-          <br />
-          <Link to="/contact">Contact us</Link> and we&apos;ll be happy to help.
+          Ready to discuss a custom order?{' '}
+          <Link to="/contact">Send us your order details</Link> and we&apos;ll be happy to help.
         </p>
       </div>
     </div>

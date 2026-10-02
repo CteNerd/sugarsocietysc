@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const contactSubmissionSchema = z.object({
+  requestId: z.string().uuid(),
   firstName: z.string().trim().min(1).max(100).refine((value) => !/[\r\n]/.test(value)),
   lastName: z.string().trim().min(1).max(100).refine((value) => !/[\r\n]/.test(value)),
   email: z.string().trim().email().max(320),
