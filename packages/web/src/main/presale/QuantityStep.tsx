@@ -49,7 +49,7 @@ export default function QuantityStep({
                       <strong>{label}</strong>
                       <p className="presale-design-price">{formatCents(variant.priceCents)} / pack</p>
                     </div>
-                    {soldOut ? (
+                    {soldOut && packs === 0 ? (
                       <span className="presale-sold-out-label">Sold Out</span>
                     ) : (
                       <div className="presale-quantity-stepper">

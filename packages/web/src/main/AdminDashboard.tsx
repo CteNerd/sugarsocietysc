@@ -1,4 +1,5 @@
 import React, { FormEvent, useCallback, useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   CreateNewsletterCampaignRequest,
   NewsletterCampaign,
@@ -69,6 +70,7 @@ function orderStatus(form: FormData): OrderStatus {
 }
 
 export default function AdminDashboard() {
+  const { hash } = useLocation();
   const { idToken } = useAuth();
   const [events, setEvents] = useState<PreSaleEvent[]>([]);
   const [packaging, setPackaging] = useState<PackagingOption[]>([]);
@@ -79,6 +81,13 @@ export default function AdminDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!hash) return;
+    const section = document.getElementById(hash.slice(1));
+    section?.scrollIntoView({ block: 'start' });
+    section?.focus({ preventScroll: true });
+  }, [hash]);
 
   const refreshCatalog = useCallback(async () => {
     if (!idToken) return;
@@ -233,7 +242,8 @@ export default function AdminDashboard() {
       {error && <p className="auth-error" role="alert">{error}</p>}
       {notice && <p className="auth-message" role="status">{notice}</p>}
 
-      <section>
+      <section id="presale" tabIndex={-1} aria-labelledby="presale-heading">
+        <h2 id="presale-heading">Pre-Sale &amp; Menus</h2>
         <h2>Pre-Sale events</h2>
         <form className="admin-form" onSubmit={(e) => submit(e, async (form) => {
           if (!idToken) return;
@@ -274,17 +284,16 @@ export default function AdminDashboard() {
             </details>
           ))}
         </div>
-      </section>
-
       <MenuManagement
         idToken={idToken}
         events={events}
         packaging={packaging}
         onChanged={refreshCatalog}
       />
+      </section>
 
-      <section>
-        <h2>Packaging</h2>
+      <section id="packaging" tabIndex={-1} aria-labelledby="packaging-heading">
+        <h2 id="packaging-heading">Packaging</h2>
         <form className="admin-form" onSubmit={(e) => submit(e, async (form) => {
           if (!idToken) return;
           await createPackagingOption(idToken, {
@@ -317,8 +326,8 @@ export default function AdminDashboard() {
         </div>
       </section>
 
-      <section>
-        <h2>Newsletter campaigns</h2>
+      <section id="newsletter" tabIndex={-1} aria-labelledby="newsletter-heading">
+        <h2 id="newsletter-heading">Newsletter campaigns</h2>
         <p>Email content is plain text inside the fixed logo/signature template. SMS is plain text; include URLs in the message when needed.</p>
         <form className="admin-form" onSubmit={createCampaign}>
           <h3>Create campaign draft</h3>
@@ -353,8 +362,8 @@ export default function AdminDashboard() {
         </div>
       </section>
 
-      <section>
-        <h2>Orders</h2>
+      <section id="orders" tabIndex={-1} aria-labelledby="orders-heading">
+        <h2 id="orders-heading">Orders</h2>
         <div className="admin-order-list">
           {orders.map((order) => (
             <button className="admin-order-row" key={order.id} type="button" onClick={() => openOrder(order)}>

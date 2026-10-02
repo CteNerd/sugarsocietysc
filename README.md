@@ -32,6 +32,29 @@ are optional and assigned per event. Admins sign in with Google and are promoted
 verified Google identity is on the `ADMIN_EMAILS` allowlist and matches `ADMIN_EMAIL_DOMAIN`; the
 company domain alone never grants admin access.
 
+### Navigation and mobile usability
+
+Mobile and desktop navigation share the same destinations: public pages (including Pre-Sale and
+Contact), guest Log In/Sign Up, and signed-in Account/My Orders/Log Out. Active, authorized admins also
+see Dashboard, Pre-Sale & Menus, Packaging, Orders, and Newsletter links to dashboard sections.
+Privacy Policy remains in the footer. The mobile drawer supports keyboard focus containment,
+Escape/backdrop dismissal, background scroll locking, and focus restoration.
+
+Pack quantity controls use explicit contrasting symbols and 44px touch targets. Responsive page
+gutters, cards, checkout summaries, account/admin forms, newsletter signup, and embedded form wrappers
+fit narrow screens without the former large header gap. Existing branding and content are retained.
+
+The auth provider shares an API-backed profile/role with navigation, Account, and the admin guard.
+Existing profiles reconcile role eligibility on session restoration, token refresh, and admin API
+requests without rewriting contact details or newsletter preferences. Loading/verification errors
+are distinct from access denial; clients never grant admin access based on email alone.
+
+Google federation must map `email_verified` into the Cognito verified-email attribute. The mapping
+correction requires an approved Auth stack deployment and a fresh Google sign-in; an older token
+cannot gain the missing claim through a page reload. See the [admin smoke-test checklist](docs/AWS-DEPLOYMENT.md#admin-access-parity-smoke-test).
+Local regression tests, responsive browser checks, and dev/prod synth do not establish deployed
+admin parity; post-deployment Google sign-in and physical iPhone Safari verification remain required.
+
 ## Local Development
 
 Requires Docker and Node 20+.
@@ -57,6 +80,7 @@ npm test                                                # test all workspaces
 npm run migrate --workspace=@sugarsocietysc/api         # run DB migrations
 npm run synth:dev --workspace=@sugarsocietysc/infra     # CDK synth (template generation, no AWS calls)
 npm run diff:dev --workspace=@sugarsocietysc/infra      # CDK diff against the dev environment
+CI=true npm test --workspace=@sugarsocietysc/web -- --watchAll=false --runInBand
 ```
 
 `cdk deploy` is intentionally not run automatically by AI agents in this repo — deploys touch real AWS

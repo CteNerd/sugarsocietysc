@@ -10,10 +10,17 @@ export interface SyncProfileInput {
   newsletterOptInSms?: boolean;
 }
 
-async function parseJson(res: Response) {
-  const body = await res.json().catch(() => undefined);
+export class AuthApiError extends Error {
+  constructor(message: string, public readonly status: number) {
+    super(message);
+    this.name = 'AuthApiError';
+  }
+}
+
+async function parseJson(res: Response): Promise<User> {
+  const body = await res.json();
   if (!res.ok) {
-    throw new Error(body?.error ? JSON.stringify(body.error) : `Request failed (${res.status})`);
+    throw new AuthApiError(body?.error ? JSON.stringify(body.error) : `Request failed (${res.status})`, res.status);
   }
   return body;
 }

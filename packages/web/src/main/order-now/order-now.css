@@ -1,13 +1,13 @@
-iframe {
+.order-now-page-container iframe {
   width: 100%;
   height: 100%;
 }
 
-.contact-us-form {
+.order-now-page-container .contact-us-form {
   height: 750px;
 }
 
-button {
+.order-now-page-container button {
   margin: 5px;
 }
 

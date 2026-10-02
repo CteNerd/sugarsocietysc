@@ -143,11 +143,53 @@ existing Google OAuth clients and complete these environment-specific checks:
    employees; the domain by itself does not grant admin access. The API promotes an account only when
    it is on the allowlist, has a verified email on the configured domain, and its Cognito token
    contains a Google federated identity. If Google supplies an `hd` claim, it must match the configured
-   domain as well. Removing an address from the allowlist demotes it on the next auth sync and blocks
-   admin requests immediately.
-4. Redeploy the environment only when the Cognito client/secret, redirect registration, or allowlist
+   domain as well. Removing an address from the allowlist demotes it on the next profile lookup or
+   auth sync and blocks admin requests immediately. Inactive users are never granted admin access.
+   Existing-session reconciliation updates only identity/role fields, not contact details or
+   newsletter preferences.
+4. The Google identity provider must map `email_verified` to Google's `email_verified` attribute,
+   in addition to email and names. `AuthStack` configures this explicitly. An absent mapping can
+   allow successful Google login while leaving the user ineligible for admin access. Verify the
+   mapping without exposing OAuth secrets:
+   ```bash
+   aws cognito-idp describe-identity-provider \
+     --user-pool-id <environment-user-pool-id> \
+     --provider-name Google \
+     --query 'IdentityProvider.AttributeMapping'
+   ```
+5. Redeploy the environment only when the Cognito client/secret, attribute mapping, redirect registration, or allowlist
    configuration changes. Confirm an admin can sign in through the Google button and a non-allowlisted
    user cannot access admin API routes.
+
+### Admin access parity smoke test
+
+Perform these checks separately in dev and prod after an explicitly approved deployment; the
+environments share eligibility policy, not user pools or database records.
+
+1. Confirm both environments configure the same approved admin allowlist/domain and map
+   `email_verified`. CDK synth checks infrastructure intent; inspect the deployed provider as well.
+2. Log out and use **Sign in with Google** again for an allowlisted account. For an existing browser
+   Google session, use a fresh session if necessary to complete a new provider login. Reloading an old
+   ID token, or refreshing it without a new provider login, does not prove the mapped attribute has
+   been populated.
+3. Confirm `/auth-sync/me` reports an active admin profile, the navigation exposes every admin
+   destination, and `/admin` loads. Verify section links work on mobile and desktop, including
+   reloading `/admin#orders`. Check a protected admin API request succeeds.
+4. Reload the page and confirm restored-session profile reconciliation preserves admin access and
+   saved newsletter preferences. Log out and verify admin links disappear.
+5. Sign in as a non-allowlisted customer and verify both the UI and protected admin API deny access.
+   An allowlisted email/password identity must also remain ineligible; do not substitute email-only
+   checks or manually promote a database record.
+6. Check the storefront at narrow widths and on physical iPhone Safari: visible +/- controls,
+   increment/decrement and stock limits, usable menu scrolling, no horizontal overflow, and
+   accessible account/admin forms. Use Stripe test mode for any payment smoke test, never a
+   production purchase as a layout check.
+
+Profile verification failures show a retry action rather than a misleading access-denied state.
+For an allowlisted identity that still fails eligibility, use sanitized API diagnostics for
+verified-email/federation/domain claim presence; never log or share tokens, OAuth secrets, or PII.
+Until the approved rollout and these real-login/device checks complete, live parity remains
+unverified even when local tests and synth pass.
 
 ## First dev run and production cutover
 

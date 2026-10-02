@@ -48,42 +48,96 @@
 }
 
 .nav-logo {
-  width: 8vw;
+  width: 88px;
+  max-width: 100%;
+  display: block;
 }
 
 .main-nav-container {
   background-color: rgb(255, 255, 255);
-  width: 100vw;
+  width: 100%;
 }
 
 .main-nav {
   position: relative;
   display: flex;
-  justify-content: center;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 12px 20px;
 }
 
-.menu-item {
-  padding: 20px 40px;
-  font-size: 20px;
-  font-weight: 300;
+.nav-logo-link {
+  flex-shrink: 0;
 }
-.menu-item a {
+
+.nav-public-links,
+.nav-account-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.main-nav a,
+.main-nav button,
+.main-nav summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px;
+  font-size: 15px;
   color: #000;
+  white-space: nowrap;
+}
+
+.main-nav button {
+  background: transparent;
+  border: 0;
+}
+
+.main-nav a[aria-current="page"],
+.sidenav a[aria-current="page"] {
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.nav-admin-dropdown {
+  position: relative;
+  text-align: left;
+}
+
+.nav-admin-dropdown summary {
+  cursor: pointer;
+}
+
+.nav-admin-links {
+  position: absolute;
+  right: 0;
+  min-width: 200px;
+  padding: 8px;
+  background: #fff;
+  border: 1px solid #e0cfc2;
+  box-shadow: 0 4px 12px #0002;
+  z-index: var(--z-dropdown);
 }
 
 .App-body-container {
-  text-align: -webkit-center;
   flex: 1 0 auto;
 }
 
 .App-body {
-  width: 60vw;
+  width: min(1100px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 1rem 0;
 }
 
 .page-content-container {
   background-color: rgba(165, 164, 164, 0.6);
-  padding: 10px;
-  min-height: 90vh;
+  padding: clamp(12px, 2vw, 24px);
+  overflow-wrap: anywhere;
 }
 
 h1,
@@ -101,6 +155,15 @@ button {
   color: #fff;
   font-size: 20px;
   font-weight: 300;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 12px;
+  line-height: 1.25;
+}
+
+:focus-visible {
+  outline: 3px solid #7a3b2e;
+  outline-offset: 3px;
 }
 
 button:hover {
@@ -114,6 +177,7 @@ button:hover {
   max-width: 400px;
   margin: 0 auto;
   gap: 12px;
+  overflow-wrap: anywhere;
 }
 
 .auth-form-container form {
@@ -126,6 +190,29 @@ button:hover {
 .auth-form-container input {
   padding: 10px;
   font-size: 16px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.auth-form-container input:not([type='checkbox']) {
+  min-height: 44px;
+}
+
+.auth-form-container fieldset {
+  min-width: 0;
+  width: 100%;
+  text-align: left;
+}
+
+.auth-form-container fieldset label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}
+
+.auth-form-container fieldset input[type='checkbox'] {
+  flex-shrink: 0;
 }
 
 .auth-error {
@@ -146,11 +233,21 @@ button:hover {
 
 .newsletter-signup label {
   font-size: 14px;
+  flex-basis: 100%;
 }
 
 .newsletter-signup input[type='email'] {
   padding: 6px 10px;
-  font-size: 14px;
+  font-size: 16px;
+  min-height: 44px;
+  min-width: 0;
+  max-width: 100%;
+  flex: 1 1 220px;
+}
+
+.newsletter-signup {
+  max-width: 640px;
+  margin: 0 auto;
 }
 
 .App-link {
@@ -180,9 +277,9 @@ footer {
 }
 
 .App-header .menu-btn {
-  vertical-align: middle;
-  padding: 1vh;
-  min-height: 10vh;
+  padding: 8px;
+  border: 0;
+  background: transparent;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -194,18 +291,11 @@ footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 4vw;
+  padding: 8px 1rem;
 }
 
-.mobile-nav-logo-link {
-  display: flex;
-  align-items: center;
-}
-
-.mobile-nav-logo {
-  width: auto;
-  height: 7vh;
-  max-height: 60px;
+.mobile-nav-bar .nav-logo {
+  width: 72px;
 }
 
 .menu-btn:hover {
@@ -219,7 +309,7 @@ footer {
   width: 35px;
   height: 5px;
   background-color: #000;
-  margin: 6px 0;
+  margin: 4px 0;
 }
 
 .social-link {
@@ -235,10 +325,8 @@ footer {
 
 @media only screen and (max-width: 600px) {
   .App-body {
-    width: 80vw;
-    /* Bottom padding no longer needed to clear a fixed footer now that the footer sits in normal
-       document flow (flexbox sticky footer). */
-    padding: 15vh 0vh 0vh 0vh;
+    width: calc(100% - 1rem);
+    padding: 0.5rem 0;
   }
 
   .App {
@@ -248,6 +336,25 @@ footer {
   .footer-link-container {
     display: block;
     padding: 3px;
+  }
+
+  p {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  footer {
+    padding: 16px;
+  }
+
+  .newsletter-signup button {
+    flex: 1 1 140px;
+  }
+
+  .footer-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
   }
 }
 

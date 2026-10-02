@@ -1,84 +1,67 @@
-/* The side navigation menu */
+.sidenav-backdrop {
+  position: fixed;
+  inset: 0;
+  background: #0006;
+  z-index: var(--z-sidenav);
+}
+
 .sidenav {
-  height: 100%; /* 100% Full-height */
-  width: 0; /* 0 width - change this with JavaScript */
-  position: fixed; /* Stay in place */
-  z-index: var(--z-sidenav); /* Always render above in-page content (carousels, modals, footer) while open */
-  top: 0; /* Stay at the top */
-  left: 0;
-  background-color: #000;
-  overflow-x: hidden; /* Disable horizontal scroll */
-  padding-top: 60px; /* Place content 60px from the top */
-  transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
-}
-
-/* The navigation menu links */
-.sidenav a {
-  padding: 8px 8px 8px 32px;
-  text-decoration: none;
-  font-size: 25px;
+  height: 100%;
+  height: 100dvh;
+  width: min(340px, 90vw);
+  padding: max(64px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+  position: relative;
+  background: #000;
   color: #eae4d4;
-  display: block;
-  transition: 0.3s;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  text-align: left;
 }
 
-.sidenav .anticon {
-  color: #fff;
+.sidenav .nav-public-links,
+.sidenav .nav-account-links {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
 }
 
-.sidenav .biz-icon {
-  max-width: 24px;
-  max-height: 24px;
-  margin: 0px 2px 0px 0px;
+.sidenav .nav-account-links,
+.sidenav .nav-admin-group {
+  border-top: 1px solid #eae4d466;
+  margin-top: 12px;
+  padding-top: 12px;
 }
 
-/* Position and style the close button (top right corner) */
+.sidenav a,
+.sidenav button {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 10px 12px;
+  font-size: 18px;
+  line-height: 1.35;
+  text-decoration: none;
+  color: #eae4d4;
+  background: transparent;
+  border: 0;
+  text-align: left;
+}
+
+.sidenav h2 {
+  margin: 4px 12px 8px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
 .sidenav .closebtn {
   position: absolute;
-  top: 0;
-  color: #eae4d4;
-  right: 25px;
-  font-size: 36px;
-  margin-left: 50px;
-  text-align: right;
+  top: max(8px, env(safe-area-inset-top));
+  right: 12px;
+  justify-content: center;
+  font-size: 32px;
 }
 
-.sidenav .closebtn:hover {
-  cursor: pointer;
-}
-
-/* Style the sidenav links and the dropdown button */
-.sidenav a,
-.dropdown-btn {
-  padding: 6px 8px 6px 16px;
-  text-decoration: none;
-  font-size: 20px;
-  color: #eae4d4;
-  display: block;
-  border: none;
-  background: none;
-  width: 100%;
-  text-align: left;
-  cursor: pointer;
-  outline: none;
-  margin: 0;
-}
-
-.sidenav .dropdown-container a {
-  padding-left: 30px;
-}
-
-/* On mouse-over */
-.dropdown-btn:hover {
-  color: #fff;
-}
-
-.sidenav a:hover {
-  color: #fff;
-}
-
-/* Optional: Style the caret down icon */
-.fa-caret-down {
-  float: right;
-  padding-right: 8px;
+.sidenav :focus-visible {
+  outline-color: #eae4d4;
 }

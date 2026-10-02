@@ -69,6 +69,7 @@ export class AuthStack extends Stack {
         scopes: ['profile', 'email', 'openid'],
         attributeMapping: {
           email: cognito.ProviderAttribute.GOOGLE_EMAIL,
+          emailVerified: cognito.ProviderAttribute.other('email_verified'),
           givenName: cognito.ProviderAttribute.GOOGLE_GIVEN_NAME,
           familyName: cognito.ProviderAttribute.GOOGLE_FAMILY_NAME,
         },
@@ -106,4 +107,3 @@ export class AuthStack extends Stack {
     new CfnOutput(this, 'GoogleOAuthClientSecretArn', { value: googleOAuthSecret.secretArn });
   }
 }
-

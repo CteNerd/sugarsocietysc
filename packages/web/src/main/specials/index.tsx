@@ -76,7 +76,7 @@ export default function Specials(props: Props) {
   }
 
   return (
-    <div>
+    <div className="specials-page">
       <div>
         <img
           className="specials-img"
