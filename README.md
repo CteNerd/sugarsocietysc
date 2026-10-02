@@ -25,6 +25,13 @@ Auth is Amazon Cognito (with OAuth/social login support), the database is Aurora
 (PostgreSQL), and hosting is S3 + CloudFront (replacing the previous GitHub Pages deployment once the
 cutover is complete).
 
+Pre-Sales support concurrent seasonal events. Each event owns its order window, pickup date, deposit
+percentage, categories, cookie designs, and fixed-price pack variants. Orders are tied to one event;
+the API recomputes prices from the database and reserves inventory by pack size. Packaging and add-ons
+are optional and assigned per event. Admins sign in with Google and are promoted only when their
+verified Google identity is on the `ADMIN_EMAILS` allowlist and matches `ADMIN_EMAIL_DOMAIN`; the
+company domain alone never grants admin access.
+
 ## Local Development
 
 Requires Docker and Node 20+.
@@ -93,9 +100,10 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for the full phase-by-phase plan and stat
 - [ ] Phase 2 — Newsletter signup (subscribe/unsubscribe/preferences) — mostly done; admin copy review and
   real SES/SNS delivery verification remain.
 - [x] Phase 3 — Catalog (Pre-Sale events, cookie designs, packaging options) — backend, idempotent demo
-  seed script, and admin CRUD UI.
-- [x] Phase 4 — Pre-Sale order workflow (browse → quantity → packaging → invoice → guest/authed checkout)
-  — full backend + web wizard, verified end-to-end locally
+  seed script, and admin CRUD UI. Multiple events, categorized menus, and fixed-price pack variants are
+  supported.
+- [x] Phase 4 — Pre-Sale order workflow (choose event → choose packs → optional packaging → checkout)
+  — server-priced backend + web wizard; Stripe payment metadata includes event and item snapshots
 - [ ] Phase 5 — Custom order workflow — excluded from the current completion scope; retained as future work
 - [x] Phase 6 — Payments (Stripe deposit via `IPaymentProvider`, webhook handling) — backend + Stripe
   Elements web UI built; untested with real Stripe test keys (see setup above)
@@ -106,6 +114,7 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for the full phase-by-phase plan and stat
   SNS email notifications, API Gateway throttling, and manual OIDC deployment workflow are implemented;
   `dev` has been successfully deployed end-to-end (OIDC, CDK deploy, migrations, frontend publish,
   health check all verified). Remaining before production cutover: prod deploy, Squarespace DNS CNAME
-  for `www.sugarsocietysc.com`, switching Stripe to live keys/webhook, and (optionally) enabling Google
-  sign-in with a dedicated OAuth client. Configure GitHub Environment **variables** and AWS OIDC as
-  documented; GitHub secrets are not required by the deployment workflow.
+  for `www.sugarsocietysc.com`, switching Stripe to live keys/webhook, and confirming the existing
+  Google OAuth secret and Cognito redirect URI. Configure the admin allowlist in `packages/infra/cdk.json`
+  per environment. Configure GitHub Environment **variables** and AWS OIDC as documented; GitHub
+  secrets are not required by the deployment workflow.

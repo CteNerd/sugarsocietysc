@@ -9,7 +9,7 @@ import { AuthSyncService } from './auth-sync-service';
 
 export function authSyncRoutes(pool: Pool, config: AppConfig): Hono<{ Variables: { authClaims: AuthClaims } }> {
   const app = new Hono<{ Variables: { authClaims: AuthClaims } }>();
-  const service = new AuthSyncService(new AuthSyncRepository(pool));
+  const service = new AuthSyncService(new AuthSyncRepository(pool), config);
   const auth = requireAuth(config);
 
   app.post('/', auth, async (c) => {

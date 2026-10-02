@@ -8,6 +8,7 @@ import OurCookies from "./main/cookies";
 import CreateInvoice from "./main/invoice/create-invoice";
 import OrderNow from "./main/order-now";
 import PreSale from "./main/presale";
+import EventOrder from "./main/presale/EventOrder";
 import "./App.css";
 import SideNav from "./main/sideNav/sideNav";
 import Contact from "./main/contact";
@@ -125,6 +126,7 @@ function App() {
                   {/* <Route path="/pricing" element={<Pricing />} /> */}
                   <Route path="/order-now" element={<OrderNow />} />
                   <Route path="/pre-sale" element={<PreSale />} />
+                  <Route path="/presale/:eventId" element={<EventOrder />} />
                   <Route path="/order-form" element={<OrderForm />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/privacy" element={<PrivacyPolicy />} />

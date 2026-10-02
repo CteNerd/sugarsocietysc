@@ -2,25 +2,34 @@ import { z } from 'zod';
 import { guestContactSchema } from './order-schemas';
 
 /**
- * Pre-Sale checkout only (Phase 4). Quantity must always be sold in multiples of 6 — enforced here via
- * `.multipleOf(6)` and re-validated server-side in the orders service (never trust the client alone).
- * The custom order builder (design/icing/packaging a la carte) is Phase 5 and intentionally not covered
- * by this schema.
+ * Pre-Sale checkout. Customers order a number of packs of each menu item variant (e.g. 2 x "Love
+ * Letter (6)"). Prices are NEVER accepted from the client — the server looks each variant up and
+ * computes every amount (see orders service).
  */
 export const createPresaleOrderItemSchema = z.object({
-  cookieDesignId: z.string().uuid(),
-  quantity: z.number().int().positive().multipleOf(6, 'Quantity must be a multiple of 6'),
+  variantId: z.string().uuid(),
+  packs: z.number().int().positive().max(100),
 });
 export type CreatePresaleOrderItemRequest = z.infer<typeof createPresaleOrderItemSchema>;
 
-export const createPresaleOrderSchema = z.object({
-  preSaleEventId: z.string().uuid(),
-  items: z.array(createPresaleOrderItemSchema).min(1),
-  packagingOptionId: z.string().uuid(),
-  addOnOptionIds: z.array(z.string().uuid()).default([]),
-  /** Only required for guest checkout — omit when the request is authenticated. */
-  guestContact: guestContactSchema.optional(),
-});
+export const createPresaleOrderSchema = z
+  .object({
+    preSaleEventId: z.string().uuid(),
+    items: z.array(createPresaleOrderItemSchema).min(1).max(50),
+    /** Optional box/packaging for the whole order. */
+    packagingOptionId: z.string().uuid().optional(),
+    addOnOptionIds: z.array(z.string().uuid()).max(20).default([]),
+    /** Only required for guest checkout — omit when the request is authenticated. */
+    guestContact: guestContactSchema.optional(),
+  })
+  .refine((o) => new Set(o.items.map((i) => i.variantId)).size === o.items.length, {
+    message: 'Each pack option may only appear once',
+    path: ['items'],
+  })
+  .refine((o) => new Set(o.addOnOptionIds).size === o.addOnOptionIds.length, {
+    message: 'Duplicate add-ons are not allowed',
+    path: ['addOnOptionIds'],
+  });
 export type CreatePresaleOrderRequest = z.infer<typeof createPresaleOrderSchema>;
 
 /** Admin order status transitions (state machine enforced server-side in the orders service). */

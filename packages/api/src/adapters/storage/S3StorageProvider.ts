@@ -12,6 +12,21 @@ export class S3StorageProvider implements IStorageProvider {
     this.client = new S3Client({ region });
   }
 
+  async getUploadUrl(
+    key: string,
+    contentType: string,
+    contentLength: number,
+    expiresInSeconds = 900,
+  ): Promise<string> {
+    const command = new PutObjectCommand({
+      Bucket: this.bucketName,
+      Key: key,
+      ContentType: contentType,
+      ContentLength: contentLength,
+    });
+    return getSignedUrl(this.client, command, { expiresIn: expiresInSeconds });
+  }
+
   async uploadImage({ key, contentType, body }: UploadImageParams): Promise<string> {
     await this.client.send(
       new PutObjectCommand({

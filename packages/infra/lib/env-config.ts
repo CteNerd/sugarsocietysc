@@ -10,6 +10,8 @@ export interface EnvConfig {
   /** Google OAuth client ID (not secret — the client secret lives in Secrets Manager). Empty string
    * disables Google federation until a real client has been registered in Google Cloud Console. */
   googleOAuthClientId: string;
+  adminEmails: string[];
+  adminEmailDomain: string;
   /** ACM cert (us-east-1, for CloudFront) covering domainName — the domain's real DNS is NOT Route53
    * (it's managed externally, e.g. Squarespace/Google Domains), so this must be validated manually
    * there; CDK only imports it by ARN, never creates or auto-validates a cert via Route53. */

@@ -10,11 +10,11 @@ interface PackagingStepProps {
   onContinue: () => void;
 }
 
-/** Step 2: pick exactly one box (required) and any number of add-ons. */
+/** Step 2: packaging and add-ons are optional. */
 export default function PackagingStep({ packagingOptions, selections, onChange, onBack, onContinue }: PackagingStepProps) {
   const boxes = packagingOptions.filter((p) => p.type === 'box');
   const addOns = packagingOptions.filter((p) => p.type === 'addon');
-  const canContinue = selections.packagingOptionId !== null;
+  const canContinue = true;
 
   function toggleAddOn(id: string) {
     const addOnOptionIds = selections.addOnOptionIds.includes(id)
@@ -27,7 +27,16 @@ export default function PackagingStep({ packagingOptions, selections, onChange, 
     <div className="presale-step">
       <h2>Choose Your Packaging</h2>
       <div className="presale-packaging-group">
-        <h3>Box</h3>
+        <h3>Packaging (optional)</h3>
+        <label className="presale-packaging-option">
+          <input
+            type="radio"
+            name="packaging-box"
+            checked={selections.packagingOptionId === null}
+            onChange={() => onChange({ ...selections, packagingOptionId: null })}
+          />
+          No packaging
+        </label>
         {boxes.map((box) => (
           <label key={box.id} className="presale-packaging-option">
             <input

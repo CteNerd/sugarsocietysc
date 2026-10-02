@@ -35,7 +35,7 @@ export function newsletterRoutes(pool: Pool, config: AppConfig): Hono<{ Variable
     config,
   );
   const auth = requireAuth(config);
-  const adminOnly = requireAdminRole(pool);
+  const adminOnly = requireAdminRole(pool, config);
 
   app.post('/subscribe', async (c) => {
     const parsed = newsletterSubscribeSchema.safeParse(await c.req.json());

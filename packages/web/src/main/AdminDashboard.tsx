@@ -1,6 +1,5 @@
 import React, { FormEvent, useCallback, useEffect, useState } from 'react';
 import {
-  CookieDesign,
   CreateNewsletterCampaignRequest,
   NewsletterCampaign,
   NewsletterSendLog,
@@ -12,16 +11,14 @@ import {
 } from '@sugarsocietysc/shared';
 import { useAuth } from '../auth/AuthContext';
 import {
-  createCookieDesign,
   createPackagingOption,
   createPreSaleEvent,
-  listCookieDesigns,
   listPackagingOptions,
   listPreSaleEvents,
-  updateCookieDesign,
   updatePackagingOption,
   updatePreSaleEvent,
 } from '../api/catalog-admin-client';
+import MenuManagement from './MenuManagement';
 import { getAdminOrder, getAdminOrders, updateAdminOrderStatus } from '../api/orders-client';
 import {
   createNewsletterCampaign,
@@ -74,7 +71,6 @@ function orderStatus(form: FormData): OrderStatus {
 export default function AdminDashboard() {
   const { idToken } = useAuth();
   const [events, setEvents] = useState<PreSaleEvent[]>([]);
-  const [designs, setDesigns] = useState<CookieDesign[]>([]);
   const [packaging, setPackaging] = useState<PackagingOption[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [campaigns, setCampaigns] = useState<NewsletterCampaign[]>([]);
@@ -86,13 +82,11 @@ export default function AdminDashboard() {
 
   const refreshCatalog = useCallback(async () => {
     if (!idToken) return;
-    const [nextEvents, nextDesigns, nextPackaging] = await Promise.all([
+    const [nextEvents, nextPackaging] = await Promise.all([
       listPreSaleEvents(idToken),
-      listCookieDesigns(idToken),
       listPackagingOptions(idToken),
     ]);
     setEvents(nextEvents);
-    setDesigns(nextDesigns);
     setPackaging(nextPackaging);
   }, [idToken]);
 
@@ -142,20 +136,6 @@ export default function AdminDashboard() {
       orderWindowEnd: new Date(text(form, 'orderWindowEnd')).toISOString(),
       pickupDate: new Date(text(form, 'pickupDate')).toISOString(),
       depositPercent: Number(text(form, 'depositPercent')),
-      isActive: check(form, 'isActive'),
-    });
-  }
-
-  async function updateDesign(design: CookieDesign, form: FormData) {
-    if (!idToken) return;
-    const maxQuantity = text(form, 'maxQuantity');
-    await updateCookieDesign(idToken, design.id, {
-      name: text(form, 'name'),
-      imageUrls: text(form, 'imageUrls').split(/\r?\n|,/).map((url) => url.trim()).filter(Boolean),
-      basePrice: cents(form.get('basePrice')),
-      preSaleEventId: text(form, 'preSaleEventId'),
-      colors: text(form, 'colors').split(',').map((color) => color.trim()).filter(Boolean),
-      maxQuantity: maxQuantity ? Number(maxQuantity) : undefined,
       isActive: check(form, 'isActive'),
     });
   }
@@ -296,54 +276,12 @@ export default function AdminDashboard() {
         </div>
       </section>
 
-      <section>
-        <h2>Cookie designs</h2>
-        <form className="admin-form" onSubmit={(e) => submit(e, async (form) => {
-          if (!idToken) return;
-          const maxQuantity = text(form, 'maxQuantity');
-          await createCookieDesign(idToken, {
-            name: text(form, 'name'),
-            imageUrls: text(form, 'imageUrls').split(/\r?\n|,/).map((url) => url.trim()).filter(Boolean),
-            basePrice: cents(form.get('basePrice')),
-            preSaleEventId: text(form, 'preSaleEventId'),
-            colors: text(form, 'colors').split(',').map((color) => color.trim()).filter(Boolean),
-            maxQuantity: maxQuantity ? Number(maxQuantity) : undefined,
-            isActive: check(form, 'isActive'),
-          });
-        }, 'Cookie design created.')}>
-          <h3>Create cookie design</h3>
-          <input name="name" aria-label="Design name" placeholder="Design name" required />
-          <select name="preSaleEventId" aria-label="Pre-Sale event" required defaultValue="">
-            <option value="" disabled>Select event</option>
-            {events.map((event) => <option value={event.id} key={event.id}>{event.name}</option>)}
-          </select>
-          <input name="basePrice" aria-label="Price per cookie in dollars" type="number" min="0.01" step="0.01" placeholder="Price per cookie ($)" required />
-          <textarea name="imageUrls" aria-label="Image URLs" placeholder="Image URLs (one per line)" required />
-          <input name="colors" aria-label="Colors" placeholder="Colors, comma separated" />
-          <input name="maxQuantity" aria-label="Maximum quantity" type="number" min="1" placeholder="Maximum quantity (optional)" />
-          <label><input name="isActive" type="checkbox" defaultChecked /> Active</label>
-          <button disabled={saving}>Create design</button>
-        </form>
-        <div className="admin-record-list">
-          {designs.map((design) => (
-            <details key={design.id}>
-              <summary>{design.name} · ${dollars(design.basePrice)} · {design.isActive ? 'Active' : 'Inactive'}</summary>
-              <form className="admin-form" onSubmit={(e) => submit(e, (form) => updateDesign(design, form), 'Cookie design updated.')}>
-                <input name="name" aria-label="Design name" defaultValue={design.name} required />
-                <select name="preSaleEventId" aria-label="Pre-Sale event" defaultValue={design.preSaleEventId}>
-                  {events.map((event) => <option value={event.id} key={event.id}>{event.name}</option>)}
-                </select>
-                <input name="basePrice" aria-label="Price per cookie in dollars" type="number" min="0.01" step="0.01" defaultValue={dollars(design.basePrice)} required />
-                <textarea name="imageUrls" aria-label="Image URLs" defaultValue={design.imageUrls.join('\n')} required />
-                <input name="colors" aria-label="Colors" defaultValue={design.colors.join(', ')} />
-                <input name="maxQuantity" aria-label="Maximum quantity" type="number" min="1" defaultValue={design.maxQuantity ?? ''} />
-                <label><input name="isActive" type="checkbox" defaultChecked={design.isActive} /> Active</label>
-                <button disabled={saving}>Save design</button>
-              </form>
-            </details>
-          ))}
-        </div>
-      </section>
+      <MenuManagement
+        idToken={idToken}
+        events={events}
+        packaging={packaging}
+        onChanged={refreshCatalog}
+      />
 
       <section>
         <h2>Packaging</h2>
@@ -435,7 +373,11 @@ export default function AdminDashboard() {
                 ? `${selectedOrder.customer.firstName} ${selectedOrder.customer.lastName} · ${selectedOrder.customer.email} · ${selectedOrder.customer.phone}`
                 : `${selectedOrder.order.guestEmail ?? 'Guest'} · ${selectedOrder.order.guestPhone ?? 'No phone on record'}`}
             </p>
-            <p>Items: {selectedOrder.items.map((item) => `${item.quantity} × ${item.cookieDesignId ?? 'Cookie'}`).join(', ')}</p>
+            <p>
+              Items: {selectedOrder.items.map((item) =>
+                `${item.quantity} × ${item.itemName ?? item.cookieDesignId ?? 'Cookie'}${item.variantLabel ? ` (${item.variantLabel})` : ''}`,
+              ).join(', ')}
+            </p>
             <ul>
               {selectedOrder.statusHistory.map((entry) => (
                 <li key={entry.id}>{entry.status} — {new Date(entry.changedAt).toLocaleString()}{entry.note ? `: ${entry.note}` : ''}</li>

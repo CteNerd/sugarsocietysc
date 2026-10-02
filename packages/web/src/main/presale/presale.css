@@ -15,6 +15,50 @@
   gap: 1rem;
 }
 
+.presale-event-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+.presale-event-card {
+  border: 1px solid #e0cfc2;
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.presale-event-card h2 {
+  margin-top: 0.25rem;
+}
+
+.presale-event-status {
+  color: #7a3b2e;
+  font-weight: 700;
+}
+
+.presale-event-card .presale-primary-button {
+  display: inline-block;
+  text-decoration: none;
+}
+
+.presale-menu-category {
+  margin: 1rem 0 1.5rem;
+}
+
+.presale-variant-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.6rem 0;
+  border-top: 1px solid #eee2d9;
+  text-align: left;
+}
+
+.presale-variant-row p {
+  margin: 0.15rem 0 0;
+}
+
 .presale-hint {
   color: #666;
   font-size: 0.9rem;

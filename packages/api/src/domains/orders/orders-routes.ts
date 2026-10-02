@@ -20,7 +20,7 @@ export function ordersRoutes(pool: Pool, config: AppConfig): Hono<{ Variables: {
   );
   const auth = requireAuth(config);
   const guestOrAuth = optionalAuth(config);
-  const adminOnly = requireAdminRole(pool);
+  const adminOnly = requireAdminRole(pool, config);
 
   function handleError(c: Context, err: unknown) {
     if (err instanceof OrdersError) {

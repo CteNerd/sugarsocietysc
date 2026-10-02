@@ -20,6 +20,42 @@ export class OrdersError extends Error {
   }
 }
 
+interface PaymentSummaryItem {
+  name: string;
+  variantLabel: string;
+  packSize: number;
+  packs: number;
+}
+
+export function buildPaymentMetadata(input: {
+  order: OrderWithDetails['order'];
+  event: { id: string; name: string; pickupDate: string };
+  items: PaymentSummaryItem[];
+}): Record<string, string> {
+  const metadata: Record<string, string> = {
+    orderId: input.order.id,
+    orderNumber: input.order.orderNumber,
+    eventId: input.event.id,
+    eventName: input.event.name.slice(0, 500),
+    pickupDate: input.event.pickupDate,
+    subtotal: String(input.order.subtotal),
+    deposit: String(input.order.depositAmount),
+    balance: String(input.order.total - input.order.depositAmount),
+  };
+  const summary = input.items
+    .map((item) => `${item.name} (${item.variantLabel || `${item.packSize} pack`}) x ${item.packs}`)
+    .join('; ');
+  const chunks = summary.match(/[\s\S]{1,500}/g) ?? [];
+  const maxChunks = 50 - Object.keys(metadata).length;
+  if (chunks.length > maxChunks) {
+    throw new OrdersError('Order item summary exceeds the payment metadata limit', 400);
+  }
+  chunks.forEach((chunk, index) => {
+    metadata[`items_${index + 1}`] = chunk;
+  });
+  return metadata;
+}
+
 /** Status transitions an admin (or, for `payment_received`, a confirmed Stripe webhook) may apply.
  * `cancelled` is reachable from any non-terminal status; otherwise the flow is strictly forward-only. */
 const ALLOWED_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
@@ -37,18 +73,13 @@ export class OrdersService {
     private readonly paymentProvider: IPaymentProvider,
   ) {}
 
-  /**
-   * Phase 4 checkout: browse (already served by catalog) -> quantities (multiple of 6, enforced by the
-   * zod schema and the `order_items` CHECK constraint) -> packaging -> this endpoint, which computes
-   * pricing server-side, atomically reserves stock, and opens a Stripe PaymentIntent for the deposit.
-   * Pickup date is NEVER taken from the client — it's always the active event's pickup date.
-   */
+  /** Computes all prices from the database, validates event assignments, and atomically reserves stock. */
   async createPresaleOrder(
     claims: AuthClaims | undefined,
     input: CreatePresaleOrderRequest,
   ): Promise<PresaleOrderCreateResult> {
-    const event = await this.catalogRepository.getActivePreSaleEvent();
-    if (!event || event.id !== input.preSaleEventId) {
+    const event = await this.catalogRepository.getPreSaleEventById(input.preSaleEventId);
+    if (!event || !event.isActive) {
       throw new OrdersError('Pre-Sale event is not currently active', 409);
     }
     const now = new Date();
@@ -57,50 +88,69 @@ export class OrdersService {
     }
 
     let userId: string | undefined;
+    let receiptEmail = input.guestContact?.guestEmail;
     if (claims) {
       const user = await this.repository.findUserByCognitoSub(claims.sub);
       if (!user) {
         throw new OrdersError('User not yet synced', 404);
       }
       userId = user.id;
+      receiptEmail = user.email;
     } else if (!input.guestContact) {
       throw new OrdersError('Guest contact details are required when not signed in', 400);
     }
 
-    const packagingOption = await this.catalogRepository.getPackagingOptionById(input.packagingOptionId);
-    if (!packagingOption || packagingOption.type !== 'box' || !packagingOption.isActive) {
+    const selectedPackagingIds = [
+      ...(input.packagingOptionId ? [input.packagingOptionId] : []),
+      ...input.addOnOptionIds,
+    ];
+    const assignedOptions = await this.catalogRepository.listAssignedPackagingOptions(event.id, selectedPackagingIds);
+    if (assignedOptions.length !== selectedPackagingIds.length) {
+      throw new OrdersError('One or more selected packaging options are unavailable for this event', 400);
+    }
+    const packagingOption = input.packagingOptionId
+      ? assignedOptions.find((option) => option.id === input.packagingOptionId)
+      : undefined;
+    if (input.packagingOptionId && packagingOption?.type !== 'box') {
       throw new OrdersError('Selected packaging option is unavailable', 400);
     }
-    const addOnOptions = await Promise.all(
-      input.addOnOptionIds.map((id) => this.catalogRepository.getPackagingOptionById(id)),
-    );
-    const missingAddOnIndex = addOnOptions.findIndex((o) => !o || o.type !== 'addon' || !o.isActive);
-    if (missingAddOnIndex !== -1) {
+    const addOnOptions = input.addOnOptionIds.map((id) => assignedOptions.find((option) => option.id === id));
+    if (addOnOptions.some((option) => option?.type !== 'addon')) {
       throw new OrdersError('One or more selected add-ons are unavailable', 400);
     }
 
-    const designs = await Promise.all(
-      input.items.map((item) => this.catalogRepository.getCookieDesignById(item.cookieDesignId)),
-    );
-    const invalidIndex = designs.findIndex(
-      (d, i) =>
-        !d ||
-        d.type !== 'presale' ||
-        !d.isActive ||
-        d.preSaleEventId !== event.id ||
-        d.id !== input.items[i].cookieDesignId,
-    );
-    if (invalidIndex !== -1) {
-      throw new OrdersError('One or more selected cookie designs are unavailable', 400);
-    }
-
-    const itemsWithPricing = input.items.map((item, i) => {
-      const design = designs[i]!;
-      const lineTotal = design.basePrice * item.quantity;
-      return { cookieDesignId: design.id, quantity: item.quantity, unitPrice: design.basePrice, lineTotal };
+    const variants = await this.catalogRepository.getVariantsWithItems(input.items.map((item) => item.variantId));
+    const variantsById = new Map(variants.map((entry) => [entry.variant.id, entry]));
+    const itemsWithPricing = input.items.map((requestedItem) => {
+      const entry = variantsById.get(requestedItem.variantId);
+      if (
+        !entry ||
+        !entry.variant.isActive ||
+        !entry.item.isActive ||
+        entry.item.type !== 'presale' ||
+        entry.item.preSaleEventId !== event.id
+      ) {
+        throw new OrdersError('One or more selected pack options are unavailable for this event', 400);
+      }
+      const unitPrice = entry.variant.priceCents;
+      return {
+        cookieDesignId: entry.item.id,
+        variantId: entry.variant.id,
+        itemName: entry.item.name,
+        variantLabel: entry.variant.label ?? `${entry.variant.packSize} pack`,
+        packSize: entry.variant.packSize,
+        quantity: requestedItem.packs,
+        inventoryQuantity: requestedItem.packs * entry.variant.packSize,
+        unitPrice,
+        lineTotal: unitPrice * requestedItem.packs,
+      };
     });
-    const packagingPrice = packagingOption.price + addOnOptions.reduce((sum, o) => sum + (o?.price ?? 0), 0);
+    const packagingPrice =
+      (packagingOption?.price ?? 0) + addOnOptions.reduce((sum, option) => sum + (option?.price ?? 0), 0);
     const subtotal = itemsWithPricing.reduce((sum, item) => sum + item.lineTotal, 0) + packagingPrice;
+    if (!Number.isSafeInteger(subtotal) || subtotal <= 0) {
+      throw new OrdersError('Order total must be greater than zero', 400);
+    }
     const tax = 0;
     const depositAmount = Math.round((subtotal * event.depositPercent) / 100);
     const total = subtotal + tax;
@@ -110,6 +160,7 @@ export class OrdersService {
         userId,
         guestEmail: input.guestContact?.guestEmail,
         guestPhone: input.guestContact?.guestPhone,
+        preSaleEventId: event.id,
         pickupDate: event.pickupDate,
         subtotal,
         tax,
@@ -121,7 +172,7 @@ export class OrdersService {
           client,
           createdOrder.id,
           item.cookieDesignId,
-          item.quantity,
+          item.inventoryQuantity,
         );
         if (!reserved) {
           throw new OrdersError('One or more cookie designs sold out during checkout', 409);
@@ -131,11 +182,14 @@ export class OrdersService {
       for (const item of itemsWithPricing) {
         createdItems.push(await this.repository.createOrderItem(client, createdOrder.id, item));
       }
-      const createdPackaging = await this.repository.createOrderPackaging(client, createdOrder.id, {
-        packagingOptionId: packagingOption.id,
-        addOnOptionIds: input.addOnOptionIds,
-        price: packagingPrice,
-      });
+      const createdPackaging =
+        selectedPackagingIds.length > 0
+          ? await this.repository.createOrderPackaging(client, createdOrder.id, {
+              packagingOptionId: packagingOption?.id,
+              addOnOptionIds: input.addOnOptionIds,
+              price: packagingPrice,
+            })
+          : null;
       await this.repository.recordStatusHistory(client, createdOrder.id, 'received');
       return { order: createdOrder, items: createdItems, packaging: createdPackaging };
     });
@@ -146,6 +200,18 @@ export class OrdersService {
         amount: depositAmount,
         currency: 'usd',
         orderId: order.id,
+        description: `${event.name} pre-sale deposit — Order ${order.orderNumber}`,
+        metadata: buildPaymentMetadata({
+          order,
+          event,
+          items: itemsWithPricing.map((item) => ({
+            name: item.itemName,
+            variantLabel: item.variantLabel,
+            packSize: item.packSize,
+            packs: item.quantity,
+          })),
+        }),
+        receiptEmail,
       });
     } catch (err) {
       await this.repository.cancelUnpaidOrder(order.id, 'Payment setup failed; inventory hold released');

@@ -9,6 +9,7 @@ export interface AppConfig {
   paymentProvider: 'stripe';
   storageProvider: 's3';
   uploadsBucketName: string;
+  uploadsPublicBaseUrl: string;
   stripeSecretKey: string;
   stripeWebhookSecret: string;
   guestPiiRetentionDays: number;
@@ -20,6 +21,8 @@ export interface AppConfig {
   cognitoIssuer: string;
   cognitoJwksUri: string;
   cognitoClientId: string;
+  adminEmails: string[];
+  adminEmailDomain: string;
 }
 
 function requireEnv(name: string, fallback?: string): string {
@@ -44,6 +47,7 @@ export function loadConfig(): AppConfig {
     paymentProvider: 'stripe',
     storageProvider: 's3',
     uploadsBucketName: requireEnv('UPLOADS_BUCKET_NAME', 'local-uploads'),
+    uploadsPublicBaseUrl: requireEnv('UPLOADS_PUBLIC_BASE_URL', 'http://localhost:4566/local-uploads'),
     stripeSecretKey: requireEnv('STRIPE_SECRET_KEY', 'sk_test_placeholder'),
     stripeWebhookSecret: requireEnv('STRIPE_WEBHOOK_SECRET', 'whsec_placeholder'),
     guestPiiRetentionDays,
@@ -55,5 +59,10 @@ export function loadConfig(): AppConfig {
     cognitoIssuer,
     cognitoJwksUri: `${cognitoIssuer}/.well-known/jwks.json`,
     cognitoClientId: requireEnv('COGNITO_CLIENT_ID', 'local_placeholder'),
+    adminEmails: (process.env.ADMIN_EMAILS ?? '')
+      .split(',')
+      .map((email) => email.trim().toLowerCase())
+      .filter(Boolean),
+    adminEmailDomain: requireEnv('ADMIN_EMAIL_DOMAIN', 'sugarsocietysc.com').trim().toLowerCase(),
   };
 }

@@ -10,6 +10,8 @@
         "auroraMaxCapacity": 2,
         "domainName": "dev.sugarsocietysc.com",
         "guestPiiRetentionDays": 60,
+        "adminEmails": ["ashuah.tomlin@sugarsocietysc.com", "admin@sugarsocietysc.com"],
+        "adminEmailDomain": "sugarsocietysc.com",
         "googleOAuthClientId": "622792694552-1ilfi8dco17r69fiav2liu83ob8hqbv4.apps.googleusercontent.com",
         "certificateArn": "arn:aws:acm:us-east-1:425061472162:certificate/90208d78-aa43-4d32-b341-409fb77ab504",
         "alertEmail": "tech@wewillcalltix.com"
@@ -22,6 +24,8 @@
         "auroraMaxCapacity": 4,
         "domainName": "www.sugarsocietysc.com",
         "guestPiiRetentionDays": 60,
+        "adminEmails": ["ashuah.tomlin@sugarsocietysc.com", "admin@sugarsocietysc.com"],
+        "adminEmailDomain": "sugarsocietysc.com",
         "googleOAuthClientId": "622792694552-59k81bgug10lur1jpq88ihit95t2qs7a.apps.googleusercontent.com",
         "certificateArn": "arn:aws:acm:us-east-1:425061472162:certificate/90208d78-aa43-4d32-b341-409fb77ab504",
         "alertEmail": "tech@wewillcalltix.com"

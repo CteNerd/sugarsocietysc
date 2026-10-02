@@ -1,77 +1,110 @@
 import React from 'react';
-import { CookieDesign } from '@sugarsocietysc/shared';
+import { MenuCategoryWithItems, MenuItemWithVariants } from '@sugarsocietysc/shared';
 import { formatCents, QuantitySelections } from './types';
 
-const QUANTITY_STEP = 6;
-
 interface QuantityStepProps {
-  designs: CookieDesign[];
+  categories: MenuCategoryWithItems[];
+  uncategorizedItems: MenuItemWithVariants[];
   selections: QuantitySelections;
-  onChange: (designId: string, quantity: number) => void;
+  onChange: (variantId: string, packs: number) => void;
   onContinue: () => void;
 }
 
-/** Step 1: browse active Pre-Sale designs and pick a quantity for each, always in multiples of 6. */
-export default function QuantityStep({ designs, selections, onChange, onContinue }: QuantityStepProps) {
-  const totalCookies = Object.values(selections).reduce((sum, qty) => sum + qty, 0);
-  const canContinue = totalCookies > 0;
+export default function QuantityStep({
+  categories,
+  uncategorizedItems,
+  selections,
+  onChange,
+  onContinue,
+}: QuantityStepProps) {
+  const packCount = Object.values(selections).reduce((sum, packs) => sum + packs, 0);
 
-  function remaining(design: CookieDesign): number | undefined {
-    if (design.maxQuantity === undefined) {
-      return undefined;
-    }
-    return Math.max(design.maxQuantity - design.quantitySold, 0);
-  }
-
-  function step(design: CookieDesign, delta: number) {
-    const current = selections[design.id] ?? 0;
-    const next = Math.max(0, current + delta * QUANTITY_STEP);
-    const max = remaining(design);
-    onChange(design.id, max !== undefined ? Math.min(next, Math.floor(max / QUANTITY_STEP) * QUANTITY_STEP) : next);
+  function renderItems(items: MenuItemWithVariants[]) {
+    return (
+      <div className="presale-design-grid">
+        {items.map((item) => {
+          const selectedUnits = item.variants.reduce(
+            (sum, variant) => sum + (selections[variant.id] ?? 0) * variant.packSize,
+            0,
+          );
+          const availableUnits =
+            item.maxQuantity === undefined ? undefined : Math.max(item.maxQuantity - item.quantitySold, 0);
+          return (
+            <article key={item.id} className="presale-design-card">
+              {item.imageUrls[0] && <img className="presale-design-image" src={item.imageUrls[0]} alt={item.name} />}
+              <h3>{item.name}</h3>
+              {item.description && <p>{item.description}</p>}
+              {item.variants.map((variant) => {
+                const packs = selections[variant.id] ?? 0;
+                const otherUnits = selectedUnits - packs * variant.packSize;
+                const maxPacks =
+                  availableUnits === undefined
+                    ? undefined
+                    : Math.max(0, Math.floor((availableUnits - otherUnits) / variant.packSize));
+                const soldOut = maxPacks === 0;
+                const label = variant.label ?? `${variant.packSize} pack`;
+                return (
+                  <div key={variant.id} className="presale-variant-row">
+                    <div>
+                      <strong>{label}</strong>
+                      <p className="presale-design-price">{formatCents(variant.priceCents)} / pack</p>
+                    </div>
+                    {soldOut ? (
+                      <span className="presale-sold-out-label">Sold Out</span>
+                    ) : (
+                      <div className="presale-quantity-stepper">
+                        <button
+                          type="button"
+                          aria-label={`Decrease ${label} quantity for ${item.name}`}
+                          disabled={packs <= 0}
+                          onClick={() => onChange(variant.id, packs - 1)}
+                        >
+                          &minus;
+                        </button>
+                        <span className="presale-quantity-value">{packs}</span>
+                        <button
+                          type="button"
+                          aria-label={`Increase ${label} quantity for ${item.name}`}
+                          disabled={maxPacks !== undefined && packs >= maxPacks}
+                          onClick={() => onChange(variant.id, packs + 1)}
+                        >
+                          +
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              {availableUnits !== undefined && (
+                <p className="presale-hint">{Math.max(availableUnits - selectedUnits, 0)} cookies remaining</p>
+              )}
+            </article>
+          );
+        })}
+      </div>
+    );
   }
 
   return (
     <div className="presale-step">
-      <h2>Choose Your Cookies</h2>
-      <p className="presale-hint">Cookies are sold by the dozen&mdash;select quantities in multiples of 6.</p>
-      <div className="presale-design-grid">
-        {designs.map((design) => {
-          const left = remaining(design);
-          const soldOut = left !== undefined && left < QUANTITY_STEP;
-          const qty = selections[design.id] ?? 0;
-          return (
-            <div key={design.id} className={`presale-design-card${soldOut ? ' sold-out' : ''}`}>
-              {design.imageUrls[0] && (
-                <img className="presale-design-image" src={design.imageUrls[0]} alt={design.name} />
-              )}
-              <h3>{design.name}</h3>
-              <p className="presale-design-price">{formatCents(design.basePrice)} / cookie</p>
-              {soldOut ? (
-                <p className="presale-sold-out-label">Sold Out</p>
-              ) : (
-                <div className="presale-quantity-stepper">
-                  <button
-                    type="button"
-                    aria-label={`Decrease quantity for ${design.name}`}
-                    disabled={qty <= 0}
-                    onClick={() => step(design, -1)}
-                  >
-                    &minus;
-                  </button>
-                  <span className="presale-quantity-value">{qty}</span>
-                  <button type="button" aria-label={`Increase quantity for ${design.name}`} onClick={() => step(design, 1)}>
-                    +
-                  </button>
-                </div>
-              )}
-              {left !== undefined && !soldOut && <p className="presale-hint">{left} left</p>}
-            </div>
-          );
-        })}
-      </div>
+      <h2>Choose Your Packs</h2>
+      <p className="presale-hint">Choose a pack size and quantity for each item.</p>
+      {categories.map((category) => (
+        <section className="presale-menu-category" key={category.id}>
+          <h3>{category.name}</h3>
+          {category.description && <p>{category.description}</p>}
+          {renderItems(category.items)}
+        </section>
+      ))}
+      {uncategorizedItems.length > 0 && (
+        <section className="presale-menu-category">
+          <h3>More Treats</h3>
+          {renderItems(uncategorizedItems)}
+        </section>
+      )}
       <div className="presale-actions">
-        <p className="presale-total-cookies">Total: {totalCookies} cookies</p>
-        <button type="button" className="presale-primary-button" disabled={!canContinue} onClick={onContinue}>
+        <p className="presale-total-cookies">Total: {packCount} packs</p>
+        <button type="button" className="presale-primary-button" disabled={packCount === 0} onClick={onContinue}>
           Continue to Packaging
         </button>
       </div>

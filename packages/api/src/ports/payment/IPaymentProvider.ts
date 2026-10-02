@@ -2,6 +2,9 @@ export interface CreatePaymentIntentParams {
   amount: number;
   currency: string;
   orderId: string;
+  description?: string;
+  metadata?: Record<string, string>;
+  receiptEmail?: string;
 }
 
 export interface PaymentIntentResult {

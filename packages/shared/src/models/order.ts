@@ -22,6 +22,7 @@ export interface Order {
   guestPhone?: string;
   type: OrderType;
   status: OrderStatus;
+  preSaleEventId?: string;
   pickupDate: string;
   subtotal: number;
   tax: number;
@@ -41,7 +42,15 @@ export interface OrderItem {
   icingOptionId?: string;
   customDesignImageUrl?: string;
   colorSelection?: string;
+  /** Pre-Sale pack purchased (snapshot taken at order time). */
+  variantId?: string;
+  itemName?: string;
+  variantLabel?: string;
+  /** Cookies per pack; absent on legacy per-cookie rows (treat as 1). */
+  packSize?: number;
+  /** Number of packs (or individual cookies on legacy rows). */
   quantity: number;
+  /** Price of one pack (or one cookie on legacy rows), integer cents. */
   unitPrice: number;
   lineTotal: number;
 }
@@ -49,7 +58,8 @@ export interface OrderItem {
 export interface OrderPackaging {
   id: string;
   orderId: string;
-  packagingOptionId: string;
+  /** Absent when the customer chose only add-ons (no box). */
+  packagingOptionId?: string;
   addOnOptionIds: string[];
   quantity: number;
   price: number;
@@ -81,7 +91,7 @@ export interface PaymentTransaction {
 export interface PresaleOrderCreateResult {
   order: Order;
   items: OrderItem[];
-  packaging: OrderPackaging;
+  packaging: OrderPackaging | null;
   stripeClientSecret: string;
 }
 

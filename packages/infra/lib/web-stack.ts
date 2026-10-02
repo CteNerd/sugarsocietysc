@@ -27,6 +27,13 @@ export class WebStack extends Stack {
       encryption: s3.BucketEncryption.S3_MANAGED,
       removalPolicy: envConfig.envName === 'prod' ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
       autoDeleteObjects: envConfig.envName !== 'prod',
+      cors: [{
+        allowedMethods: [s3.HttpMethods.GET, s3.HttpMethods.HEAD, s3.HttpMethods.PUT],
+        allowedOrigins: [`https://${envConfig.domainName}`, 'http://localhost:3000'],
+        allowedHeaders: ['content-type'],
+        exposedHeaders: ['ETag'],
+        maxAge: 3600,
+      }],
     });
 
     const certificate = acm.Certificate.fromCertificateArn(this, 'WebCertificate', envConfig.certificateArn);
