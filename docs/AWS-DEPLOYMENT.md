@@ -71,6 +71,16 @@ distribution (with its own WAF Web ACL) in front of the HTTP API instead of call
 endpoint directly — that change affects the public API URL and requires re-registering the Stripe
 webhook endpoint.
 
+### API default stage logical IDs
+
+The deployed API stacks have different CloudFormation logical IDs for their `$default` stage:
+dev uses `HttpApiDefaultStage3EEB07D6`, while prod uses `HttpApiDefaultStage439BF176` because it was
+first deployed with a standalone `HttpStage`. `ApiStack` preserves the prod logical ID when
+configuring the built-in default stage. Keep this override: removing it makes CloudFormation try
+to create a second `$default` stage on the same API and fail early validation with "already exists".
+Do not delete the existing stage to work around this error; preserving its logical ID updates it
+in place and keeps the API URL and throttling settings unchanged.
+
 The workflow checks out code, installs dependencies, runs workspace type-check/tests/build, synthesizes
 the selected environment, assumes the role, deploys CDK, reads API/Cognito/Web outputs, builds the
 frontend with those values, syncs assets, invalidates CloudFront, and checks `/health`.
