@@ -13,7 +13,7 @@ export function contactRoutes(pool: Pool, config: AppConfig): Hono {
   const service = new ContactService(
     new ContactRepository(pool),
     createHumanVerificationProvider(config),
-    createContactQueue(config),
+    { enqueue: (submissionId) => createContactQueue(config).enqueue(submissionId) },
   );
 
   app.post('/', async (c) => {
