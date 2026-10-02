@@ -7,6 +7,7 @@ import { newsletterRoutes } from './domains/newsletter/newsletter-routes';
 import { catalogRoutes } from './domains/catalog/catalog-routes';
 import { ordersRoutes } from './domains/orders/orders-routes';
 import { webhooksStripeRoutes } from './domains/webhooks-stripe/webhooks-stripe-routes';
+import { contactRoutes } from './domains/contact/contact-routes';
 
 /**
  * Composition root: same `app` is wrapped by the Lambda adapter in production
@@ -22,6 +23,7 @@ export function createApp(): Hono {
   app.route('/newsletter', newsletterRoutes(pool, config));
   app.route('/catalog', catalogRoutes(pool, config));
   app.route('/orders', ordersRoutes(pool, config));
+  app.route('/contact', contactRoutes(pool, config));
   app.route('/webhooks/stripe', webhooksStripeRoutes(pool, config));
   return app;
 }

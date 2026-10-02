@@ -61,6 +61,7 @@ export class ApiStack extends Stack {
       UPLOADS_BUCKET_NAME: props.uploadsBucket.bucketName,
       UPLOADS_PUBLIC_BASE_URL: `https://${envConfig.domainName}`,
       GUEST_PII_RETENTION_DAYS: envConfig.guestPiiRetentionDays.toString(),
+      CONTACT_SUBMISSION_RETENTION_DAYS: '365',
       ADMIN_EMAILS: envConfig.adminEmails.join(','),
       ADMIN_EMAIL_DOMAIN: envConfig.adminEmailDomain,
       SMS_PROVIDER: 'sns',
@@ -152,7 +153,7 @@ export class ApiStack extends Stack {
     });
     props.cluster.secret?.grantRead(guestPiiRetentionFn);
     new events.Rule(this, 'GuestPiiRetentionSchedule', {
-      description: `Purge guest contact details after ${envConfig.guestPiiRetentionDays} days in terminal order states`,
+      description: `Purge terminal-order guest contact details after ${envConfig.guestPiiRetentionDays} days and contact submissions after 365 days`,
       schedule: events.Schedule.cron({ minute: '0', hour: '3' }),
       targets: [new targets.LambdaFunction(guestPiiRetentionFn)],
     });
@@ -179,7 +180,7 @@ export class ApiStack extends Stack {
     });
     inventoryHoldExpiryErrorsAlarm.addAlarmAction(alarmAction);
     const guestPiiRetentionErrorsAlarm = new cloudwatch.Alarm(this, 'GuestPiiRetentionErrorsAlarm', {
-      alarmDescription: 'Investigate failures in the scheduled guest-contact purge.',
+      alarmDescription: 'Investigate failures in scheduled guest-order and contact-submission retention.',
       metric: guestPiiRetentionFn.metricErrors({ period: Duration.minutes(5), statistic: 'Sum' }),
       threshold: 1,
       evaluationPeriods: 1,
@@ -205,6 +206,29 @@ export class ApiStack extends Stack {
     });
     props.cluster.secret?.grantRead(newsletterFn);
     newsletterQueue.grantSendMessages(newsletterFn);
+
+    const googleRecaptchaSecret = secretsmanager.Secret.fromSecretNameV2(
+      this,
+      'GoogleRecaptchaSecret',
+      `sugarsocietysc/${envConfig.envName}/google-recaptcha`,
+    );
+    const contactFn = new lambdaNode.NodejsFunction(this, 'ContactFn', {
+      entry: path.join(__dirname, '../../api/src/lambda.ts'),
+      handler: 'handler',
+      ...commonFnProps,
+      timeout: Duration.seconds(20),
+      logGroup: functionLogGroup('ContactFn'),
+      environment: {
+        ...commonEnv,
+        GOOGLE_RECAPTCHA_SECRET_ARN: googleRecaptchaSecret.secretArn,
+      },
+    });
+    props.cluster.secret?.grantRead(contactFn);
+    googleRecaptchaSecret.grantRead(contactFn);
+    contactFn.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['ses:SendEmail'],
+      resources: ['*'],
+    }));
 
     const newsletterWorkerFn = new lambdaNode.NodejsFunction(this, 'NewsletterWorkerFn', {
       entry: path.join(__dirname, '../../api/src/domains/newsletter/newsletter-worker.ts'),
@@ -345,6 +369,11 @@ export class ApiStack extends Stack {
       path: '/newsletter/subscribe',
       methods: [apigwv2.HttpMethod.POST],
       integration: new HttpLambdaIntegration('NewsletterSubscribeIntegration', newsletterFn),
+    });
+    this.httpApi.addRoutes({
+      path: '/contact',
+      methods: [apigwv2.HttpMethod.POST],
+      integration: new HttpLambdaIntegration('ContactIntegration', contactFn),
     });
     this.httpApi.addRoutes({
       path: '/newsletter/unsubscribe',

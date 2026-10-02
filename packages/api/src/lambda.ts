@@ -3,11 +3,12 @@ import type { LambdaEvent, LambdaContext } from 'hono/aws-lambda';
 import { createApp } from './app';
 import { resolveDatabaseUrl } from './config/db-secret';
 import { resolveStripeSecrets } from './config/stripe-secret';
+import { resolveGoogleRecaptchaSecret } from './config/google-recaptcha-secret';
 
 let handlerPromise: ReturnType<typeof buildHandler> | undefined;
 
 async function buildHandler() {
-  await Promise.all([resolveDatabaseUrl(), resolveStripeSecrets()]);
+  await Promise.all([resolveDatabaseUrl(), resolveStripeSecrets(), resolveGoogleRecaptchaSecret()]);
   return handle(createApp());
 }
 

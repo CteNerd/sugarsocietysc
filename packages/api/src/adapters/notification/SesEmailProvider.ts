@@ -11,11 +11,12 @@ export class SesEmailProvider implements IEmailProvider {
     this.client = new SESClient({ region });
   }
 
-  async send({ to, subject, html, text }: SendEmailParams): Promise<void> {
+  async send({ to, subject, html, text, replyTo }: SendEmailParams): Promise<void> {
     await this.client.send(
       new SendEmailCommand({
         Source: this.fromAddress,
-        Destination: { ToAddresses: [to] },
+        Destination: { ToAddresses: Array.isArray(to) ? to : [to] },
+        ReplyToAddresses: replyTo ? [replyTo] : undefined,
         Message: {
           Subject: { Data: subject },
           Body: { Html: { Data: html }, Text: { Data: text } },

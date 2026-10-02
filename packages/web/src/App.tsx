@@ -117,7 +117,8 @@ function App() {
               rel="noopener noreferrer"
               aria-label="Visit our Facebook page"
             >
-              {/* <FacebookOutlined /> */}
+              <span aria-hidden="true">f</span>
+              <span>Facebook</span>
             </a>
 
             <a
@@ -127,7 +128,8 @@ function App() {
               rel="noopener noreferrer"
               aria-label="Visit our Instagram page"
             >
-              {/* <InstagramOutlined /> */}
+              <span aria-hidden="true">◎</span>
+              <span>Instagram</span>
             </a>
             <a
               className="social-link"
@@ -136,7 +138,8 @@ function App() {
               rel="noopener noreferrer"
               aria-label="Visit our Google Business page"
             >
-              {/* <GoogleOutlined /> */}
+              <span aria-hidden="true">G</span>
+              <span>Google Business</span>
             </a>
           </div>
           <div className="footer-link-container">
@@ -149,7 +152,7 @@ function App() {
           </div>
           <div className="footer-link-container">
             <p className="footer-copyright">
-              © 2025 Sugar Society Sugar Cookies | A Black-owned business in Rosharon, TX serving the greater
+              © {new Date().getFullYear()} Sugar Society Sugar Cookies | A Black-owned business in Rosharon, TX serving the greater
               Houston area
             </p>
           </div>

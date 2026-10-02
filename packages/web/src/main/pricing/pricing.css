@@ -14,23 +14,19 @@
 }
 
 .pricing-table-row {
-  font-family: LemonMilk;
   font-size: smaller;
 }
 
 .pricing-table-item {
-  font-family: Cream;
   float: left;
 }
 
 .pricing-table-price {
-  font-family: Cream;
   float: right;
 }
 
 /* Tooltip text */
 .tooltip .tooltiptext {
-  font-family: Cream;
   visibility: hidden;
   width: 120px;
   background-color: black;

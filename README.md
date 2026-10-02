@@ -43,8 +43,10 @@ Privacy Policy remains in the footer. The mobile drawer supports keyboard focus 
 Escape/backdrop dismissal, background scroll locking, and focus restoration.
 
 Pack quantity controls use explicit contrasting symbols and 44px touch targets. Responsive page
-gutters, cards, checkout summaries, account/admin forms, newsletter signup, and embedded form wrappers
-fit narrow screens without the former large header gap. Existing branding and content are retained.
+gutters, cards, checkout summaries, account/admin forms, newsletter signup, and the first-party
+Contact form fit narrow screens. Contact submissions are emailed to the business inboxes and purged
+from the database after one year. Ordinary text, navigation, and controls share one sans-serif font;
+selected decorative headings retain their display fonts.
 
 The auth provider shares an API-backed profile/role with navigation, Account, and the admin guard.
 Existing profiles reconcile role eligibility on session restoration, token refresh, and admin API
@@ -74,6 +76,11 @@ This single command starts:
 
 LocalStack creates the `local-uploads` S3 bucket and configures browser CORS on startup for menu-image uploads.
 No AWS account is required for day-to-day feature work.
+
+To test the Contact form locally, register a Google reCAPTCHA v2 checkbox key for `localhost` and set
+`REACT_APP_RECAPTCHA_SITE_KEY` and `GOOGLE_RECAPTCHA_SECRET` in `.env.local`. See
+[Google reCAPTCHA setup](docs/AWS-DEPLOYMENT.md#google-recaptcha-for-the-contact-form) for Google
+registration and deployed secret configuration steps.
 
 ### Other useful commands
 ```bash

@@ -20,12 +20,33 @@ restrict `dev` to the branches your team intends to deploy.
 | `STRIPE_PUBLISHABLE_KEY` | Stripe publishable key for the matching environment; this is public frontend configuration, not a secret. |
 | `NEWSLETTER_FROM_EMAIL` | SES-verified sender address for campaign email in the matching AWS account/region. |
 | `NEWSLETTER_SIGNATURE` | Standard email signature displayed below admin-composed campaign text; defaults to the business name if omitted. |
+| `RECAPTCHA_SITE_KEY` | Public Google reCAPTCHA v2 checkbox site key for the matching environment's website domain. |
 
 No long-lived AWS access key is needed in GitHub, and the workflow needs no GitHub Actions secrets:
 it requests short-lived credentials through GitHub OIDC. Keep Stripe secret/webhook keys, Google OAuth
 client secret, and database credentials in AWS Secrets Manager, not GitHub Actions or source control.
 Cognito, API, bucket, and distribution values are read from deployed CloudFormation outputs by the
 workflow.
+
+## Google reCAPTCHA for the Contact form
+
+1. Open the [Google reCAPTCHA Admin Console](https://www.google.com/recaptcha/admin/create) and register
+   a site using **Challenge (v2)** → **"I'm not a robot" Checkbox**.
+2. Add the exact website host for each environment to its allowed domains. Add `localhost` for local
+   development. Google provides a public **site key** and a private **secret key**.
+3. Set the public site key as the `RECAPTCHA_SITE_KEY` variable in each matching GitHub Environment.
+   The deploy workflow exposes it only to the frontend build as `REACT_APP_RECAPTCHA_SITE_KEY`.
+4. Store the private key in the SecretString of an AWS Secrets Manager secret named
+   `sugarsocietysc/dev/google-recaptcha` or `sugarsocietysc/prod/google-recaptcha`, formatted as JSON:
+   `{ "secretKey": "<Google reCAPTCHA secret key>" }`. The API Contact Lambda reads the `secretKey`
+   value; do not put the private key in GitHub variables or frontend configuration.
+5. For local development, put `REACT_APP_RECAPTCHA_SITE_KEY` and `GOOGLE_RECAPTCHA_SECRET` in the
+   root `.env.local` file. Use a test key pair or a site key registered for `localhost`. Restart the
+   web and API dev servers after changing the file.
+
+Contact requests are stored in the database, emailed to the two Sugar Society contact addresses, and
+purged from the database after 365 days by the existing daily contact-retention schedule. The email
+sender uses the environment's SES-verified `NEWSLETTER_FROM_EMAIL`.
 
 ## AWS OIDC and CDK bootstrap
 
@@ -55,7 +76,7 @@ Before the first workflow run, an AWS administrator must:
 5. Confirm the imported ACM certificate is issued in `us-east-1`, covers the environment's configured
    web domain, and is valid. DNS remains externally managed.
 
-CloudWatch alarms (API 5xxs, inventory-hold-expiry errors, the guest-contact purge, newsletter worker
+CloudWatch alarms (API 5xxs, inventory-hold-expiry errors, guest-order and contact-submission purges, newsletter worker
 errors, and the newsletter DLQ) publish to a per-environment SNS topic
 (`sugarsocietysc-<env>-alarms`), which emails `environments.<env>.alertEmail` from `cdk.json`. AWS
 sends a confirmation email to that address on first deploy — someone must click it before

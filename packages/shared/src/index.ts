@@ -8,3 +8,4 @@ export * from './schemas/order-schemas';
 export * from './schemas/auth-schemas';
 export * from './schemas/catalog-schemas';
 export * from './schemas/presale-order-schemas';
+export * from './schemas/contact-schemas';
