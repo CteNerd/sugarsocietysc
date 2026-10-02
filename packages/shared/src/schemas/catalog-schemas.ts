@@ -33,7 +33,10 @@ export type CreateCookieDesignRequest = z.infer<typeof createCookieDesignSchema>
 export const updateCookieDesignSchema = createCookieDesignSchema
   .omit({ preSaleEventId: true })
   .partial()
-  .extend({ preSaleEventId: z.string().uuid().optional() });
+  .extend({
+    preSaleEventId: z.string().uuid().optional(),
+    maxQuantity: z.number().int().positive().nullable().optional(),
+  });
 export type UpdateCookieDesignRequest = z.infer<typeof updateCookieDesignSchema>;
 
 /** Admin-only: a menu section within one event (e.g. "Teacher Gifts"). */

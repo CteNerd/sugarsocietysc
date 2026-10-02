@@ -63,6 +63,18 @@ export class CatalogService {
     return event ? this.getEventMenu(event.id, now) : undefined;
   }
 
+  async getActivePreSaleSnapshot(): Promise<ActivePreSaleSnapshot | undefined> {
+    const event = await this.repository.getFirstOpenPreSaleEvent();
+    if (!event) {
+      return undefined;
+    }
+    const [designs, packagingOptions] = await Promise.all([
+      this.repository.listCookieDesignsForEvent(event.id),
+      this.repository.listPackagingOptionsForEvent(event.id, true),
+    ]);
+    return { event, designs, packagingOptions };
+  }
+
   // --- Admin: Pre-Sale events ---
 
   listAllPreSaleEvents(): Promise<PreSaleEvent[]> {
@@ -93,12 +105,13 @@ export class CatalogService {
   }
 
   async updateCookieDesign(id: string, input: UpdateCookieDesignRequest): Promise<CookieDesign> {
-    if (input.categoryId) {
+    if (input.categoryId !== undefined || input.preSaleEventId !== undefined) {
       const existing = await this.repository.getCookieDesignById(id);
       if (!existing) {
         throw new CatalogError('Cookie design not found');
       }
-      await this.assertCategoryBelongsToEvent(input.categoryId, input.preSaleEventId ?? existing.preSaleEventId);
+      const categoryId = input.categoryId !== undefined ? input.categoryId : existing.categoryId;
+      await this.assertCategoryBelongsToEvent(categoryId, input.preSaleEventId ?? existing.preSaleEventId);
     }
     const design = await this.repository.updateCookieDesign(id, input);
     if (!design) {
@@ -196,7 +209,13 @@ export class CatalogService {
 
 /** Groups an event's items under their categories and attaches active pack variants. Items with no
  * active variant are not purchasable and are omitted; empty categories are omitted too. */
-export function buildEventMenu(
+export interface ActivePreSaleSnapshot {
+  event: PreSaleEvent;
+  designs: CookieDesign[];
+  packagingOptions: PackagingOption[];
+}
+
+function buildEventMenu(
   event: PreSaleEventSummary,
   categories: MenuCategory[],
   designs: CookieDesign[],

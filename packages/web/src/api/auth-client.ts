@@ -6,6 +6,8 @@ export interface SyncProfileInput {
   firstName: string;
   lastName: string;
   phone: string;
+  newsletterOptInEmail?: boolean;
+  newsletterOptInSms?: boolean;
 }
 
 async function parseJson(res: Response) {

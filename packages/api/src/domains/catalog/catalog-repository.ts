@@ -507,7 +507,7 @@ export class CatalogRepository {
          image_urls = COALESCE($3, image_urls),
          pre_sale_event_id = COALESCE($4, pre_sale_event_id),
          colors = COALESCE($5, colors),
-         max_quantity = COALESCE($6, max_quantity),
+         max_quantity = CASE WHEN $12::boolean THEN $13::integer ELSE max_quantity END,
          is_active = COALESCE($7, is_active),
          description = COALESCE($8, description),
          sort_order = COALESCE($9, sort_order),
@@ -526,6 +526,8 @@ export class CatalogRepository {
         input.sortOrder ?? null,
         input.categoryId !== undefined,
         input.categoryId ?? null,
+        input.maxQuantity !== undefined,
+        input.maxQuantity ?? null,
       ],
     );
     return result.rows[0] ? toCookieDesign(result.rows[0]) : undefined;

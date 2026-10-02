@@ -49,11 +49,11 @@ export function catalogRoutes(pool: Pool, config: AppConfig): Hono<{ Variables: 
   });
 
   app.get('/presale/active', async (c) => {
-    const menu = await service.getFirstOpenEventMenu();
-    if (!menu) {
+    const snapshot = await service.getActivePreSaleSnapshot();
+    if (!snapshot) {
       return c.json({ error: 'No Pre-Sale event is currently open' }, 404);
     }
-    return c.json(menu, 200);
+    return c.json(snapshot, 200);
   });
 
   app.get('/presale/events/:id', async (c) => {

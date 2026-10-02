@@ -11,6 +11,8 @@ import { IPaymentProvider, PaymentIntentResult } from '../../ports/payment/IPaym
 import { CatalogRepository } from '../catalog/catalog-repository';
 import { OrdersRepository } from './orders-repository';
 
+const MAX_DATABASE_INTEGER = 2_147_483_647;
+
 export class OrdersError extends Error {
   constructor(
     message: string,
@@ -148,12 +150,15 @@ export class OrdersService {
     const packagingPrice =
       (packagingOption?.price ?? 0) + addOnOptions.reduce((sum, option) => sum + (option?.price ?? 0), 0);
     const subtotal = itemsWithPricing.reduce((sum, item) => sum + item.lineTotal, 0) + packagingPrice;
-    if (!Number.isSafeInteger(subtotal) || subtotal <= 0) {
-      throw new OrdersError('Order total must be greater than zero', 400);
+    if (!Number.isSafeInteger(subtotal) || subtotal <= 0 || subtotal > MAX_DATABASE_INTEGER) {
+      throw new OrdersError('Order total must be between 1 and 2,147,483,647 cents', 400);
     }
     const tax = 0;
     const depositAmount = Math.round((subtotal * event.depositPercent) / 100);
     const total = subtotal + tax;
+    if (depositAmount > MAX_DATABASE_INTEGER || total > MAX_DATABASE_INTEGER) {
+      throw new OrdersError('Order total exceeds the supported amount', 400);
+    }
 
     const { order, items, packaging } = await this.repository.withTransaction(async (client) => {
       const createdOrder = await this.repository.createOrder(client, {

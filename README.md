@@ -47,6 +47,7 @@ This single command starts:
 - The API dev server (`packages/api`, hot reload) on `http://localhost:3001`
 - The CRA frontend dev server (`packages/web`) on `http://localhost:3000`
 
+LocalStack creates the `local-uploads` S3 bucket and configures browser CORS on startup for menu-image uploads.
 No AWS account is required for day-to-day feature work.
 
 ### Other useful commands

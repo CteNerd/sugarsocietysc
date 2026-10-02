@@ -10,6 +10,7 @@ export interface AppConfig {
   storageProvider: 's3';
   uploadsBucketName: string;
   uploadsPublicBaseUrl: string;
+  awsEndpointUrl?: string;
   stripeSecretKey: string;
   stripeWebhookSecret: string;
   guestPiiRetentionDays: number;
@@ -48,6 +49,7 @@ export function loadConfig(): AppConfig {
     storageProvider: 's3',
     uploadsBucketName: requireEnv('UPLOADS_BUCKET_NAME', 'local-uploads'),
     uploadsPublicBaseUrl: requireEnv('UPLOADS_PUBLIC_BASE_URL', 'http://localhost:4566/local-uploads'),
+    awsEndpointUrl: process.env.AWS_ENDPOINT_URL,
     stripeSecretKey: requireEnv('STRIPE_SECRET_KEY', 'sk_test_placeholder'),
     stripeWebhookSecret: requireEnv('STRIPE_WEBHOOK_SECRET', 'whsec_placeholder'),
     guestPiiRetentionDays,

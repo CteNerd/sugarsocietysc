@@ -272,6 +272,30 @@ describe('OrdersService.createPresaleOrder', () => {
     expect(createOrderPackaging).not.toHaveBeenCalled();
   });
 
+  it('rejects order totals that exceed the database integer range before inserting', async () => {
+    const createOrder = vi.fn();
+    const items = Array.from({ length: 22 }, (_, index) => ({
+      variantId: `variant-${index}`,
+      packs: 100,
+    }));
+    const variants = items.map(({ variantId }) => ({
+      variant: fakeVariant({ id: variantId, priceCents: 1_000_000 }),
+      item: fakeDesign(),
+    }));
+    const service = new OrdersService(
+      fakeOrdersRepository({ createOrder: createOrder as never }),
+      fakeCatalogRepository({ getVariantsWithItems: async () => variants }),
+      fakePaymentProvider(),
+    );
+
+    await expect(service.createPresaleOrder(claims, {
+      preSaleEventId: 'event-1',
+      items,
+      addOnOptionIds: [],
+    })).rejects.toMatchObject({ statusCode: 400 });
+    expect(createOrder).not.toHaveBeenCalled();
+  });
+
   it('fails the order when stock reservation fails', async () => {
     const service = new OrdersService(
       fakeOrdersRepository(),

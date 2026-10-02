@@ -39,8 +39,8 @@ export default function QuantityStep({
                 const otherUnits = selectedUnits - packs * variant.packSize;
                 const maxPacks =
                   availableUnits === undefined
-                    ? undefined
-                    : Math.max(0, Math.floor((availableUnits - otherUnits) / variant.packSize));
+                    ? 100
+                    : Math.min(100, Math.max(0, Math.floor((availableUnits - otherUnits) / variant.packSize)));
                 const soldOut = maxPacks === 0;
                 const label = variant.label ?? `${variant.packSize} pack`;
                 return (
@@ -65,7 +65,7 @@ export default function QuantityStep({
                         <button
                           type="button"
                           aria-label={`Increase ${label} quantity for ${item.name}`}
-                          disabled={maxPacks !== undefined && packs >= maxPacks}
+                          disabled={packs >= maxPacks}
                           onClick={() => onChange(variant.id, packs + 1)}
                         >
                           +

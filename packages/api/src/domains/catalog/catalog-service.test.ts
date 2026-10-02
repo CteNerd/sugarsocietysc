@@ -5,9 +5,10 @@ import {
   MenuItemVariant,
   PackagingOption,
   PreSaleEvent,
+  updateCookieDesignSchema,
 } from '@sugarsocietysc/shared';
 import { CatalogRepository } from './catalog-repository';
-import { CatalogError, CatalogService } from './catalog-service';
+import { CatalogError, CatalogService, CatalogValidationError } from './catalog-service';
 
 function fakeEvent(overrides: Partial<PreSaleEvent> = {}): PreSaleEvent {
   return {
@@ -78,6 +79,9 @@ function fakeRepository(overrides: Partial<CatalogRepository> = {}): CatalogRepo
     listPublicPreSaleEvents: async () => [fakeEvent()],
     getFirstOpenPreSaleEvent: async () => fakeEvent(),
     getPreSaleEventById: async () => fakeEvent(),
+    getCookieDesignById: async () => fakeDesign(),
+    getCategoryById: async () => fakeCategory(),
+    listAllPackagingOptions: async () => [fakePackaging()],
     listActiveCategoriesForEvent: async () => [fakeCategory()],
     listCookieDesignsForEvent: async () => [fakeDesign()],
     listActiveVariantsForEvent: async () => [fakeVariant()],
@@ -122,6 +126,30 @@ describe('CatalogService', () => {
     const service = new CatalogService(fakeRepository());
 
     expect((await service.getFirstOpenEventMenu(new Date('2026-10-02T00:00:00Z')))?.event.id).toBe('event-1');
+  });
+
+  it('keeps the legacy active Pre-Sale response shape', async () => {
+    const service = new CatalogService(fakeRepository());
+
+    const snapshot = await service.getActivePreSaleSnapshot();
+
+    expect(snapshot).toEqual({
+      event: fakeEvent(),
+      designs: [fakeDesign()],
+      packagingOptions: [fakePackaging()],
+    });
+    expect(snapshot?.event).not.toHaveProperty('status');
+  });
+
+  it('rejects moving an item when its existing category belongs to another event', async () => {
+    const service = new CatalogService(fakeRepository());
+
+    await expect(service.updateCookieDesign('design-1', { preSaleEventId: 'event-2' }))
+      .rejects.toThrow(CatalogValidationError);
+  });
+
+  it('accepts an explicit null to clear the menu item inventory cap', () => {
+    expect(updateCookieDesignSchema.parse({ maxQuantity: null })).toEqual({ maxQuantity: null });
   });
 
   it('throws when updating a Pre-Sale event that does not exist', async () => {

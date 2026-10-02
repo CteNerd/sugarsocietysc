@@ -1,4 +1,4 @@
-import React, { FormEvent, useEffect, useState } from 'react';
+import React, { FormEvent, useEffect, useRef, useState } from 'react';
 import {
   CookieDesign,
   MenuCategory,
@@ -48,34 +48,86 @@ export default function MenuManagement({ idToken, events, packaging, onChanged }
   const [designs, setDesigns] = useState<CookieDesign[]>([]);
   const [variants, setVariants] = useState<MenuItemVariant[]>([]);
   const [assignedPackaging, setAssignedPackaging] = useState<string[]>([]);
+  const [loadedEventId, setLoadedEventId] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const currentEventId = useRef('');
+  const loadRequestId = useRef(0);
 
   useEffect(() => {
-    if (!eventId && events.length > 0) setEventId(events[0].id);
-    if (eventId && !events.some((event) => event.id === eventId)) setEventId(events[0]?.id ?? '');
+    if (!eventId && events.length > 0) selectEvent(events[0].id);
+    if (eventId && !events.some((event) => event.id === eventId)) selectEvent(events[0]?.id ?? '');
   }, [eventId, events]);
 
   async function reload() {
     if (!idToken || !eventId) return;
+    const requestId = ++loadRequestId.current;
+    const requestedEventId = eventId;
     const [nextCategories, nextDesigns, nextVariants, nextPackaging] = await Promise.all([
-      listMenuCategories(idToken, eventId),
-      listCookieDesigns(idToken, eventId),
-      listMenuVariants(idToken, eventId),
-      listEventPackaging(idToken, eventId),
+      listMenuCategories(idToken, requestedEventId),
+      listCookieDesigns(idToken, requestedEventId),
+      listMenuVariants(idToken, requestedEventId),
+      listEventPackaging(idToken, requestedEventId),
     ]);
+    if (requestId !== loadRequestId.current || currentEventId.current !== requestedEventId) return;
     setCategories(nextCategories);
     setDesigns(nextDesigns);
     setVariants(nextVariants);
     setAssignedPackaging(nextPackaging.map((option) => option.id));
+    setLoadedEventId(requestedEventId);
   }
 
   useEffect(() => {
+    const requestedEventId = eventId;
+    const requestId = ++loadRequestId.current;
+    let cancelled = false;
+    setLoadedEventId('');
+    setCategories([]);
+    setDesigns([]);
+    setVariants([]);
+    setAssignedPackaging([]);
     setError(null);
-    reload().catch((err: unknown) => setError(err instanceof Error ? err.message : 'Could not load event menu'));
+    if (idToken && requestedEventId) {
+      Promise.all([
+        listMenuCategories(idToken, requestedEventId),
+        listCookieDesigns(idToken, requestedEventId),
+        listMenuVariants(idToken, requestedEventId),
+        listEventPackaging(idToken, requestedEventId),
+      ]).then(([nextCategories, nextDesigns, nextVariants, nextPackaging]) => {
+        if (cancelled || requestId !== loadRequestId.current || currentEventId.current !== requestedEventId) return;
+        setCategories(nextCategories);
+        setDesigns(nextDesigns);
+        setVariants(nextVariants);
+        setAssignedPackaging(nextPackaging.map((option) => option.id));
+        setLoadedEventId(requestedEventId);
+      }).catch((err: unknown) => {
+        if (
+          !cancelled &&
+          requestId === loadRequestId.current &&
+          currentEventId.current === requestedEventId
+        ) {
+          setError(err instanceof Error ? err.message : 'Could not load event menu');
+        }
+      });
+    }
+    return () => {
+      cancelled = true;
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId, idToken]);
+
+  function selectEvent(nextEventId: string) {
+    currentEventId.current = nextEventId;
+    setEventId(nextEventId);
+    setLoadedEventId('');
+    setCategories([]);
+    setDesigns([]);
+    setVariants([]);
+    setAssignedPackaging([]);
+    setError(null);
+    setNotice(null);
+  }
 
   async function runAction(action: () => Promise<void>, success: string, form?: HTMLFormElement) {
     setSaving(true);
@@ -135,13 +187,14 @@ export default function MenuManagement({ idToken, events, packaging, onChanged }
       {notice && <p className="auth-message" role="status">{notice}</p>}
       <label>
         Pre-Sale event
-        <select value={eventId} onChange={(event) => setEventId(event.target.value)} disabled={events.length === 0}>
+        <select value={eventId} onChange={(event) => selectEvent(event.target.value)} disabled={events.length === 0}>
           <option value="" disabled>Select an event</option>
           {events.map((event) => <option key={event.id} value={event.id}>{event.name}</option>)}
         </select>
       </label>
 
-      {selectedEvent && (
+      {selectedEvent && loadedEventId !== eventId && <p role="status">Loading event menu…</p>}
+      {selectedEvent && loadedEventId === eventId && (
         <>
           <section>
             <h3>Categories</h3>
@@ -239,7 +292,7 @@ export default function MenuManagement({ idToken, events, packaging, onChanged }
                       categoryId: formText(form, 'categoryId') || null,
                       sortOrder: Number(formText(form, 'sortOrder') || 0),
                       colors: formText(form, 'colors').split(',').map((color) => color.trim()).filter(Boolean),
-                      maxQuantity: maxQuantity ? Number(maxQuantity) : undefined,
+                      maxQuantity: maxQuantity ? Number(maxQuantity) : null,
                       isActive: checked(form, 'isActive'),
                     });
                   }, 'Menu item updated.')}>
