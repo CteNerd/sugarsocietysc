@@ -13,10 +13,12 @@
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
+    "test:smoke": "playwright test",
     "migrate": "npm run migrate --workspace=@sugarsocietysc/api",
     "cdk": "npm run cdk --workspace=@sugarsocietysc/infra"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
     "concurrently": "^9.1.2",
     "dotenv": "^16.4.5"
   }

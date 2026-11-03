@@ -57,6 +57,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run test --workspace=@sugarsocietysc/web -- --watchAll=false --runInBand
+      - name: Validate deployed smoke test discovery
+        run: npm run test:smoke -- --list
+        env:
+          SMOKE_WEB_URL: https://web.example.invalid
+          SMOKE_API_URL: https://api.example.invalid
       - run: npm run build --workspace=@sugarsocietysc/web
 
   release:

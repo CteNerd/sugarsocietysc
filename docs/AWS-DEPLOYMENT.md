@@ -118,13 +118,55 @@ build. A failed, skipped, or cancelled job fails the release gate and blocks the
 After validation, the deployment job synthesizes the selected environment once, validates settings,
 assumes the role, checks rollout prerequisites, and deploys that exact cloud assembly. It requires
 nonempty API/Cognito/Web outputs and a successful migration response, checks `/health` before frontend
-publication, builds the frontend with deployed values, syncs assets, invalidates CloudFront, and
-checks health again. HTTP smoke tests and job durations are bounded; production environment approval
+publication, builds the frontend with deployed values, syncs assets, waits for CloudFront invalidation,
+and runs health plus deployed API/browser smoke tests. HTTP smoke tests and job durations are bounded; production environment approval
 is still required independently of CI success.
+
+### Deployed-environment smoke tests
+
+The [Deployed smoke tests workflow](../.github/workflows/deployed-smoke.yml) is called after successful
+deployment and can also be dispatched manually with `web_url` and `api_url` HTTPS origins to test
+already deployed code without changing AWS resources. When newly adding a workflow on a PR branch,
+GitHub may not offer manual dispatch until it exists on the default branch; the local command below
+works before merge. The workflow uses no AWS credentials or test accounts.
+
+```bash
+npx playwright install chromium
+SMOKE_WEB_URL=https://dev.sugarsocietysc.com \
+SMOKE_API_URL=https://YOUR_API.execute-api.us-east-1.amazonaws.com \
+npm run test:smoke
+```
+
+Both URLs are required and validated; there is no implicit production target. Ten checks cover:
+
+- Actual database connectivity via `/health`, public event listing and a detail read when events exist,
+  invalid identifier handling, and anonymous admin catalog rejection.
+- Desktop and mobile Chromium: home rendering, navigation to the contact form, SPA deep links,
+  anonymous admin-to-login redirect, and pre-sale rendering with the **expected real API**, not mocks.
+- Empty catalogs are valid and reported, not seeded automatically. They do not prove menu or checkout
+  readiness. Browser navigation waits for DOM readiness and asserts application content instead of
+  waiting for unrelated external images to finish loading.
+
+Tests make only read requests; browser writes are blocked and fail the suite. They do not log in,
+create users/orders, reserve inventory, submit contact/newsletter forms, or trigger payment/webhook
+or message delivery. Authenticated admin parity, Stripe test-mode checkout/refunds, Scheduler
+delivery, privacy purges, alarm delivery and pause/resume behavior still need separately approved
+fixtures and acceptance checks. Mobile coverage emulates a phone in Chromium, not real iOS/Safari.
+
+The smoke job has a ten-minute timeout, the suite a five-minute deadline, and no automatic retries.
+A failure makes the deployment workflow fail **after publication**; this is detection, not automatic
+rollback. Inspect the uploaded HTML report, failure screenshots and traces (seven-day retention)
+before deciding whether to fix forward or use the rollback procedure.
 
 ## Lean Data API rollout
 
-The implementation is **not an AWS deployment**. The operating target is AWS-only hosting, one
+The November 3 dev deployment of `abeb0f74` completed migrations and frontend publication. Read-only
+assessment confirmed all 13 API stack Lambdas use Data API without VPC attachment, Aurora PostgreSQL
+16.13 has its HTTP endpoint enabled with 0.5-2 ACU capacity, polling remains enabled, and dev NAT is
+retained. Database health and an empty public catalog succeeded. This does not certify checkout,
+scheduled expiration, pause/resume or production rollout.
+
+The operating target is AWS-only hosting, one
 persistent production environment, local `pg` development, and temporary staging. Keep PostgreSQL
 repositories and SQL transactions; only the transport changes in AWS. All live changes below need
 explicit operator approval.

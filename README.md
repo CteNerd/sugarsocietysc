@@ -113,6 +113,12 @@ and should require GitHub Environment approval. Configure environment-specific G
 AWS OIDC/CDK bootstrap first. See [docs/AWS-DEPLOYMENT.md](docs/AWS-DEPLOYMENT.md)
 for the exact setup and rollback/cutover checklist. Runtime credentials remain in AWS Secrets Manager.
 
+After publication and completed CloudFront invalidation, deployment must also pass read-only
+[deployed smoke tests](.github/workflows/deployed-smoke.yml): real database health/catalog reads,
+anonymous admin rejection, and desktop/mobile Chromium navigation, catalog rendering and login
+redirects. Reports and failure screenshots/traces are retained for seven days. The same workflow can
+test an existing environment without redeploying; see [commands and coverage limits](docs/AWS-DEPLOYMENT.md#deployed-environment-smoke-tests).
+
 API Lambdas share the app composition root but receive domain-specific configuration and IAM grants.
 Contact queue initialization is deferred until notification delivery is requested, like newsletter
 queue initialization, so `/health` and other domains do not require `CONTACT_QUEUE_URL` or contact
@@ -133,8 +139,10 @@ a one-time EventBridge Scheduler event. Hourly reconciliation recovers missed sc
 holds; timestamps and row locks remain authoritative. Payment finalization compares cookie quantities
 (`packs * pack_size`), rather than comparing packs to reserved cookies.
 
-**Implemented, not deployed:** the default CDK rollout keeps five-minute polling, 0.5 minimum ACU,
-and one NAT per environment. Scheduled mode and zero-ACU pause are explicit follow-up configuration
+**Staging transport deployed; production rollout pending:** the November 3 dev deployment of
+`abeb0f74` enabled Data API and removed API Lambda VPC attachments. Read-only staging checks confirmed
+database health and catalog access. Five-minute polling, 0.5 minimum ACU, and one NAT remain in dev.
+Scheduled mode and zero-ACU pause are explicit follow-up configuration
 changes; the deployment workflow refuses scheduled mode until the existing migration Lambda confirms
 the expiry-task table exists. NAT removal is a separately approved Network-only update after
 non-VPC runtime verification. Managed secrets, privacy purges, backups, deletion protection, WAF,

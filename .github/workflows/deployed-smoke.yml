@@ -1,0 +1,52 @@
+name: Deployed smoke tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      web_url:
+        description: Deployed HTTPS frontend origin
+        required: true
+        type: string
+      api_url:
+        description: Deployed HTTPS API origin
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      web_url:
+        required: true
+        type: string
+      api_url:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Read-only deployed API and browser checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CI: 'true'
+      SMOKE_WEB_URL: ${{ inputs.web_url }}
+      SMOKE_API_URL: ${{ inputs.api_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:smoke
+      - name: Save smoke report and failure evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployed-smoke-${{ github.run_attempt }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
