@@ -5,13 +5,8 @@ import { ContactRepository } from './domains/contact/contact-repository';
 
 export const handler = async (): Promise<{ purgedOrders: number; purgedContactSubmissions: number }> => {
   await resolveDatabaseUrl();
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) {
-    throw new Error('DATABASE_URL is not available for guest PII retention job');
-  }
-
   const retentionDays = Number(process.env.GUEST_PII_RETENTION_DAYS ?? 60);
-  const pool = getPool(databaseUrl);
+  const pool = getPool();
   const [purgedOrders, purgedContactSubmissions] = await Promise.all([
     new GuestPiiRetentionRepository(pool).purgeExpiredGuestContact(retentionDays),
     new ContactRepository(pool).purgeExpired(

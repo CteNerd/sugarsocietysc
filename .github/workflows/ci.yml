@@ -1,0 +1,116 @@
+name: Release CI
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      run_deployed_smoke:
+        description: Also run read-only smoke tests against an existing deployment
+        type: boolean
+        default: false
+      web_url:
+        description: HTTPS frontend origin (required when smoke tests are selected)
+        type: string
+      api_url:
+        description: HTTPS API origin (required when smoke tests are selected)
+        type: string
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  api:
+    name: API tests and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run lint --workspace=@sugarsocietysc/shared --workspace=@sugarsocietysc/api
+      - run: npm run test --workspace=@sugarsocietysc/api
+      - run: npm run test:integration --workspace=@sugarsocietysc/api
+      - run: npm run build --workspace=@sugarsocietysc/shared --workspace=@sugarsocietysc/api
+
+  infra:
+    name: Infrastructure validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run lint --workspace=@sugarsocietysc/infra
+      - run: npm run validate:lean --workspace=@sugarsocietysc/infra
+      - run: npm run synth:dev --workspace=@sugarsocietysc/infra
+      - run: npm run synth:prod --workspace=@sugarsocietysc/infra
+
+  web:
+    name: Frontend tests and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CI: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run test --workspace=@sugarsocietysc/web -- --watchAll=false --runInBand
+      - name: Validate deployed smoke test discovery
+        run: npm run test:smoke -- --list
+        env:
+          SMOKE_WEB_URL: https://web.example.invalid
+          SMOKE_API_URL: https://api.example.invalid
+      - run: npm run build --workspace=@sugarsocietysc/web
+        env:
+          REACT_APP_API_BASE_URL: http://127.0.0.1:4174
+          REACT_APP_COGNITO_USER_POOL_ID: us-east-1_browserfixture
+          REACT_APP_COGNITO_CLIENT_ID: browser-fixture-client
+      - run: npx playwright install --with-deps chromium
+      - name: Test production frontend in desktop and mobile browsers
+        run: npm run test:browser:pr
+      - name: Save PR browser report and failure evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-browser-${{ github.run_attempt }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+  release:
+    name: Release gate
+    if: ${{ always() }}
+    needs: [api, infra, web]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    env:
+      API_RESULT: ${{ needs.api.result }}
+      INFRA_RESULT: ${{ needs.infra.result }}
+      WEB_RESULT: ${{ needs.web.result }}
+    steps:
+      - name: Require every validation job to pass
+        run: |
+          if [[ "$API_RESULT" != "success" || "$INFRA_RESULT" != "success" || "$WEB_RESULT" != "success" ]]; then
+            echo "::error::Release validation failed: API=$API_RESULT infra=$INFRA_RESULT web=$WEB_RESULT"
+            exit 1
+          fi
+
+  deployed-smoke:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_deployed_smoke }}
+    needs: release
+    uses: ./.github/workflows/deployed-smoke.yml
+    with:
+      web_url: ${{ inputs.web_url }}
+      api_url: ${{ inputs.api_url }}

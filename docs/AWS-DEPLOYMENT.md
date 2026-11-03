@@ -1,15 +1,53 @@
 # AWS Deployment Setup
 
-The `Deploy to AWS` GitHub Actions workflow is manual-only. It deploys to the selected `dev` or `prod`
-GitHub Environment, then publishes the CRA build to the private S3 bucket and invalidates CloudFront.
-Production should be configured with required reviewers in GitHub Environment protection rules before
-using the workflow.
+The [Deploy to AWS workflow](../.github/workflows/deploy-aws.yml) validates each push to `main`,
+automatically deploys that commit to dev/staging, and runs deployed smoke tests. Only successful
+staging validation unlocks production Environment approval. Production deploys and tests the same
+commit after approval, refusing stale promotion if main has advanced.
+
+PR previews remain manual: dispatch `Deploy to AWS` on the PR branch with `environment: dev`.
+Non-main production requests fail before validation or deployment. Manual `prod` dispatches on main
+repeat validation, staging deployment and staging tests before requesting approval; they cannot skip
+staging. Manual `dev` dispatches, including on main, stop after staging.
+
+The [single-environment reusable workflow](../.github/workflows/deploy-environment.yml) deploys CDK,
+applies migrations, publishes the CRA build, waits for CloudFront invalidation and runs the same
+API/desktop/mobile tests in one job. All checkouts are pinned to the triggering SHA, not a moving
+branch. Only deployment jobs request OIDC; initial validation and standalone smoke tests do not.
 
 ## GitHub configuration
 
 Create `dev` and `prod` GitHub Environments under Settings → Environments. Configure these **variables**
 in each environment. Require reviewers for `prod` and restrict its deployment branches to `main`;
 restrict `dev` to the branches your team intends to deploy.
+
+Production currently has required review and a main-only branch policy; preserve both. The workflow
+does not create these GitHub protection rules, so retain them even when changing pipeline YAML.
+Merging authorizes automatic staging, not automatic production approval.
+
+### Release sequencing and shared staging
+
+The orchestrator holds the `aws-release` concurrency group across validation, staging deployment/tests,
+production approval and production deployment/tests. PR previews use the same group. This deliberately
+blocks other releases and previews while a production approval is pending; approve, reject or cancel
+the pending run to free staging. Running deployments are never automatically cancelled.
+
+GitHub concurrency keeps one running and one pending run; a newer request can replace an older
+pending run, and ordering is not guaranteed. This is a latest-pending-release policy, not a FIFO queue.
+After approval, production compares the triggering SHA with current main and fails before assuming
+AWS credentials if it is stale. Resume the newest main release instead; do not approve an old run
+expecting it to deploy current source. Direct CLI deployments bypass this workflow lock and must not
+be run concurrently.
+
+Production artifacts are rebuilt for production-specific configuration from the exact staging-tested
+source SHA; they are not byte-identical copies of the staging frontend/CDK assembly. Initial CI tests
+and read-only staging smoke tests do not prove all business acceptance criteria: reviewers must still
+check the outstanding checkout, authentication and operational acceptance gates before approval.
+
+Configure branch protection/rulesets for `main` to require **Release gate** from
+[Release CI](../.github/workflows/ci.yml), and require branches to be up to date before merging.
+The gate always runs, including documentation-only PRs, and requires successful API, infrastructure,
+and frontend jobs. Workflow changes do not configure repository protection automatically.
 
 | Variable | Purpose |
 | --- | --- |
@@ -62,7 +100,10 @@ Before the first workflow run, an AWS administrator must:
 3. Grant the role permission to assume the environment's CDK bootstrap deployment/file-publishing
    roles, and permission to read the named CloudFormation outputs, publish to the WebStack bucket,
    invalidate its CloudFront distribution, invoke the migration Lambda, and query its AWS account
-   identity. CDK bootstrap roles must trust this deploy role. Keep the production role/environment
+   identity. Lean-rollout preflights also require `cloudformation:ListStackResources` on the selected
+   API stack and `lambda:GetFunctionConfiguration` on its functions. The CloudFormation execution
+   role must support EventBridge Scheduler schedule groups and the scoped Scheduler execution role.
+   CDK bootstrap roles must trust this deploy role. Keep the production role/environment
    separately protected. The CDK CloudFormation execution policy also needs scoped service permissions
    for resources in these stacks (including SQS, Lambda, SES `SendEmail`, WAF, CloudWatch, Cognito,
    Aurora, S3, and CloudFront), plus full lifecycle permissions — not just `sns:Publish` — for the
@@ -102,9 +143,201 @@ to create a second `$default` stage on the same API and fail early validation wi
 Do not delete the existing stage to work around this error; preserving its logical ID updates it
 in place and keeps the API URL and throttling settings unchanged.
 
-The workflow checks out code, installs dependencies, runs workspace type-check/tests/build, synthesizes
-the selected environment, assumes the role, deploys CDK, reads API/Cognito/Web outputs, builds the
-frontend with those values, syncs assets, invalidates CloudFront, and checks `/health`.
+The shared Node 22 release checks cover API/shared types and builds, API unit and PostgreSQL integration
+tests, infrastructure types/assertions and dev/prod synth, and frontend tests plus a strict production
+build. The frontend job also runs six desktop/mobile Playwright checks against that local production
+build, so browser failures block the required PR Release gate. Main repeats the same checks before
+deployment. A failed, skipped, or cancelled validation job fails the release gate and blocks deployment.
+After validation, the deployment job synthesizes the selected environment once, validates settings,
+assumes the role, checks rollout prerequisites, and deploys that exact cloud assembly. It requires
+nonempty API/Cognito/Web outputs and a successful migration response, checks `/health` before frontend
+publication, builds the frontend with deployed values, syncs assets, waits for CloudFront invalidation,
+and runs health plus deployed API/browser smoke tests. HTTP smoke tests and job durations are bounded; production environment approval
+is still required independently of CI success.
+
+### Deployed-environment smoke tests
+
+#### PR browser gate (no deployment)
+
+Every PR runs the browser scenarios against a loopback-only server for the actual CRA production
+build. The catalog GET is fulfilled with a controlled empty fixture; synthetic Cognito configuration
+allows anonymous routes to initialize without contacting a real user pool. This checks rendering,
+desktop/mobile navigation, deep-link serving, empty-catalog UI and login redirects, not backend or
+authenticated behavior. No staging access or credentials are required. The same browser test source
+is used after deployment with fixtures disabled and actual API requests.
+
+```bash
+CI=true \
+REACT_APP_API_BASE_URL=http://127.0.0.1:4174 \
+REACT_APP_COGNITO_USER_POOL_ID=us-east-1_browserfixture \
+REACT_APP_COGNITO_CLIENT_ID=browser-fixture-client \
+npm run build --workspace=@sugarsocietysc/web
+npx playwright install chromium
+npm run test:browser:pr
+```
+
+The PR test server is started and stopped by Playwright and refuses to reuse an existing server.
+Reports and failure screenshots/traces are uploaded from the required frontend job for seven days.
+
+#### Real deployed checks
+
+Each environment deployment runs the smoke suite before it is considered successful.
+The [Deployed smoke tests workflow](../.github/workflows/deployed-smoke.yml) can be dispatched
+manually with `web_url` and `api_url` HTTPS origins to test
+already deployed code without changing AWS resources. When newly adding a workflow on a PR branch,
+GitHub will not offer its manual dispatch until it exists on the default branch. Before merge, run
+the already registered **Release CI** workflow on the PR branch, select `run_deployed_smoke`, and
+provide both origins; it runs the same smoke workflow after normal validation without deploying.
+The local command below also works before merge. The smoke workflow uses no AWS credentials or test accounts.
+
+```bash
+npx playwright install chromium
+SMOKE_WEB_URL=https://dev.sugarsocietysc.com \
+SMOKE_API_URL=https://YOUR_API.execute-api.us-east-1.amazonaws.com \
+npm run test:smoke
+```
+
+Both URLs are required and validated; there is no implicit production target. Ten checks cover:
+
+- Actual database connectivity via `/health`, public event listing and a detail read when events exist,
+  invalid identifier handling, and anonymous admin catalog rejection.
+- Desktop and mobile Chromium: home rendering, navigation to the contact form, SPA deep links,
+  anonymous admin-to-login redirect, and pre-sale rendering with the **expected real API**, not mocks.
+- Empty catalogs are valid and reported, not seeded automatically. They do not prove menu or checkout
+  readiness. Browser navigation waits for DOM readiness and asserts application content instead of
+  waiting for unrelated external images to finish loading.
+
+Tests make only read requests; browser writes are blocked and fail the suite. They do not log in,
+create users/orders, reserve inventory, submit contact/newsletter forms, or trigger payment/webhook
+or message delivery. Authenticated admin parity, Stripe test-mode checkout/refunds, Scheduler
+delivery, privacy purges, alarm delivery and pause/resume behavior still need separately approved
+fixtures and acceptance checks. Mobile coverage emulates a phone in Chromium, not real iOS/Safari.
+
+The smoke job has a ten-minute timeout, the suite a five-minute deadline, and no automatic retries.
+A failure makes the deployment workflow fail **after publication**; this is detection, not automatic
+rollback. Inspect the uploaded HTML report, failure screenshots and traces (seven-day retention)
+before deciding whether to fix forward or use the rollback procedure.
+
+## Lean Data API rollout
+
+The November 3 dev deployment of `abeb0f74` completed migrations and frontend publication. Read-only
+assessment confirmed all 13 API stack Lambdas use Data API without VPC attachment, Aurora PostgreSQL
+16.13 has its HTTP endpoint enabled with 0.5-2 ACU capacity, polling remains enabled, and dev NAT is
+retained. Database health and an empty public catalog succeeded. This does not certify checkout,
+scheduled expiration, pause/resume or production rollout.
+
+The operating target is AWS-only hosting, one
+persistent production environment, local `pg` development, and temporary staging. Keep PostgreSQL
+repositories and SQL transactions; only the transport changes in AWS. All live changes below need
+explicit operator approval.
+
+### Validation before rollout
+
+```bash
+npm run lint
+npm run test --workspace=@sugarsocietysc/api
+npm run test:integration --workspace=@sugarsocietysc/api
+npm run validate:lean --workspace=@sugarsocietysc/infra
+npm run synth:dev --workspace=@sugarsocietysc/infra
+npm run synth:prod --workspace=@sugarsocietysc/infra
+CI=true npm run test --workspace=@sugarsocietysc/web -- --watchAll=false --runInBand
+CI=true npm run build
+```
+
+The integration suite downloads a platform-specific PostgreSQL 16 executable during dependency
+installation, binds only loopback on a temporary port, creates synthetic databases, and removes its
+own temporary directory afterward. Normal `npm ci` runs the native package's symlink setup; if you
+installed with `--ignore-scripts`, rebuild the installed `@embedded-postgres/<platform>` package.
+It executes real SQL, migrations, locks, oversell/payment/expiry races, and rollback, but emulates
+the Data API wire response. Migration clients and every pooled connection's close event are awaited
+before server shutdown to avoid connection-termination races on Linux CI; `Pool.end()` alone can
+return before sockets close. CI runs it without an AWS account or Docker.
+
+### Approved deployment sequence
+
+1. **Confirm recovery and alerts first.** Verify a usable production snapshot/PITR policy and test
+   restoration in staging. Verify the production SNS alarm topic has an actual confirmed subscriber
+   and delivers a test notification: the billing investigation found none despite a previously
+   successful CloudFormation subscription. Source code is not proof of delivery.
+2. **Deploy the transport without changing expiration or idle capacity.** Keep
+   `inventoryExpiryMode: "polling"`, `auroraMinCapacity: 0.5`, and `natGateways: 1` in the selected
+   CDK environment. Review the change set: enable the existing cluster's HTTP endpoint and remove
+   Lambda VPC attachment, not replace the database. Cluster, subnet, security-group, API-stage logical
+   IDs and legacy exports are preserved. AWS runtime uses `DATABASE_DRIVER=data-api`,
+   `DB_CLUSTER_ARN`, `DB_SECRET_ARN`, and `DB_NAME`; Data API authorization remains scoped to the
+   cluster and its managed secret. Existing DB host/port exports remain for staged rollback.
+3. **Apply bundled migrations and test the real runtime.** The workflow invokes the migration
+   Lambda after deploying. The Data API runner keeps the existing `pgmigrations` history, generates
+   SQL through node-pg-migrate, executes statements sequentially in one transaction, and acquires a
+   transaction-level advisory lock. Test health, catalog arrays/dates, auth/admin access, newsletter
+   persistence, contact queue delivery, guest checkout, simultaneous final-stock checkout, Stripe
+   test-mode success/duplicate/late webhook refunds, and privacy purges in temporary staging.
+   Do not switch to live payments or certify transport compatibility from local tests alone.
+4. **Enable scheduled expiry while retaining 0.5 ACU.** Change only `inventoryExpiryMode` to
+   `"scheduled"` and review/synth/deploy with approval. The workflow performs a read-only prerequisite
+   invocation of the *already deployed* migration Lambda with
+   `{"checkInventoryExpiryReady":true}`; an old Lambda or missing table blocks this deployment.
+   For manual CDK operations, perform that check yourself before deployment.
+   Checkout atomically records a durable task with its reservation. Deterministic one-time Scheduler
+   events release only the selected unpaid order; duplicate deliveries and paid orders do not
+   release sold stock. Scheduling failures are logged and left for reconciliation, not retried as
+   duplicate checkouts. Verify Scheduler creation/delivery, scoped pass-role trust, failure queues,
+   alarms, premature/duplicate events, and payment/expiration races in AWS.
+5. **Opt in to pause only after latency acceptance.** Set `auroraMinCapacity: 0`,
+   keep scheduled mode, and set `auroraAutoPauseSeconds` (300-86400; default 300). The context parser
+   rejects zero ACU with polling. Aurora PostgreSQL 16.13 is configured; verify the deployed engine
+   and region still support zero ACU. Measure actual pause periods, cold API latency, resume
+   rejections, checkout/webhook behavior, and queue redelivery after resume. Accept the measured UX
+   and alarm behavior before production. Keep 0.5 ACU if cold latency is unacceptable.
+6. **Remove NAT independently.** Only after every deployed Lambda has no VPC attachment and legacy
+   private-subnet/security-group imports are no longer consumed, set that environment's
+   `natGateways: 0`. The workflow checks every currently deployed API Lambda has no VPC and selects
+   Data API before allowing this change. Review an explicitly approved Network-only change set/deployment; do not combine
+   this with the first transport rollout. Existing subnet logical IDs/exports remain, while the NAT
+   and its public IPv4 are removed. This is the first guaranteed idle-network saving.
+7. **Retire permanent dev deliberately.** Export or preserve any wanted dev data/configuration,
+   test rebuilding temporary staging, and approve its teardown separately. Dev removal policies
+   may destroy its database; never use a blanket destroy as an unreviewed cost fix. Keep prod
+   deletion protection, backups, privacy retention, secrets, queues and alarms. WAF removal is not
+   part of this change.
+
+### Timing, scaling and migration limits
+
+- Scheduler has minute-level precision, not exact-second expiry. SQL timestamps remain authoritative:
+  expired reservations stop reducing available stock even if an order's status cleanup lags.
+- Hourly reconciliation wakes Aurora; daily privacy purges and normal traffic also prevent continuous
+  sleep. Reconciliation processes up to 100 pending tasks per invocation and performs the legacy
+  expiry sweep. During a scheduling/delivery outage, cleanup may lag by an hour or longer with a
+  backlog; monitor failures and run an approved dispatcher invocation to drain/recover tasks.
+- Accepted expiry Lambda failures and exhausted Scheduler delivery failures reach a 14-day failure
+  queue with an alarm. The durable SQL task also enables reconciliation when no Lambda invocation
+  was accepted. Queued contact/newsletter workloads and privacy retention remain unchanged.
+- Data API reads use the writer, responses must stay within 1 MiB and 64 KiB per row, and each query
+  needs an HTTP round trip. Add pagination for growing administrative datasets. Large reports,
+  streaming/COPY, session-level settings, and read-replica routing require a separate execution path.
+- Calls on one transaction are serialized. Transactions expire after three minutes of inactivity;
+  migrations are also bounded by the 60-second migration Lambda timeout. Keep migration batches
+  short. Nontransactional migrations and builders requiring a live `pg` session are rejected,
+  rather than silently applied partially; approve a dedicated runner for those migrations.
+- SDK retries are disabled for Data API. Only explicit `DatabaseResumingException` rejections retry,
+  up to five waits totalling 15 seconds. Ambiguous network errors and commits are not blindly replayed.
+  Application/Stripe idempotency and live latency checks remain essential.
+- SQL stays parameterized with explicit UUID/array/timestamp casts. UUID-looking Cognito subjects and
+  Stripe references remain text. Vendor-specific transport is confined to the database adapter;
+  future domain endpoints retain PostgreSQL relationships and transactions.
+
+### Rollback and cost confirmation
+
+Before NAT removal, rollback can restore the previous VPC/`pg` runtime because subnet/secret/endpoint
+exports are retained. Do not undo migration history or drop the outbox during runtime rollback.
+If reverting after NAT removal, restore the Network NAT first before restoring any VPC-attached
+Lambda. Disable pause by restoring minimum 0.5 ACU; restore polling only after pausing is disabled.
+If scheduled processing fails, alert, invoke the expiry sweep/dispatcher with operator approval,
+and confirm held stock, paid orders, late refunds and durable tasks reconcile.
+
+After approved changes, compare tagged Cost Explorer service/usage charges and Aurora pause metrics
+over representative idle and ordering periods. No savings are claimed by this PR. Keep the detailed
+billing investigation locally as historical evidence, not a deployed-state record.
 
 ## DNS (Squarespace, not Route53)
 

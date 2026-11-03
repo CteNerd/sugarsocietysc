@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { Pool } from 'pg';
+import { SqlDatabase } from '../../ports/database/ISqlDatabase';
 import { authSyncRequestSchema } from '@sugarsocietysc/shared';
 import { AppConfig } from '../../config/env';
 import { requireAuth } from '../../auth/require-auth';
@@ -7,7 +7,7 @@ import { AuthClaims } from '../../auth/verify-jwt';
 import { AuthSyncRepository } from './auth-sync-repository';
 import { AuthSyncService } from './auth-sync-service';
 
-export function authSyncRoutes(pool: Pool, config: AppConfig): Hono<{ Variables: { authClaims: AuthClaims } }> {
+export function authSyncRoutes(pool: SqlDatabase, config: AppConfig): Hono<{ Variables: { authClaims: AuthClaims } }> {
   const app = new Hono<{ Variables: { authClaims: AuthClaims } }>();
   const service = new AuthSyncService(new AuthSyncRepository(pool), config);
   const auth = requireAuth(config);

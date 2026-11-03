@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { Pool } from 'pg';
+import { SqlDatabase } from '../../ports/database/ISqlDatabase';
 import { AppConfig } from '../../config/env';
 import { CatalogRepository } from '../catalog/catalog-repository';
 import { OrdersRepository } from '../orders/orders-repository';
@@ -11,7 +11,7 @@ import { createPaymentProvider } from '../../adapters/payment/payment-provider-f
  * signature on the raw request body. Must read `c.req.text()`, never `c.req.json()`, since
  * `stripe.webhooks.constructEvent` verifies the signature against the exact raw bytes Stripe sent.
  */
-export function webhooksStripeRoutes(pool: Pool, config: AppConfig): Hono {
+export function webhooksStripeRoutes(pool: SqlDatabase, config: AppConfig): Hono {
   const app = new Hono();
   const paymentProvider = createPaymentProvider(config);
   const service = new OrdersService(new OrdersRepository(pool), new CatalogRepository(pool), paymentProvider);

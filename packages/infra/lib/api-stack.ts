@@ -7,7 +7,6 @@ import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import * as cloudwatchActions from 'aws-cdk-lib/aws-cloudwatch-actions';
-import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as eventSources from 'aws-cdk-lib/aws-lambda-event-sources';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambdaNode from 'aws-cdk-lib/aws-lambda-nodejs';
@@ -18,14 +17,13 @@ import * as logs from 'aws-cdk-lib/aws-logs';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as scheduler from 'aws-cdk-lib/aws-scheduler';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import * as path from 'path';
 import { EnvConfig } from './env-config';
 
 export interface ApiStackProps extends StackProps {
-  vpc: ec2.Vpc;
-  lambdaSecurityGroup: ec2.SecurityGroup;
   cluster: rds.DatabaseCluster;
   userPool: cognito.UserPool;
   userPoolClient: cognito.UserPoolClient;
@@ -41,23 +39,23 @@ export class ApiStack extends Stack {
 
   constructor(scope: Construct, id: string, envConfig: EnvConfig, props: ApiStackProps) {
     super(scope, id, props);
+    const databaseSecret = props.cluster.secret;
+    if (!databaseSecret) throw new Error('Data API requires a managed Aurora credentials secret');
 
-    // NOTE: the DB credentials secret is resolved at runtime (not synth time).
-    // Phase 1 adds a small bootstrap in packages/api that reads DB_SECRET_ARN via the
-    // Secrets Manager SDK and builds the pg connection string from it.
     const commonFnProps = {
       runtime: lambda.Runtime.NODEJS_22_X,
       memorySize: 256,
-      timeout: Duration.seconds(10),
-      vpc: props.vpc,
-      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
-      securityGroups: [props.lambdaSecurityGroup],
+      timeout: Duration.seconds(28),
     };
     const commonEnv = {
-      DB_SECRET_ARN: props.cluster.secret?.secretArn ?? '',
+      DATABASE_DRIVER: 'data-api',
+      DB_CLUSTER_ARN: props.cluster.clusterArn,
+      DB_SECRET_ARN: databaseSecret.secretArn,
+      // Retained during staged rollout so rollback to the current pg bootstrap keeps its exports.
       DB_HOST: props.cluster.clusterEndpoint.hostname,
       DB_PORT: props.cluster.clusterEndpoint.port.toString(),
       DB_NAME: 'sugarsocietysc',
+      INVENTORY_EXPIRY_MODE: envConfig.inventoryExpiryMode,
       UPLOADS_BUCKET_NAME: props.uploadsBucket.bucketName,
       UPLOADS_PUBLIC_BASE_URL: `https://${envConfig.domainName}`,
       GUEST_PII_RETENTION_DAYS: envConfig.guestPiiRetentionDays.toString(),
@@ -70,6 +68,10 @@ export class ApiStack extends Stack {
       NEWSLETTER_SIGNATURE: process.env.NEWSLETTER_SIGNATURE || 'Sugar Society Sugar Cookies',
       COGNITO_ISSUER_URL: props.userPool.userPoolProviderUrl,
       COGNITO_CLIENT_ID: props.userPoolClient.userPoolClientId,
+    };
+    const grantDatabaseAccess = (fn: lambda.IFunction) => {
+      props.cluster.grantDataApiAccess(fn);
+      databaseSecret.grantRead(fn);
     };
     const functionLogGroup = (name: string) => new logs.LogGroup(this, `${name}Logs`, {
       retention: logs.RetentionDays.ONE_MONTH,
@@ -92,12 +94,10 @@ export class ApiStack extends Stack {
       logGroup: functionLogGroup('HealthFn'),
       environment: commonEnv,
     });
-    props.cluster.secret?.grantRead(healthFn);
+    grantDatabaseAccess(healthFn);
 
-    // Not wired to any HTTP route or trigger — Aurora lives in a private isolated subnet with no
-    // route from outside AWS, so this is the only way to apply `node-pg-migrate` migrations to a
-    // deployed environment. Invoke manually via `aws lambda invoke` after deploying new migrations
-    // (see README "Deploying to AWS").
+    // Not wired to HTTP or a trigger. Invoke after deployment to apply the bundled migrations
+    // through Data API before enabling scheduled expiration.
     const migrateFn = new lambdaNode.NodejsFunction(this, 'MigrateFn', {
       entry: path.join(__dirname, '../../api/src/migrate-lambda.ts'),
       handler: 'handler',
@@ -115,7 +115,7 @@ export class ApiStack extends Stack {
         },
       },
     });
-    props.cluster.secret?.grantRead(migrateFn);
+    grantDatabaseAccess(migrateFn);
 
     // One-off demo-data seeder, same rationale/invocation pattern as MigrateFn — run after
     // migrations whenever a deployed environment needs the Halloween Pre-Sale catalog populated.
@@ -127,7 +127,7 @@ export class ApiStack extends Stack {
       timeout: Duration.seconds(60),
       environment: commonEnv,
     });
-    props.cluster.secret?.grantRead(seedFn);
+    grantDatabaseAccess(seedFn);
 
     const newsletterDeadLetterQueue = new sqs.Queue(this, 'NewsletterDeadLetterQueue', {
       encryption: sqs.QueueEncryption.SQS_MANAGED,
@@ -155,6 +155,12 @@ export class ApiStack extends Stack {
         maxReceiveCount: 5,
       },
     });
+    const inventoryExpiryDeadLetterQueue = envConfig.inventoryExpiryMode === 'scheduled'
+      ? new sqs.Queue(this, 'InventoryExpiryDeadLetterQueue', {
+        encryption: sqs.QueueEncryption.SQS_MANAGED,
+        retentionPeriod: Duration.days(14),
+      })
+      : undefined;
 
     const guestPiiRetentionFn = new lambdaNode.NodejsFunction(this, 'GuestPiiRetentionFn', {
       entry: path.join(__dirname, '../../api/src/guest-pii-retention-lambda.ts'),
@@ -164,7 +170,7 @@ export class ApiStack extends Stack {
       timeout: Duration.seconds(60),
       environment: commonEnv,
     });
-    props.cluster.secret?.grantRead(guestPiiRetentionFn);
+    grantDatabaseAccess(guestPiiRetentionFn);
     new events.Rule(this, 'GuestPiiRetentionSchedule', {
       description: `Purge terminal-order guest contact details after ${envConfig.guestPiiRetentionDays} days and contact submissions after 365 days`,
       schedule: events.Schedule.cron({ minute: '0', hour: '3' }),
@@ -176,14 +182,80 @@ export class ApiStack extends Stack {
       ...commonFnProps,
       logGroup: functionLogGroup('InventoryHoldExpiryFn'),
       timeout: Duration.seconds(60),
+      ...(inventoryExpiryDeadLetterQueue
+        ? {
+          deadLetterQueue: inventoryExpiryDeadLetterQueue,
+          maxEventAge: Duration.hours(1),
+          retryAttempts: 2,
+        }
+        : {}),
       environment: commonEnv,
     });
-    props.cluster.secret?.grantRead(inventoryHoldExpiryFn);
-    new events.Rule(this, 'InventoryHoldExpirySchedule', {
-      description: 'Release cookie inventory held by unpaid checkouts after 30 minutes',
-      schedule: events.Schedule.rate(Duration.minutes(5)),
-      targets: [new targets.LambdaFunction(inventoryHoldExpiryFn)],
+    grantDatabaseAccess(inventoryHoldExpiryFn);
+
+    const inventoryExpiryScheduleGroupName = `sugarsocietysc-${envConfig.envName}-inventory-expiry`;
+    const inventoryExpiryScheduleGroup = envConfig.inventoryExpiryMode === 'scheduled'
+      ? new scheduler.CfnScheduleGroup(this, 'InventoryExpiryScheduleGroup', {
+        name: inventoryExpiryScheduleGroupName,
+      })
+      : undefined;
+    const inventoryExpiryScheduleRole = inventoryExpiryScheduleGroup
+      ? new iam.Role(this, 'InventoryExpiryScheduleRole', {
+        assumedBy: new iam.ServicePrincipal('scheduler.amazonaws.com').withConditions({
+          StringEquals: { 'aws:SourceAccount': Stack.of(this).account },
+          ArnLike: { 'aws:SourceArn': inventoryExpiryScheduleGroup.attrArn },
+        }),
+        description: 'Allows the inventory-expiry schedule group to invoke only the expiry Lambda.',
+      })
+      : undefined;
+    if (inventoryExpiryScheduleRole) {
+      inventoryExpiryScheduleRole.addToPolicy(new iam.PolicyStatement({
+        actions: ['lambda:InvokeFunction'],
+        resources: [inventoryHoldExpiryFn.functionArn],
+      }));
+      if (inventoryExpiryDeadLetterQueue) inventoryExpiryScheduleRole.addToPolicy(new iam.PolicyStatement({
+        actions: ['sqs:SendMessage'],
+        resources: [inventoryExpiryDeadLetterQueue.queueArn],
+      }));
+    }
+
+    const inventoryExpiryScheduleEnvironment: Record<string, string> =
+      inventoryExpiryScheduleGroup && inventoryExpiryScheduleRole && inventoryExpiryDeadLetterQueue
+      ? {
+        INVENTORY_EXPIRY_SCHEDULE_GROUP: inventoryExpiryScheduleGroupName,
+        INVENTORY_EXPIRY_TARGET_ARN: inventoryHoldExpiryFn.functionArn,
+        INVENTORY_EXPIRY_ROLE_ARN: inventoryExpiryScheduleRole.roleArn,
+        INVENTORY_EXPIRY_DLQ_ARN: inventoryExpiryDeadLetterQueue.queueArn,
+      }
+      : {};
+    const inventoryExpiryScheduleArn = this.formatArn({
+      service: 'scheduler',
+      resource: 'schedule',
+      resourceName: `${inventoryExpiryScheduleGroupName}/order-*`,
+      arnFormat: ArnFormat.SLASH_RESOURCE_NAME,
     });
+    const grantInventoryExpiryScheduleManagement = (fn: lambda.IFunction) => {
+      if (!inventoryExpiryScheduleRole) return;
+      fn.addToRolePolicy(new iam.PolicyStatement({
+        actions: ['scheduler:CreateSchedule', 'scheduler:GetSchedule'],
+        resources: [inventoryExpiryScheduleArn],
+      }));
+      fn.addToRolePolicy(new iam.PolicyStatement({
+        actions: ['iam:PassRole'],
+        resources: [inventoryExpiryScheduleRole.roleArn],
+        conditions: {
+          StringEquals: { 'iam:PassedToService': 'scheduler.amazonaws.com' },
+        },
+      }));
+    };
+
+    if (envConfig.inventoryExpiryMode === 'polling') {
+      new events.Rule(this, 'InventoryHoldExpirySchedule', {
+        description: 'Release cookie inventory held by unpaid checkouts after 30 minutes',
+        schedule: events.Schedule.rate(Duration.minutes(5)),
+        targets: [new targets.LambdaFunction(inventoryHoldExpiryFn)],
+      });
+    }
     const inventoryHoldExpiryErrorsAlarm = new cloudwatch.Alarm(this, 'InventoryHoldExpiryErrorsAlarm', {
       alarmDescription: 'Investigate failures in the scheduled unpaid inventory hold expiry job.',
       metric: inventoryHoldExpiryFn.metricErrors({ period: Duration.minutes(5), statistic: 'Sum' }),
@@ -192,6 +264,23 @@ export class ApiStack extends Stack {
       treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
     });
     inventoryHoldExpiryErrorsAlarm.addAlarmAction(alarmAction);
+    if (inventoryExpiryDeadLetterQueue) {
+      const inventoryExpiryDeadLetterQueueAlarm = new cloudwatch.Alarm(
+        this,
+        'InventoryExpiryDeadLetterQueueAlarm',
+        {
+          alarmDescription: 'Investigate scheduled inventory-expiry invocations that exhausted retries.',
+          metric: inventoryExpiryDeadLetterQueue.metricApproximateNumberOfMessagesVisible({
+            period: Duration.minutes(5),
+            statistic: 'Maximum',
+          }),
+          threshold: 1,
+          evaluationPeriods: 1,
+          treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        },
+      );
+      inventoryExpiryDeadLetterQueueAlarm.addAlarmAction(alarmAction);
+    }
     const guestPiiRetentionErrorsAlarm = new cloudwatch.Alarm(this, 'GuestPiiRetentionErrorsAlarm', {
       alarmDescription: 'Investigate failures in scheduled guest-order and contact-submission retention.',
       metric: guestPiiRetentionFn.metricErrors({ period: Duration.minutes(5), statistic: 'Sum' }),
@@ -208,7 +297,7 @@ export class ApiStack extends Stack {
       logGroup: functionLogGroup('AuthSyncFn'),
       environment: commonEnv,
     });
-    props.cluster.secret?.grantRead(authSyncFn);
+    grantDatabaseAccess(authSyncFn);
 
     const newsletterFn = new lambdaNode.NodejsFunction(this, 'NewsletterFn', {
       entry: path.join(__dirname, '../../api/src/lambda.ts'),
@@ -217,7 +306,7 @@ export class ApiStack extends Stack {
       logGroup: functionLogGroup('NewsletterFn'),
       environment: { ...commonEnv, NEWSLETTER_QUEUE_URL: newsletterQueue.queueUrl },
     });
-    props.cluster.secret?.grantRead(newsletterFn);
+    grantDatabaseAccess(newsletterFn);
     newsletterQueue.grantSendMessages(newsletterFn);
 
     const googleRecaptchaSecret = secretsmanager.Secret.fromSecretNameV2(
@@ -237,7 +326,7 @@ export class ApiStack extends Stack {
         GOOGLE_RECAPTCHA_SECRET_ARN: googleRecaptchaSecret.secretArn,
       },
     });
-    props.cluster.secret?.grantRead(contactFn);
+    grantDatabaseAccess(contactFn);
     googleRecaptchaSecret.grantRead(contactFn);
     contactQueue.grantSendMessages(contactFn);
 
@@ -249,7 +338,7 @@ export class ApiStack extends Stack {
       timeout: Duration.seconds(60),
       environment: { ...commonEnv, CONTACT_QUEUE_URL: contactQueue.queueUrl },
     });
-    props.cluster.secret?.grantRead(contactWorkerFn);
+    grantDatabaseAccess(contactWorkerFn);
     contactQueue.grantConsumeMessages(contactWorkerFn);
     contactWorkerFn.addToRolePolicy(new iam.PolicyStatement({
       actions: ['ses:SendEmail'],
@@ -294,7 +383,7 @@ export class ApiStack extends Stack {
       timeout: Duration.seconds(60),
       environment: { ...commonEnv, NEWSLETTER_QUEUE_URL: newsletterQueue.queueUrl },
     });
-    props.cluster.secret?.grantRead(newsletterWorkerFn);
+    grantDatabaseAccess(newsletterWorkerFn);
     newsletterQueue.grantConsumeMessages(newsletterWorkerFn);
     newsletterWorkerFn.addToRolePolicy(new iam.PolicyStatement({
       actions: ['ses:SendEmail'],
@@ -335,7 +424,7 @@ export class ApiStack extends Stack {
       logGroup: functionLogGroup('CatalogFn'),
       environment: commonEnv,
     });
-    props.cluster.secret?.grantRead(catalogFn);
+    grantDatabaseAccess(catalogFn);
     props.uploadsBucket.grantPut(catalogFn, 'uploads/menu-items/*');
 
     // Populated out-of-band by a human (real Stripe API keys can't be generated/committed by CDK) —
@@ -352,10 +441,42 @@ export class ApiStack extends Stack {
       handler: 'handler',
       ...commonFnProps,
       logGroup: functionLogGroup('OrdersFn'),
-      environment: stripeEnv,
+      environment: { ...stripeEnv, ...inventoryExpiryScheduleEnvironment },
     });
-    props.cluster.secret?.grantRead(ordersFn);
+    grantDatabaseAccess(ordersFn);
     stripeSecret.grantRead(ordersFn);
+    grantInventoryExpiryScheduleManagement(ordersFn);
+
+    if (envConfig.inventoryExpiryMode === 'scheduled' && inventoryExpiryDeadLetterQueue) {
+      const inventoryExpiryDispatcherFn = new lambdaNode.NodejsFunction(
+        this,
+        'InventoryExpiryDispatcherFn',
+        {
+          entry: path.join(__dirname, '../../api/src/inventory-expiry-dispatch-lambda.ts'),
+          handler: 'handler',
+          ...commonFnProps,
+          logGroup: functionLogGroup('InventoryExpiryDispatcherFn'),
+          timeout: Duration.seconds(60),
+          deadLetterQueue: inventoryExpiryDeadLetterQueue,
+          maxEventAge: Duration.hours(1),
+          retryAttempts: 2,
+          environment: { ...commonEnv, ...inventoryExpiryScheduleEnvironment },
+        },
+      );
+      grantDatabaseAccess(inventoryExpiryDispatcherFn);
+      grantInventoryExpiryScheduleManagement(inventoryExpiryDispatcherFn);
+      new events.Rule(this, 'InventoryExpiryReconciliationSchedule', {
+        description: 'Schedule pending inventory expirations and reconcile overdue order holds.',
+        schedule: events.Schedule.rate(Duration.hours(1)),
+        targets: [
+          new targets.LambdaFunction(inventoryExpiryDispatcherFn, {
+            deadLetterQueue: inventoryExpiryDeadLetterQueue,
+            maxEventAge: Duration.hours(1),
+            retryAttempts: 2,
+          }),
+        ],
+      });
+    }
 
     const webhooksStripeFn = new lambdaNode.NodejsFunction(this, 'WebhooksStripeFn', {
       entry: path.join(__dirname, '../../api/src/lambda.ts'),
@@ -364,7 +485,7 @@ export class ApiStack extends Stack {
       logGroup: functionLogGroup('WebhooksStripeFn'),
       environment: stripeEnv,
     });
-    props.cluster.secret?.grantRead(webhooksStripeFn);
+    grantDatabaseAccess(webhooksStripeFn);
     stripeSecret.grantRead(webhooksStripeFn);
 
     this.httpApi = new apigwv2.HttpApi(this, 'HttpApi', {

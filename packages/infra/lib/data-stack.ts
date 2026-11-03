@@ -1,4 +1,4 @@
-import { RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
+import { Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as rds from 'aws-cdk-lib/aws-rds';
 import { Construct } from 'constructs';
@@ -39,6 +39,10 @@ export class DataStack extends Stack {
       }),
       serverlessV2MinCapacity: envConfig.auroraMinCapacity,
       serverlessV2MaxCapacity: envConfig.auroraMaxCapacity,
+      serverlessV2AutoPauseDuration: envConfig.auroraMinCapacity === 0
+        ? Duration.seconds(envConfig.auroraAutoPauseSeconds)
+        : undefined,
+      enableDataApi: true,
       vpc: props.vpc,
       vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
       securityGroups: [dbSecurityGroup],

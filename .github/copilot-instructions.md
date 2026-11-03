@@ -28,6 +28,17 @@ Never string-concatenate SQL — always use parameterized queries.
 - `npm run synth:dev --workspace=@sugarsocietysc/infra` — CDK synth only, never deploy without explicit
   user approval (deploys touch real AWS billing/resources).
 
+## Release validation
+- Once PR CI passes, proactively request approval to deploy the PR branch to `dev` (staging) through
+  the manual `Deploy to AWS` workflow; merging is not required for staging deployment.
+- After approval, deploy, verify health and relevant feature smoke tests, and provide the preview URL
+  and results. Do not consider release validation complete until staging is verified; if approval is
+  pending or validation is blocked, report that explicitly.
+- Respect manual-review pauses. Approval to edit instructions or stabilize CI is not deployment
+  approval. Production deployment and destructive infrastructure changes require separate explicit
+  approval; do not merge without authorization.
+- Follow the staged rollout and rollback safeguards in [AWS deployment setup](../docs/AWS-DEPLOYMENT.md).
+
 ## Conventions
 - Validate every API boundary with a shared zod schema from `packages/shared/src/schemas`.
 - Guest checkout orders require both `guestEmail` and `guestPhone`; their PII is purged by a scheduled

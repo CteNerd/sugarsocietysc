@@ -10,19 +10,19 @@ Monorepo (npm workspaces):
 ```
 packages/
   web/      React (CRA) frontend
-  api/      Node/TypeScript Lambda backend (hono), raw SQL via pg (no ORM)
+  api/      Node/TypeScript Lambda backend (hono), parameterized PostgreSQL (no ORM)
   infra/    AWS CDK (TypeScript) — Network/Data/Auth/Api/Web stacks
   shared/   Shared TS types + zod schemas used by both web and api
 ```
 
 The backend uses a ports-and-adapters design for every external integration (SMS, email, payments,
-storage) so vendors can be swapped (e.g. SNS -> Twilio) by adding one adapter class, never by touching
+storage, database transport) so vendors can be swapped (e.g. SNS -> Twilio) by adding one adapter class, never by touching
 business logic. See [.github/copilot-instructions.md](.github/copilot-instructions.md) for full
 conventions, `.github/instructions/*.instructions.md` for per-package rules, and
 [docs/ROADMAP.md](docs/ROADMAP.md) for the full scope, decisions, data model, and phase-by-phase status.
 
 Auth is Amazon Cognito (with OAuth/social login support), the database is Aurora Serverless v2
-(PostgreSQL), and hosting is S3 + CloudFront (replacing the previous GitHub Pages deployment once the
+(PostgreSQL through Data API in AWS, `pg` locally), and hosting is S3 + CloudFront (replacing the previous GitHub Pages deployment once the
 cutover is complete).
 
 Pre-Sales support concurrent seasonal events. Each event owns its order window, pickup date, deposit
@@ -89,6 +89,8 @@ registration and deployed secret configuration steps.
 npm run build                                          # build all workspaces
 npm test                                                # test all workspaces
 npm run migrate --workspace=@sugarsocietysc/api         # run DB migrations
+npm run test:integration --workspace=@sugarsocietysc/api # isolated PostgreSQL 16; no Docker/AWS needed
+npm run validate:lean --workspace=@sugarsocietysc/infra  # polling, scheduled, pause and IAM assertions
 npm run synth:dev --workspace=@sugarsocietysc/infra     # CDK synth (template generation, no AWS calls)
 npm run diff:dev --workspace=@sugarsocietysc/infra      # CDK diff against the dev environment
 CI=true npm test --workspace=@sugarsocietysc/web -- --watchAll=false --runInBand
@@ -99,10 +101,30 @@ billing/resources and require explicit human approval.
 
 ### AWS deployment via GitHub Actions
 
-The manual-only `Deploy to AWS` workflow uses GitHub OIDC, deploys CDK and publishes the frontend to
-S3 + CloudFront. Configure environment-specific GitHub variables and AWS OIDC/CDK bootstrap first;
-production should require GitHub Environment approval. See [docs/AWS-DEPLOYMENT.md](docs/AWS-DEPLOYMENT.md)
+The [Release CI workflow](.github/workflows/ci.yml) runs on every PR and is reused by the release
+pipeline for pushes to `main`, using Node 22 (without a duplicate standalone main validation run).
+It checks API/shared types, unit and isolated PostgreSQL integration tests, API/shared builds,
+infrastructure types/assertions and dev/prod synth, plus frontend unit tests, a strict production build
+and required desktop/mobile Playwright checks of that build using controlled catalog fixtures.
+The always-present **Release gate** fails if any validation job fails or is skipped/cancelled; configure
+it as a required status check in branch protection (workflow code alone does not enforce merging).
+
+The [Deploy to AWS workflow](.github/workflows/deploy-aws.yml) automatically validates main commits,
+deploys them to dev/staging, and verifies deployed API/browser smoke tests before requesting production
+Environment approval. Production requires the same commit, the `main` ref, and a still-current main
+head. Manual `dev` dispatches preview any branch without a production path; manual `prod` dispatches
+on main must first repeat staging deployment and tests. A shared lock spans deployment, tests and
+production approval so previews cannot overwrite staging mid-validation. Configure GitHub variables and
+AWS OIDC/CDK bootstrap first. See [docs/AWS-DEPLOYMENT.md](docs/AWS-DEPLOYMENT.md)
 for the exact setup and rollback/cutover checklist. Runtime credentials remain in AWS Secrets Manager.
+
+After publication and completed CloudFront invalidation, each environment deployment must pass read-only
+[smoke tests](tests/smoke/): real database health/catalog reads,
+anonymous admin rejection, and desktop/mobile Chromium navigation, catalog rendering and login
+redirects. Reports and failure screenshots/traces are retained for seven days. The same workflow can
+test an existing environment without redeploying; see [commands and coverage limits](docs/AWS-DEPLOYMENT.md#deployed-environment-smoke-tests).
+PR browser checks run locally on CI, not against shared staging; main repeats them before deploying,
+then verifies the actual staging API/frontend before production approval.
 
 API Lambdas share the app composition root but receive domain-specific configuration and IAM grants.
 Contact queue initialization is deferred until notification delivery is requested, like newsletter
@@ -110,14 +132,44 @@ queue initialization, so `/health` and other domains do not require `CONTACT_QUE
 queue permissions. Contact submissions still require configured reCAPTCHA verification and a queue;
 missing configuration is surfaced as an error, not a successful submission.
 
+### Lean AWS architecture and rollout status
+
+The detailed billing investigation stays local; the public
+[rollout and rollback plan](docs/AWS-DEPLOYMENT.md#lean-data-api-rollout) documents the implementation.
+AWS Lambdas use parameterized PostgreSQL through Aurora Data API without VPC
+attachment; local development keeps `DATABASE_DRIVER=pg` (the default) and `DATABASE_URL`.
+AWS uses `DATABASE_DRIVER=data-api`, `DB_CLUSTER_ARN`, `DB_SECRET_ARN`, and `DB_NAME`; it does not
+bootstrap a TCP connection or read database credentials into application memory.
+
+Optional scheduled inventory expiry writes a durable task in the checkout transaction, then creates
+a one-time EventBridge Scheduler event. Hourly reconciliation recovers missed scheduling and legacy
+holds; timestamps and row locks remain authoritative. Payment finalization compares cookie quantities
+(`packs * pack_size`), rather than comparing packs to reserved cookies.
+
+**Staging transport deployed; production rollout pending:** the November 3 dev deployment of
+`abeb0f74` enabled Data API and removed API Lambda VPC attachments. Read-only staging checks confirmed
+database health and catalog access. Five-minute polling, 0.5 minimum ACU, and one NAT remain in dev.
+Scheduled mode and zero-ACU pause are explicit follow-up configuration
+changes; the deployment workflow refuses scheduled mode until the existing migration Lambda confirms
+the expiry-task table exists. NAT removal is a separately approved Network-only update after
+non-VPC runtime verification. Managed secrets, privacy purges, backups, deletion protection, WAF,
+queues, and alarms remain.
+
+The operating target is one persistent production environment with local development and temporary
+staging. Existing dev resources must be preserved/exported and explicitly approved for teardown;
+this PR neither deletes them nor certifies live AWS compatibility, resume latency, or savings.
+See the [staged rollout and rollback checklist](docs/AWS-DEPLOYMENT.md#lean-data-api-rollout).
+The integration suite uses real isolated PostgreSQL with an emulated Data API wire transport; it
+does not replace managed AWS and Stripe test-mode smoke tests.
+
 ## Deployment
 
-- **Frontend**: currently deployed to GitHub Pages via [.github/workflows/deploy.yml](.github/workflows/deploy.yml)
-  on push to `main`; migrate to S3 + CloudFront (`packages/infra` `WebStack`) after the AWS deployment
-  workflow and cutover are verified.
+- **Frontend**: the legacy GitHub Pages deployment workflow is no longer present. Existing hosting is
+  not changed by CI; migrate to S3 + CloudFront (`packages/infra` `WebStack`) only after the manual AWS
+  deployment workflow and cutover are verified.
 - **Backend/Infra**: successful Google OAuth sign-in confirms the Cognito Hosted UI path has been used;
   deployment state of the remaining stacks is not assumed. `packages/infra` defines `dev` and `prod`
-  environments; existing infra CI runs `cdk synth` on PRs touching infra code. The new manual AWS
+  environments; Release CI runs `cdk synth` for both on every PR and through the main release pipeline. The AWS
   workflow is documented in [docs/AWS-DEPLOYMENT.md](docs/AWS-DEPLOYMENT.md).
 
 ### Stripe test-mode setup (required for Phase 6 deposit payments)

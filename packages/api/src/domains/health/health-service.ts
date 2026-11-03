@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { SqlDatabase } from '../../ports/database/ISqlDatabase';
 
 export interface HealthResult {
   status: 'ok' | 'degraded';
@@ -6,7 +6,7 @@ export interface HealthResult {
 }
 
 export class HealthService {
-  constructor(private readonly pool: Pool) {}
+  constructor(private readonly pool: SqlDatabase) {}
 
   async check(): Promise<HealthResult> {
     try {

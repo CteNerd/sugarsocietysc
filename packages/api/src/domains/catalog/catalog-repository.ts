@@ -1,4 +1,5 @@
-import { Pool, PoolClient } from 'pg';
+import { SqlDatabase, SqlConnection } from '../../ports/database/ISqlDatabase';
+import { runSqlTransaction } from '../../db/sql-transaction';
 import {
   CookieDesign,
   CreateCookieDesignRequest,
@@ -55,6 +56,11 @@ interface CookieDesignRow {
   quantity_sold: number;
   is_active: boolean;
 }
+
+// JSON projections avoid unsupported PostgreSQL array result types over Data API.
+const cookieDesignColumns = `id, name, description, to_json(image_urls) AS image_urls,
+  pre_sale_event_id, category_id, sort_order, type, to_json(colors) AS colors,
+  max_quantity, quantity_sold, is_active`;
 
 function toCookieDesign(row: CookieDesignRow): CookieDesign {
   return {
@@ -140,21 +146,10 @@ function toPackagingOption(row: PackagingOptionRow): PackagingOption {
 }
 
 export class CatalogRepository {
-  constructor(private readonly pool: Pool) {}
+  constructor(private readonly pool: SqlDatabase) {}
 
-  private async withTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
-    const client = await this.pool.connect();
-    try {
-      await client.query('BEGIN');
-      const result = await fn(client);
-      await client.query('COMMIT');
-      return result;
-    } catch (err) {
-      await client.query('ROLLBACK');
-      throw err;
-    } finally {
-      client.release();
-    }
+  private async withTransaction<T>(fn: (client: SqlConnection) => Promise<T>): Promise<T> {
+    return runSqlTransaction(this.pool, fn);
   }
 
   // --- Public reads ---
@@ -170,7 +165,7 @@ export class CatalogRepository {
   }
 
   async getPreSaleEventById(id: string): Promise<PreSaleEvent | undefined> {
-    const result = await this.pool.query<PreSaleEventRow>('SELECT * FROM pre_sale_events WHERE id = $1', [id]);
+    const result = await this.pool.query<PreSaleEventRow>('SELECT * FROM pre_sale_events WHERE id = $1::uuid', [id]);
     return result.rows[0] ? toPreSaleEvent(result.rows[0]) : undefined;
   }
 
@@ -187,7 +182,7 @@ export class CatalogRepository {
   async listActiveCategoriesForEvent(preSaleEventId: string): Promise<MenuCategory[]> {
     const result = await this.pool.query<MenuCategoryRow>(
       `SELECT * FROM menu_categories
-       WHERE pre_sale_event_id = $1 AND is_active = true
+       WHERE pre_sale_event_id = $1::uuid AND is_active = true
        ORDER BY sort_order, name`,
       [preSaleEventId],
     );
@@ -196,8 +191,8 @@ export class CatalogRepository {
 
   async listCookieDesignsForEvent(preSaleEventId: string): Promise<CookieDesign[]> {
     const result = await this.pool.query<CookieDesignRow>(
-      `SELECT * FROM cookie_designs
-       WHERE pre_sale_event_id = $1 AND type = 'presale' AND is_active = true
+      `SELECT ${cookieDesignColumns} FROM cookie_designs
+       WHERE pre_sale_event_id = $1::uuid AND type = 'presale' AND is_active = true
        ORDER BY sort_order, name`,
       [preSaleEventId],
     );
@@ -208,7 +203,7 @@ export class CatalogRepository {
     const result = await this.pool.query<MenuItemVariantRow>(
       `SELECT v.* FROM menu_item_variants v
        JOIN cookie_designs d ON d.id = v.cookie_design_id
-       WHERE d.pre_sale_event_id = $1 AND v.is_active = true
+       WHERE d.pre_sale_event_id = $1::uuid AND v.is_active = true
        ORDER BY v.sort_order, v.pack_size`,
       [preSaleEventId],
     );
@@ -219,7 +214,7 @@ export class CatalogRepository {
     const result = await this.pool.query<PackagingOptionRow>(
       `SELECT p.* FROM packaging_options p
        JOIN pre_sale_event_packaging ep ON ep.packaging_option_id = p.id
-       WHERE ep.pre_sale_event_id = $1 AND ($2::boolean = false OR p.is_active = true)
+       WHERE ep.pre_sale_event_id = $1::uuid AND ($2::boolean = false OR p.is_active = true)
        ORDER BY p.type, p.name`,
       [preSaleEventId, activeOnly],
     );
@@ -231,7 +226,7 @@ export class CatalogRepository {
     const result = await this.pool.query<PackagingOptionRow>(
       `SELECT p.* FROM packaging_options p
        JOIN pre_sale_event_packaging ep ON ep.packaging_option_id = p.id
-       WHERE ep.pre_sale_event_id = $1 AND p.id = ANY($2::uuid[]) AND p.is_active = true`,
+       WHERE ep.pre_sale_event_id = $1::uuid AND p.id = ANY($2::uuid[]) AND p.is_active = true`,
       [preSaleEventId, ids],
     );
     return result.rows.map(toPackagingOption);
@@ -254,12 +249,12 @@ export class CatalogRepository {
   }
 
   async getCookieDesignById(id: string): Promise<CookieDesign | undefined> {
-    const result = await this.pool.query<CookieDesignRow>('SELECT * FROM cookie_designs WHERE id = $1', [id]);
+    const result = await this.pool.query<CookieDesignRow>(`SELECT ${cookieDesignColumns} FROM cookie_designs WHERE id = $1::uuid`, [id]);
     return result.rows[0] ? toCookieDesign(result.rows[0]) : undefined;
   }
 
   async getPackagingOptionById(id: string): Promise<PackagingOption | undefined> {
-    const result = await this.pool.query<PackagingOptionRow>('SELECT * FROM packaging_options WHERE id = $1', [
+    const result = await this.pool.query<PackagingOptionRow>('SELECT * FROM packaging_options WHERE id = $1::uuid', [
       id,
     ]);
     return result.rows[0] ? toPackagingOption(result.rows[0]) : undefined;
@@ -268,13 +263,13 @@ export class CatalogRepository {
   /** Atomically reserves `quantity` units of a design, never exceeding `max_quantity`. Returns the
    * updated design, or undefined if the reservation would oversell (caller should fail the order). */
   async reserveCookieDesignQuantity(
-    client: PoolClient,
+    client: SqlConnection,
     orderId: string,
     id: string,
     quantity: number,
   ): Promise<boolean> {
     const design = await client.query<{ max_quantity: number | null; quantity_sold: number; is_active: boolean; type: string }>(
-      'SELECT max_quantity, quantity_sold, is_active, type FROM cookie_designs WHERE id = $1 FOR UPDATE',
+      'SELECT max_quantity, quantity_sold, is_active, type FROM cookie_designs WHERE id = $1::uuid FOR UPDATE',
       [id],
     );
     const row = design.rows[0];
@@ -282,12 +277,12 @@ export class CatalogRepository {
 
     await client.query(
       `UPDATE order_inventory_holds SET status = 'expired'
-       WHERE cookie_design_id = $1 AND status = 'held' AND expires_at <= now()`,
+       WHERE cookie_design_id = $1::uuid AND status = 'held' AND expires_at <= now()`,
       [id],
     );
     const activeHolds = await client.query<{ quantity: string }>(
       `SELECT COALESCE(SUM(quantity), 0) AS quantity
-       FROM order_inventory_holds WHERE cookie_design_id = $1 AND status = 'held' AND expires_at > now()`,
+       FROM order_inventory_holds WHERE cookie_design_id = $1::uuid AND status = 'held' AND expires_at > now()`,
       [id],
     );
     const reserved = Number(activeHolds.rows[0].quantity);
@@ -296,7 +291,7 @@ export class CatalogRepository {
     }
     await client.query(
       `INSERT INTO order_inventory_holds (order_id, cookie_design_id, quantity, expires_at)
-       VALUES ($1, $2, $3, now() + interval '30 minutes')`,
+       VALUES ($1::uuid, $2::uuid, $3, now() + interval '30 minutes')`,
       [orderId, id, quantity],
     );
     return true;
@@ -313,7 +308,7 @@ export class CatalogRepository {
     const result = await this.pool.query<PreSaleEventRow>(
       `INSERT INTO pre_sale_events
          (name, holiday_tag, order_window_start, order_window_end, pickup_date, deposit_percent, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       VALUES ($1, $2, $3::timestamptz, $4::timestamptz, $5::timestamptz, $6, $7)
        RETURNING *`,
       [
         input.name,
@@ -333,12 +328,12 @@ export class CatalogRepository {
       `UPDATE pre_sale_events SET
          name = COALESCE($2, name),
          holiday_tag = COALESCE($3, holiday_tag),
-         order_window_start = COALESCE($4, order_window_start),
-         order_window_end = COALESCE($5, order_window_end),
-         pickup_date = COALESCE($6, pickup_date),
+         order_window_start = COALESCE($4::timestamptz, order_window_start),
+         order_window_end = COALESCE($5::timestamptz, order_window_end),
+         pickup_date = COALESCE($6::timestamptz, pickup_date),
          deposit_percent = COALESCE($7, deposit_percent),
          is_active = COALESCE($8, is_active)
-       WHERE id = $1
+       WHERE id = $1::uuid
        RETURNING *`,
       [
         id,
@@ -357,15 +352,15 @@ export class CatalogRepository {
   /** Replaces the packaging/add-on options offered for an event. Returns false if the event doesn't exist. */
   async setEventPackaging(preSaleEventId: string, packagingOptionIds: string[]): Promise<boolean> {
     return this.withTransaction(async (client) => {
-      const existing = await client.query('SELECT id FROM pre_sale_events WHERE id = $1 FOR UPDATE', [
+      const existing = await client.query('SELECT id FROM pre_sale_events WHERE id = $1::uuid FOR UPDATE', [
         preSaleEventId,
       ]);
       if (existing.rowCount !== 1) return false;
-      await client.query('DELETE FROM pre_sale_event_packaging WHERE pre_sale_event_id = $1', [preSaleEventId]);
+      await client.query('DELETE FROM pre_sale_event_packaging WHERE pre_sale_event_id = $1::uuid', [preSaleEventId]);
       if (packagingOptionIds.length > 0) {
         await client.query(
           `INSERT INTO pre_sale_event_packaging (pre_sale_event_id, packaging_option_id)
-           SELECT $1, unnest($2::uuid[])`,
+           SELECT $1::uuid, unnest($2::uuid[])`,
           [preSaleEventId, packagingOptionIds],
         );
       }
@@ -386,21 +381,21 @@ export class CatalogRepository {
 
   async listCategoriesForEvent(preSaleEventId: string): Promise<MenuCategory[]> {
     const result = await this.pool.query<MenuCategoryRow>(
-      'SELECT * FROM menu_categories WHERE pre_sale_event_id = $1 ORDER BY sort_order, name',
+      'SELECT * FROM menu_categories WHERE pre_sale_event_id = $1::uuid ORDER BY sort_order, name',
       [preSaleEventId],
     );
     return result.rows.map(toMenuCategory);
   }
 
   async getCategoryById(id: string): Promise<MenuCategory | undefined> {
-    const result = await this.pool.query<MenuCategoryRow>('SELECT * FROM menu_categories WHERE id = $1', [id]);
+    const result = await this.pool.query<MenuCategoryRow>('SELECT * FROM menu_categories WHERE id = $1::uuid', [id]);
     return result.rows[0] ? toMenuCategory(result.rows[0]) : undefined;
   }
 
   async createCategory(input: CreateMenuCategoryRequest): Promise<MenuCategory> {
     const result = await this.pool.query<MenuCategoryRow>(
       `INSERT INTO menu_categories (pre_sale_event_id, name, description, sort_order, is_active)
-       VALUES ($1, $2, $3, $4, $5)
+       VALUES ($1::uuid, $2, $3, $4, $5)
        RETURNING *`,
       [input.preSaleEventId, input.name, input.description ?? null, input.sortOrder, input.isActive],
     );
@@ -414,7 +409,7 @@ export class CatalogRepository {
          description = COALESCE($3, description),
          sort_order = COALESCE($4, sort_order),
          is_active = COALESCE($5, is_active)
-       WHERE id = $1
+       WHERE id = $1::uuid
        RETURNING *`,
       [id, input.name ?? null, input.description ?? null, input.sortOrder ?? null, input.isActive ?? null],
     );
@@ -427,8 +422,8 @@ export class CatalogRepository {
     const result = await this.pool.query<MenuItemVariantRow>(
       `SELECT v.* FROM menu_item_variants v
        JOIN cookie_designs d ON d.id = v.cookie_design_id
-       WHERE ($1::uuid IS NULL OR v.cookie_design_id = $1)
-         AND ($2::uuid IS NULL OR d.pre_sale_event_id = $2)
+       WHERE ($1::uuid IS NULL OR v.cookie_design_id = $1::uuid)
+         AND ($2::uuid IS NULL OR d.pre_sale_event_id = $2::uuid)
        ORDER BY v.sort_order, v.pack_size`,
       [filter.cookieDesignId ?? null, filter.preSaleEventId ?? null],
     );
@@ -438,7 +433,7 @@ export class CatalogRepository {
   async createVariant(input: CreateMenuItemVariantRequest): Promise<MenuItemVariant> {
     const result = await this.pool.query<MenuItemVariantRow>(
       `INSERT INTO menu_item_variants (cookie_design_id, label, pack_size, price_cents, sort_order, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6)
+       VALUES ($1::uuid, $2, $3, $4, $5, $6)
        RETURNING *`,
       [input.cookieDesignId, input.label ?? null, input.packSize, input.priceCents, input.sortOrder, input.isActive],
     );
@@ -453,7 +448,7 @@ export class CatalogRepository {
          price_cents = COALESCE($4, price_cents),
          sort_order = COALESCE($5, sort_order),
          is_active = COALESCE($6, is_active)
-       WHERE id = $1
+       WHERE id = $1::uuid
        RETURNING *`,
       [
         id,
@@ -472,10 +467,10 @@ export class CatalogRepository {
   async listAllCookieDesigns(preSaleEventId?: string): Promise<CookieDesign[]> {
     const result = preSaleEventId
       ? await this.pool.query<CookieDesignRow>(
-          'SELECT * FROM cookie_designs WHERE pre_sale_event_id = $1 ORDER BY sort_order, name',
+          `SELECT ${cookieDesignColumns} FROM cookie_designs WHERE pre_sale_event_id = $1::uuid ORDER BY sort_order, name`,
           [preSaleEventId],
         )
-      : await this.pool.query<CookieDesignRow>('SELECT * FROM cookie_designs ORDER BY sort_order, name');
+      : await this.pool.query<CookieDesignRow>(`SELECT ${cookieDesignColumns} FROM cookie_designs ORDER BY sort_order, name`);
     return result.rows.map(toCookieDesign);
   }
 
@@ -483,8 +478,8 @@ export class CatalogRepository {
     const result = await this.pool.query<CookieDesignRow>(
       `INSERT INTO cookie_designs
          (name, description, image_urls, pre_sale_event_id, category_id, sort_order, type, colors, max_quantity, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6, 'presale', $7, $8, $9)
-       RETURNING *`,
+       VALUES ($1, $2, $3::text[], $4::uuid, $5::uuid, $6, 'presale', $7::text[], $8, $9)
+       RETURNING ${cookieDesignColumns}`,
       [
         input.name,
         input.description ?? null,
@@ -504,23 +499,22 @@ export class CatalogRepository {
     const result = await this.pool.query<CookieDesignRow>(
       `UPDATE cookie_designs SET
          name = COALESCE($2, name),
-         image_urls = COALESCE($3, image_urls),
-         pre_sale_event_id = COALESCE($4, pre_sale_event_id),
-         colors = COALESCE($5, colors),
-         max_quantity = CASE WHEN $12::boolean THEN $13::integer ELSE max_quantity END,
-         is_active = COALESCE($7, is_active),
-         description = COALESCE($8, description),
-         sort_order = COALESCE($9, sort_order),
-         category_id = CASE WHEN $10::boolean THEN $11::uuid ELSE category_id END
-       WHERE id = $1
-       RETURNING *`,
+         image_urls = COALESCE($3::text[], image_urls),
+         pre_sale_event_id = COALESCE($4::uuid, pre_sale_event_id),
+         colors = COALESCE($5::text[], colors),
+         max_quantity = CASE WHEN $11::boolean THEN $12::integer ELSE max_quantity END,
+         is_active = COALESCE($6, is_active),
+         description = COALESCE($7, description),
+         sort_order = COALESCE($8, sort_order),
+         category_id = CASE WHEN $9::boolean THEN $10::uuid ELSE category_id END
+       WHERE id = $1::uuid
+       RETURNING ${cookieDesignColumns}`,
       [
         id,
         input.name ?? null,
         input.imageUrls ?? null,
         input.preSaleEventId ?? null,
         input.colors ?? null,
-        input.maxQuantity ?? null,
         input.isActive ?? null,
         input.description ?? null,
         input.sortOrder ?? null,
@@ -560,7 +554,7 @@ export class CatalogRepository {
          price = COALESCE($3, price),
          type = COALESCE($4, type),
          is_active = COALESCE($5, is_active)
-       WHERE id = $1
+       WHERE id = $1::uuid
        RETURNING *`,
       [id, input.name ?? null, input.price ?? null, input.type ?? null, input.isActive ?? null],
     );

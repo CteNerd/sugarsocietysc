@@ -1,7 +1,7 @@
-import { Pool } from 'pg';
+import { SqlDatabase } from '../../ports/database/ISqlDatabase';
 
 export class GuestPiiRetentionRepository {
-  constructor(private readonly pool: Pool) {}
+  constructor(private readonly pool: SqlDatabase) {}
 
   async purgeExpiredGuestContact(retentionDays: number): Promise<number> {
     if (!Number.isInteger(retentionDays) || retentionDays < 1) {

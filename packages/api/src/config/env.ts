@@ -3,7 +3,7 @@
  * a vendor (e.g. SNS -> Twilio) is a one-line change, never a change to calling code.
  */
 export interface AppConfig {
-  databaseUrl: string;
+  databaseUrl?: string;
   smsProvider: 'sns' | 'twilio';
   emailProvider: 'ses';
   paymentProvider: 'stripe';
@@ -27,17 +27,37 @@ export interface AppConfig {
   cognitoClientId: string;
   adminEmails: string[];
   adminEmailDomain: string;
+  inventoryExpiryScheduleGroup?: string;
+  inventoryExpiryTargetArn?: string;
+  inventoryExpiryRoleArn?: string;
+  inventoryExpiryDeadLetterQueueArn?: string;
+}
+
+export function databaseDriver(): 'pg' | 'data-api' {
+  const driver = process.env.DATABASE_DRIVER ?? 'pg';
+  if (driver !== 'pg' && driver !== 'data-api') throw new Error('DATABASE_DRIVER must be pg or data-api');
+  return driver;
+}
+
+export function dataApiConfig(): { resourceArn: string; secretArn: string; database: string } {
+  return {
+    resourceArn: requireEnv('DB_CLUSTER_ARN'),
+    secretArn: requireEnv('DB_SECRET_ARN'),
+    database: requireEnv('DB_NAME', 'sugarsocietysc'),
+  };
 }
 
 function requireEnv(name: string, fallback?: string): string {
   const value = process.env[name] ?? fallback;
-  if (value === undefined) {
+  if (value === undefined || value.trim() === '') {
     throw new Error(`Missing required environment variable: ${name}`);
   }
   return value;
 }
 
 export function loadConfig(): AppConfig {
+  const driver = databaseDriver();
+  if (driver === 'data-api') dataApiConfig();
   const cognitoIssuer = requireEnv('COGNITO_ISSUER_URL', 'http://localhost:9229/local_placeholder');
   const guestPiiRetentionDays = Number(process.env.GUEST_PII_RETENTION_DAYS ?? 60);
   if (!Number.isSafeInteger(guestPiiRetentionDays) || guestPiiRetentionDays < 1) {
@@ -45,7 +65,7 @@ export function loadConfig(): AppConfig {
   }
 
   return {
-    databaseUrl: requireEnv('DATABASE_URL'),
+    databaseUrl: driver === 'data-api' ? undefined : requireEnv('DATABASE_URL'),
     smsProvider: (process.env.SMS_PROVIDER as AppConfig['smsProvider']) ?? 'sns',
     emailProvider: 'ses',
     paymentProvider: 'stripe',
@@ -76,5 +96,9 @@ export function loadConfig(): AppConfig {
       .map((email) => email.trim().toLowerCase())
       .filter(Boolean),
     adminEmailDomain: requireEnv('ADMIN_EMAIL_DOMAIN', 'sugarsocietysc.com').trim().toLowerCase(),
+    inventoryExpiryScheduleGroup: process.env.INVENTORY_EXPIRY_SCHEDULE_GROUP,
+    inventoryExpiryTargetArn: process.env.INVENTORY_EXPIRY_TARGET_ARN,
+    inventoryExpiryRoleArn: process.env.INVENTORY_EXPIRY_ROLE_ARN,
+    inventoryExpiryDeadLetterQueueArn: process.env.INVENTORY_EXPIRY_DLQ_ARN,
   };
 }

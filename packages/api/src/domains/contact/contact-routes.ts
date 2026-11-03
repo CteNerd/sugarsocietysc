@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { Pool } from 'pg';
+import { SqlDatabase } from '../../ports/database/ISqlDatabase';
 import { contactSubmissionSchema } from '@sugarsocietysc/shared';
 import { createContactQueue } from '../../adapters/notification/contact-queue-factory';
 import { createHumanVerificationProvider } from '../../adapters/security/google-recaptcha-provider-factory';
@@ -8,7 +8,7 @@ import { AppConfig } from '../../config/env';
 import { ContactRepository } from './contact-repository';
 import { ContactSubmissionError, ContactService } from './contact-service';
 
-export function contactRoutes(pool: Pool, config: AppConfig): Hono {
+export function contactRoutes(pool: SqlDatabase, config: AppConfig): Hono {
   const app = new Hono();
   const service = new ContactService(
     new ContactRepository(pool),

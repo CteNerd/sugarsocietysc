@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { SqlDatabase } from '../ports/database/ISqlDatabase';
 
 interface SampleVariant {
   label: string;
@@ -24,7 +24,7 @@ interface SampleEvent {
   designs: SampleDesign[];
 }
 
-async function seedEvent(pool: Pool, event: SampleEvent): Promise<string> {
+async function seedEvent(pool: SqlDatabase, event: SampleEvent): Promise<string> {
   const existingEvent = await pool.query(
     'SELECT id FROM pre_sale_events WHERE name = $1 ORDER BY created_at DESC LIMIT 1',
     [event.name],
@@ -34,16 +34,16 @@ async function seedEvent(pool: Pool, event: SampleEvent): Promise<string> {
     eventId = existingEvent.rows[0].id;
     await pool.query(
       `UPDATE pre_sale_events
-       SET holiday_tag = $1, order_window_start = $2, order_window_end = $3, pickup_date = $4,
+       SET holiday_tag = $1, order_window_start = $2::timestamptz, order_window_end = $3::timestamptz, pickup_date = $4::timestamptz,
            deposit_percent = 50, is_active = true
-       WHERE id = $5`,
+       WHERE id = $5::uuid`,
       [event.holidayTag, event.orderWindowStart, event.orderWindowEnd, event.pickupDate, eventId],
     );
   } else {
     const inserted = await pool.query(
       `INSERT INTO pre_sale_events
          (name, holiday_tag, order_window_start, order_window_end, pickup_date, deposit_percent, is_active)
-       VALUES ($1, $2, $3, $4, $5, 50, true)
+       VALUES ($1, $2, $3::timestamptz, $4::timestamptz, $5::timestamptz, 50, true)
        RETURNING id`,
       [event.name, event.holidayTag, event.orderWindowStart, event.orderWindowEnd, event.pickupDate],
     );
@@ -51,13 +51,13 @@ async function seedEvent(pool: Pool, event: SampleEvent): Promise<string> {
   }
 
   const existingCategory = await pool.query(
-    'SELECT id FROM menu_categories WHERE pre_sale_event_id = $1 AND name = $2',
+    'SELECT id FROM menu_categories WHERE pre_sale_event_id = $1::uuid AND name = $2',
     [eventId, event.categoryName],
   );
   const categoryId: string = existingCategory.rows[0]?.id ?? (
     await pool.query(
       `INSERT INTO menu_categories (pre_sale_event_id, name, sort_order, is_active)
-       VALUES ($1, $2, 0, true)
+       VALUES ($1::uuid, $2, 0, true)
        RETURNING id`,
       [eventId, event.categoryName],
     )
@@ -65,23 +65,23 @@ async function seedEvent(pool: Pool, event: SampleEvent): Promise<string> {
 
   for (const [sortOrder, design] of event.designs.entries()) {
     const existing = await pool.query(
-      'SELECT id FROM cookie_designs WHERE name = $1 AND pre_sale_event_id = $2',
+      'SELECT id FROM cookie_designs WHERE name = $1 AND pre_sale_event_id = $2::uuid',
       [design.name, eventId],
     );
     let designId = existing.rows[0]?.id as string | undefined;
     if (designId) {
       await pool.query(
         `UPDATE cookie_designs
-         SET description = $1, category_id = $2, sort_order = $3, colors = $4,
+         SET description = $1, category_id = $2::uuid, sort_order = $3, colors = $4::text[],
              max_quantity = $5, is_active = true
-         WHERE id = $6`,
+         WHERE id = $6::uuid`,
         [design.description, categoryId, sortOrder, design.colors, design.maxQuantity, designId],
       );
     } else {
       const inserted = await pool.query(
         `INSERT INTO cookie_designs
            (name, description, image_urls, pre_sale_event_id, category_id, sort_order, type, colors, max_quantity, is_active)
-         VALUES ($1, $2, '{}', $3, $4, $5, 'presale', $6, $7, true)
+         VALUES ($1, $2, '{}', $3::uuid, $4::uuid, $5, 'presale', $6::text[], $7, true)
          RETURNING id`,
         [design.name, design.description, eventId, categoryId, sortOrder, design.colors, design.maxQuantity],
       );
@@ -92,27 +92,27 @@ async function seedEvent(pool: Pool, event: SampleEvent): Promise<string> {
     // disturbing any order snapshots that already reference it.
     await pool.query(
       `UPDATE menu_item_variants SET is_active = false
-       WHERE cookie_design_id = $1 AND label IS NULL`,
+       WHERE cookie_design_id = $1::uuid AND label IS NULL`,
       [designId],
     );
     for (const [variantSortOrder, variant] of design.variants.entries()) {
       const existingVariant = await pool.query(
         `SELECT id FROM menu_item_variants
-         WHERE cookie_design_id = $1 AND label = $2 AND pack_size = $3`,
+         WHERE cookie_design_id = $1::uuid AND label = $2 AND pack_size = $3`,
         [designId, variant.label, variant.packSize],
       );
       if (existingVariant.rows[0]) {
         await pool.query(
           `UPDATE menu_item_variants
            SET price_cents = $1, sort_order = $2, is_active = true
-           WHERE id = $3`,
+           WHERE id = $3::uuid`,
           [variant.priceCents, variantSortOrder, existingVariant.rows[0].id],
         );
       } else {
         await pool.query(
           `INSERT INTO menu_item_variants
              (cookie_design_id, label, pack_size, price_cents, sort_order, is_active)
-           VALUES ($1, $2, $3, $4, $5, true)`,
+           VALUES ($1::uuid, $2, $3, $4, $5, true)`,
           [designId, variant.label, variant.packSize, variant.priceCents, variantSortOrder],
         );
       }
@@ -122,7 +122,7 @@ async function seedEvent(pool: Pool, event: SampleEvent): Promise<string> {
 }
 
 /** Idempotent sample catalog with concurrent Halloween, Thanksgiving, and Valentine's events. */
-export async function seedHalloweenPresale(pool: Pool): Promise<string> {
+export async function seedHalloweenPresale(pool: SqlDatabase): Promise<string> {
   const now = new Date();
   const year = now.getUTCFullYear();
   const halloweenYear =
@@ -252,7 +252,7 @@ export async function seedHalloweenPresale(pool: Pool): Promise<string> {
       )
     ).rows[0].id;
     await pool.query(
-      'UPDATE packaging_options SET price = $1, type = $2, is_active = true WHERE id = $3',
+      'UPDATE packaging_options SET price = $1, type = $2, is_active = true WHERE id = $3::uuid',
       [option.price, option.type, id],
     );
     packagingIds.push(id);
@@ -261,7 +261,7 @@ export async function seedHalloweenPresale(pool: Pool): Promise<string> {
     for (const packagingId of packagingIds) {
       await pool.query(
         `INSERT INTO pre_sale_event_packaging (pre_sale_event_id, packaging_option_id)
-         VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+         VALUES ($1::uuid, $2::uuid) ON CONFLICT DO NOTHING`,
         [eventId, packagingId],
       );
     }

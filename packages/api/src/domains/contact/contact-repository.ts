@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { SqlDatabase } from '../../ports/database/ISqlDatabase';
 import { ContactSubmissionRequest } from '@sugarsocietysc/shared';
 
 type ContactSubmission = Omit<ContactSubmissionRequest, 'recaptchaToken'>;
@@ -10,13 +10,13 @@ export interface StoredContactSubmission extends Omit<ContactSubmission, 'reques
 }
 
 export class ContactRepository {
-  constructor(private readonly pool: Pool) {}
+  constructor(private readonly pool: SqlDatabase) {}
 
   async createOrFind(input: ContactSubmission): Promise<StoredContactSubmission> {
     const result = await this.pool.query(
       `INSERT INTO contact_submissions
          (request_id, first_name, last_name, email, phone, subject, message)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       VALUES ($1::uuid, $2, $3, $4, $5, $6, $7)
        ON CONFLICT (request_id) DO NOTHING
        RETURNING id, request_id, first_name, last_name, email, phone, subject, message, email_status`,
       [
@@ -33,7 +33,7 @@ export class ContactRepository {
     const record = result.rows[0] ?? (await this.pool.query(
       `SELECT id, request_id, first_name, last_name, email, phone, subject, message, email_status
        FROM contact_submissions
-       WHERE request_id = $1`,
+       WHERE request_id = $1::uuid`,
       [input.requestId],
     )).rows[0];
 
@@ -68,7 +68,7 @@ export class ContactRepository {
        SET email_status = 'sending',
            email_attempts = email_attempts + 1,
            last_attempt_at = now()
-       WHERE id = $1
+       WHERE id = $1::uuid
          AND (
            email_status = 'pending'
            OR (email_status = 'sending' AND last_attempt_at <= now() - interval '5 minutes')
@@ -94,7 +94,7 @@ export class ContactRepository {
     await this.pool.query(
       `UPDATE contact_submissions
        SET email_status = 'pending'
-       WHERE id = $1 AND email_status = 'sending'`,
+       WHERE id = $1::uuid AND email_status = 'sending'`,
       [id],
     );
   }
@@ -103,7 +103,7 @@ export class ContactRepository {
     await this.pool.query(
       `UPDATE contact_submissions
        SET email_status = 'sent', email_sent_at = now()
-       WHERE id = $1 AND email_status = 'sending'`,
+       WHERE id = $1::uuid AND email_status = 'sending'`,
       [id],
     );
   }

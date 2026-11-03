@@ -1,11 +1,19 @@
 import { Pool } from 'pg';
+import { DataApiDatabase } from '../adapters/database/DataApiDatabase';
+import { databaseDriver, dataApiConfig } from '../config/env';
+import { SqlDatabase } from '../ports/database/ISqlDatabase';
 
-let pool: Pool | undefined;
+let pool: SqlDatabase | undefined;
 
-/** Singleton pg Pool — reused across warm Lambda invocations, no ORM. */
-export function getPool(databaseUrl: string): Pool {
+/** Local pg pool or stateless Data API client, reused across warm invocations. */
+export function getPool(databaseUrl?: string): SqlDatabase {
   if (!pool) {
-    pool = new Pool({ connectionString: databaseUrl, max: 5 });
+    if (databaseDriver() === 'data-api') pool = new DataApiDatabase(dataApiConfig());
+    else {
+      const connectionString = databaseUrl ?? process.env.DATABASE_URL;
+      if (!connectionString) throw new Error('DATABASE_URL is required for the pg driver');
+      pool = new Pool({ connectionString, max: 5 });
+    }
   }
   return pool;
 }
