@@ -101,9 +101,16 @@ billing/resources and require explicit human approval.
 
 ### AWS deployment via GitHub Actions
 
+The [Release CI workflow](.github/workflows/ci.yml) runs on every PR and push to `main`, using Node 22.
+It checks API/shared types, unit and isolated PostgreSQL integration tests, API/shared builds,
+infrastructure types/assertions and dev/prod synth, plus frontend tests and a strict production build.
+The always-present **Release gate** fails if any validation job fails or is skipped/cancelled; configure
+it as a required status check in branch protection (workflow code alone does not enforce merging).
+
 The manual-only `Deploy to AWS` workflow uses GitHub OIDC, deploys CDK and publishes the frontend to
-S3 + CloudFront. Configure environment-specific GitHub variables and AWS OIDC/CDK bootstrap first;
-production should require GitHub Environment approval. See [docs/AWS-DEPLOYMENT.md](docs/AWS-DEPLOYMENT.md)
+S3 + CloudFront only after reusing the same release validation. Production requires the `main` ref
+and should require GitHub Environment approval. Configure environment-specific GitHub variables and
+AWS OIDC/CDK bootstrap first. See [docs/AWS-DEPLOYMENT.md](docs/AWS-DEPLOYMENT.md)
 for the exact setup and rollback/cutover checklist. Runtime credentials remain in AWS Secrets Manager.
 
 API Lambdas share the app composition root but receive domain-specific configuration and IAM grants.
@@ -142,12 +149,12 @@ does not replace managed AWS and Stripe test-mode smoke tests.
 
 ## Deployment
 
-- **Frontend**: currently deployed to GitHub Pages via [.github/workflows/deploy.yml](.github/workflows/deploy.yml)
-  on push to `main`; migrate to S3 + CloudFront (`packages/infra` `WebStack`) after the AWS deployment
-  workflow and cutover are verified.
+- **Frontend**: the legacy GitHub Pages deployment workflow is no longer present. Existing hosting is
+  not changed by CI; migrate to S3 + CloudFront (`packages/infra` `WebStack`) only after the manual AWS
+  deployment workflow and cutover are verified.
 - **Backend/Infra**: successful Google OAuth sign-in confirms the Cognito Hosted UI path has been used;
   deployment state of the remaining stacks is not assumed. `packages/infra` defines `dev` and `prod`
-  environments; existing infra CI runs `cdk synth` on PRs touching infra code. The new manual AWS
+  environments; Release CI runs `cdk synth` for both on every PR and push to `main`. The manual AWS
   workflow is documented in [docs/AWS-DEPLOYMENT.md](docs/AWS-DEPLOYMENT.md).
 
 ### Stripe test-mode setup (required for Phase 6 deposit payments)

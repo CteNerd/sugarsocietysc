@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import * as path from 'node:path';
 import { createServer } from 'node:net';
 import type EmbeddedPostgres from 'embedded-postgres' with { 'resolution-mode': 'import' };
-import { Pool, type PoolClient, type QueryResultRow } from 'pg';
+import { Client, Pool, type PoolClient, type QueryResultRow } from 'pg';
 import { runner } from 'node-pg-migrate';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
@@ -101,6 +101,21 @@ let api: DataApiDatabase;
 const migrations = path.resolve(__dirname, '../../../migrations');
 function databases(): SqlDatabase[] { return [local, api]; }
 
+async function migrateLocal(direction: 'up' | 'down', count?: number): Promise<void> {
+  const client = new Client(local.options);
+  try {
+    await client.connect();
+    await client.query("SET application_name = 'sugar-migration-test'");
+    await runner({
+      dbClient: client, dir: migrations, migrationsTable: 'pgmigrations', direction, count,
+      log: () => undefined,
+    });
+  } finally {
+    // node-pg-migrate does not await end() for internally owned clients.
+    await client.end();
+  }
+}
+
 beforeAll(async () => {
   const { default: EmbeddedPostgres } = await import('embedded-postgres');
   directory = await mkdtemp(path.join(tmpdir(), 'sugar-data-api-test-'));
@@ -122,18 +137,18 @@ beforeAll(async () => {
   local = new Pool({ host: '127.0.0.1', port, user: 'postgres', password: 'test-only-password', database: 'local' });
   apiPool = new Pool({ host: '127.0.0.1', port, user: 'postgres', password: 'test-only-password', database: 'dataapi' });
   api = dataApiOnPostgres(apiPool);
-  await runner({
-    databaseUrl: { host: '127.0.0.1', port, user: 'postgres', password: 'test-only-password', database: 'local' },
-    dir: migrations, migrationsTable: 'pgmigrations', direction: 'up', log: () => undefined,
-  });
+  await migrateLocal('up');
 });
 
 afterAll(async () => {
-  vi.restoreAllMocks();
-  await local?.end();
-  await apiPool?.end();
-  await postgres?.stop();
-  if (directory) await rm(directory, { recursive: true, force: true });
+  try {
+    await api?.end();
+    await Promise.all([local?.end(), apiPool?.end()]);
+  } finally {
+    vi.restoreAllMocks();
+    await postgres?.stop();
+    if (directory) await rm(directory, { recursive: true, force: true });
+  }
 });
 
 describe('real PostgreSQL behavior through Data API', () => {
@@ -315,10 +330,16 @@ describe('real PostgreSQL behavior through Data API', () => {
   });
 
   it('applies and reverses the expiry-task migration through the existing local migration runner', async () => {
-    const options = { databaseUrl: local.options, dir: migrations, migrationsTable: 'pgmigrations', log: () => undefined };
-    await runner({ ...options, direction: 'down', count: 1 });
+    await migrateLocal('down', 1);
     expect((await local.query("SELECT to_regclass('inventory_expiry_tasks') AS name")).rows[0].name).toBeNull();
-    await runner({ ...options, direction: 'up' });
+    await migrateLocal('up');
+  });
+
+  it('closes migration sessions before PostgreSQL shutdown', async () => {
+    const sessions = await local.query(
+      "SELECT pid FROM pg_stat_activity WHERE application_name = 'sugar-migration-test'",
+    );
+    expect(sessions.rows).toEqual([]);
   });
 });
 

@@ -1,0 +1,78 @@
+name: Release CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  api:
+    name: API tests and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run lint --workspace=@sugarsocietysc/shared --workspace=@sugarsocietysc/api
+      - run: npm run test --workspace=@sugarsocietysc/api
+      - run: npm run test:integration --workspace=@sugarsocietysc/api
+      - run: npm run build --workspace=@sugarsocietysc/shared --workspace=@sugarsocietysc/api
+
+  infra:
+    name: Infrastructure validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run lint --workspace=@sugarsocietysc/infra
+      - run: npm run validate:lean --workspace=@sugarsocietysc/infra
+      - run: npm run synth:dev --workspace=@sugarsocietysc/infra
+      - run: npm run synth:prod --workspace=@sugarsocietysc/infra
+
+  web:
+    name: Frontend tests and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CI: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run test --workspace=@sugarsocietysc/web -- --watchAll=false --runInBand
+      - run: npm run build --workspace=@sugarsocietysc/web
+
+  release:
+    name: Release gate
+    if: ${{ always() }}
+    needs: [api, infra, web]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    env:
+      API_RESULT: ${{ needs.api.result }}
+      INFRA_RESULT: ${{ needs.infra.result }}
+      WEB_RESULT: ${{ needs.web.result }}
+    steps:
+      - name: Require every validation job to pass
+        run: |
+          if [[ "$API_RESULT" != "success" || "$INFRA_RESULT" != "success" || "$WEB_RESULT" != "success" ]]; then
+            echo "::error::Release validation failed: API=$API_RESULT infra=$INFRA_RESULT web=$WEB_RESULT"
+            exit 1
+          fi

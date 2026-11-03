@@ -13,16 +13,23 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 concurrency:
   group: aws-deploy-${{ inputs.environment }}
   cancel-in-progress: false
 
 jobs:
+  validate:
+    uses: ./.github/workflows/ci.yml
+
   deploy:
+    needs: validate
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     environment: ${{ inputs.environment }}
+    permissions:
+      contents: read
+      id-token: write
     env:
       DEPLOY_ENV: ${{ inputs.environment }}
       AWS_REGION: ${{ vars.AWS_REGION }}
@@ -35,32 +42,23 @@ jobs:
       RECAPTCHA_SITE_KEY: ${{ vars.RECAPTCHA_SITE_KEY }}
 
     steps:
+      - name: Require main for production
+        if: ${{ inputs.environment == 'prod' && github.ref != 'refs/heads/main' }}
+        run: |
+          echo "::error::Production deployments must use main."
+          exit 1
+
       - name: Check out source
         uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Type-check
-        run: npm run lint
-
-      - name: Test
-        run: npm run test --workspace=@sugarsocietysc/api
-
-      - name: Test PostgreSQL transport and migrations
-        run: npm run test:integration --workspace=@sugarsocietysc/api
-
-      - name: Validate lean infrastructure safeguards
-        run: npm run validate:lean --workspace=@sugarsocietysc/infra
-
-      - name: Build workspaces
-        run: npm run build
 
       - name: Synthesize CDK
         run: npx cdk synth -c env="$DEPLOY_ENV"
@@ -133,11 +131,11 @@ jobs:
               --cli-binary-format raw-in-base64-out \
               --payload '{"checkInventoryExpiryReady":true}' \
               expiry-readiness.json > expiry-readiness-metadata.json
-            node -e "const fs=require('fs'); const meta=JSON.parse(fs.readFileSync('expiry-readiness-metadata.json')); const result=JSON.parse(fs.readFileSync('expiry-readiness.json')); if(meta.FunctionError || result.inventoryExpiryReady !== true) { console.error('Deploy in polling mode and apply migrations before enabling scheduled expiry'); process.exit(1); }"
+            node -e "const fs=require('fs'); const meta=JSON.parse(fs.readFileSync('expiry-readiness-metadata.json')); const result=JSON.parse(fs.readFileSync('expiry-readiness.json')); if(meta.StatusCode !== 200 || meta.FunctionError || result.statusCode !== 200 || result.inventoryExpiryReady !== true) { console.error('Deploy in polling mode and apply migrations before enabling scheduled expiry'); process.exit(1); }"
           fi
 
       - name: Deploy CDK stacks
-        run: npx cdk deploy -c env="$DEPLOY_ENV" --all --require-approval never
+        run: npx cdk deploy --app cdk.out --all --require-approval never
         working-directory: packages/infra
 
       - name: Read deployed stack outputs
@@ -145,18 +143,36 @@ jobs:
         run: |
           set -euo pipefail
           read_output() {
-            aws cloudformation describe-stacks \
+            local value
+            if ! value="$(aws cloudformation describe-stacks \
               --stack-name "SugarSocietySc-${DEPLOY_ENV}-$1" \
               --query "Stacks[0].Outputs[?OutputKey=='$2'].OutputValue | [0]" \
-              --output text
+              --output text)"; then
+              echo "::error::Failed to read $2 output in $1 stack." >&2
+              return 1
+            fi
+            if [[ -z "$value" || "$value" == "None" || "$value" == *$'\n'* ]]; then
+              echo "::error::Missing or invalid $2 output in $1 stack." >&2
+              return 1
+            fi
+            printf '%s' "$value"
           }
-          echo "API_URL=$(read_output Api HttpApiUrl)" >> "$GITHUB_ENV"
-          echo "MIGRATE_FUNCTION_ARN=$(read_output Api MigrateFunctionArn)" >> "$GITHUB_ENV"
-          echo "USER_POOL_ID=$(read_output Auth UserPoolId)" >> "$GITHUB_ENV"
-          echo "USER_POOL_CLIENT_ID=$(read_output Auth UserPoolClientId)" >> "$GITHUB_ENV"
-          echo "COGNITO_HOSTED_UI=$(read_output Auth CognitoHostedUiDomain)" >> "$GITHUB_ENV"
-          echo "WEB_BUCKET=$(read_output Web WebBucketName)" >> "$GITHUB_ENV"
-          echo "WEB_DISTRIBUTION_ID=$(read_output Web WebDistributionId)" >> "$GITHUB_ENV"
+          api_url="$(read_output Api HttpApiUrl)"
+          migrate_arn="$(read_output Api MigrateFunctionArn)"
+          user_pool="$(read_output Auth UserPoolId)"
+          client_id="$(read_output Auth UserPoolClientId)"
+          hosted_ui="$(read_output Auth CognitoHostedUiDomain)"
+          bucket="$(read_output Web WebBucketName)"
+          distribution="$(read_output Web WebDistributionId)"
+          {
+            echo "API_URL=$api_url"
+            echo "MIGRATE_FUNCTION_ARN=$migrate_arn"
+            echo "USER_POOL_ID=$user_pool"
+            echo "USER_POOL_CLIENT_ID=$client_id"
+            echo "COGNITO_HOSTED_UI=$hosted_ui"
+            echo "WEB_BUCKET=$bucket"
+            echo "WEB_DISTRIBUTION_ID=$distribution"
+          } >> "$GITHUB_ENV"
 
       - name: Apply database migrations
         run: |
@@ -166,11 +182,10 @@ jobs:
             --cli-binary-format raw-in-base64-out \
             --payload '{}' \
             migration-response.json > invocation-metadata.json
-          if grep -q '"FunctionError"' invocation-metadata.json; then
-            cat migration-response.json
-            echo "::error::Database migration Lambda reported an error."
-            exit 1
-          fi
+          node -e "const fs=require('fs'); const meta=JSON.parse(fs.readFileSync('invocation-metadata.json')); const result=JSON.parse(fs.readFileSync('migration-response.json')); if(meta.StatusCode !== 200 || meta.FunctionError || result.statusCode !== 200) { console.error('Database migration Lambda did not report success'); process.exit(1); }"
+
+      - name: Smoke-test backend before publishing frontend
+        run: curl --fail --silent --show-error --connect-timeout 10 --max-time 30 "${API_URL}/health"
 
       - name: Build production frontend
         run: |
@@ -193,4 +208,4 @@ jobs:
         run: aws cloudfront create-invalidation --distribution-id "$WEB_DISTRIBUTION_ID" --paths '/*'
 
       - name: Smoke-test API health
-        run: curl --fail --silent --show-error "${API_URL}/health"
+        run: curl --fail --silent --show-error --connect-timeout 10 --max-time 30 "${API_URL}/health"

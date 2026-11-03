@@ -2,6 +2,8 @@
 
 The `Deploy to AWS` GitHub Actions workflow is manual-only. It deploys to the selected `dev` or `prod`
 GitHub Environment, then publishes the CRA build to the private S3 bucket and invalidates CloudFront.
+It first calls the same `Release CI` validation used for PRs/main, without AWS credentials. Only the
+deployment job requests an OIDC token; production dispatches must select `main`.
 Production should be configured with required reviewers in GitHub Environment protection rules before
 using the workflow.
 
@@ -10,6 +12,11 @@ using the workflow.
 Create `dev` and `prod` GitHub Environments under Settings → Environments. Configure these **variables**
 in each environment. Require reviewers for `prod` and restrict its deployment branches to `main`;
 restrict `dev` to the branches your team intends to deploy.
+
+Configure branch protection/rulesets for `main` to require **Release gate** from
+[Release CI](../.github/workflows/ci.yml), and require branches to be up to date before merging.
+The gate always runs, including documentation-only PRs, and requires successful API, infrastructure,
+and frontend jobs. Workflow changes do not configure repository protection automatically.
 
 | Variable | Purpose |
 | --- | --- |
@@ -105,9 +112,15 @@ to create a second `$default` stage on the same API and fail early validation wi
 Do not delete the existing stage to work around this error; preserving its logical ID updates it
 in place and keeps the API URL and throttling settings unchanged.
 
-The workflow checks out code, installs dependencies, runs workspace type-check/tests/build, synthesizes
-the selected environment, assumes the role, deploys CDK, reads API/Cognito/Web outputs, builds the
-frontend with those values, syncs assets, invalidates CloudFront, and checks `/health`.
+The shared Node 22 release checks cover API/shared types and builds, API unit and PostgreSQL integration
+tests, infrastructure types/assertions and dev/prod synth, and frontend tests plus a strict production
+build. A failed, skipped, or cancelled job fails the release gate and blocks the manual deployment.
+After validation, the deployment job synthesizes the selected environment once, validates settings,
+assumes the role, checks rollout prerequisites, and deploys that exact cloud assembly. It requires
+nonempty API/Cognito/Web outputs and a successful migration response, checks `/health` before frontend
+publication, builds the frontend with deployed values, syncs assets, invalidates CloudFront, and
+checks health again. HTTP smoke tests and job durations are bounded; production environment approval
+is still required independently of CI success.
 
 ## Lean Data API rollout
 
@@ -125,6 +138,8 @@ npm run test:integration --workspace=@sugarsocietysc/api
 npm run validate:lean --workspace=@sugarsocietysc/infra
 npm run synth:dev --workspace=@sugarsocietysc/infra
 npm run synth:prod --workspace=@sugarsocietysc/infra
+CI=true npm run test --workspace=@sugarsocietysc/web -- --watchAll=false --runInBand
+CI=true npm run build
 ```
 
 The integration suite downloads a platform-specific PostgreSQL 16 executable during dependency
@@ -132,7 +147,8 @@ installation, binds only loopback on a temporary port, creates synthetic databas
 own temporary directory afterward. Normal `npm ci` runs the native package's symlink setup; if you
 installed with `--ignore-scripts`, rebuild the installed `@embedded-postgres/<platform>` package.
 It executes real SQL, migrations, locks, oversell/payment/expiry races, and rollback, but emulates
-the Data API wire response. CI runs it without an AWS account or Docker.
+the Data API wire response. Migration clients are explicitly closed and awaited before server shutdown
+to avoid connection-termination races on Linux CI. CI runs it without an AWS account or Docker.
 
 ### Approved deployment sequence
 
