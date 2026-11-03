@@ -98,6 +98,7 @@ let directory: string;
 let local: Pool;
 let apiPool: Pool;
 let api: DataApiDatabase;
+const poolConnectionsClosed: Promise<void>[] = [];
 const migrations = path.resolve(__dirname, '../../../migrations');
 function databases(): SqlDatabase[] { return [local, api]; }
 
@@ -136,6 +137,11 @@ beforeAll(async () => {
   await postgres.createDatabase('dataapi');
   local = new Pool({ host: '127.0.0.1', port, user: 'postgres', password: 'test-only-password', database: 'local' });
   apiPool = new Pool({ host: '127.0.0.1', port, user: 'postgres', password: 'test-only-password', database: 'dataapi' });
+  for (const pool of [local, apiPool]) {
+    pool.on('connect', (client) => {
+      poolConnectionsClosed.push(new Promise<void>((resolve) => client.once('end', resolve)));
+    });
+  }
   api = dataApiOnPostgres(apiPool);
   await migrateLocal('up');
 });
@@ -144,6 +150,8 @@ afterAll(async () => {
   try {
     await api?.end();
     await Promise.all([local?.end(), apiPool?.end()]);
+    // Pool.end() drains the pool before every client's socket has closed.
+    await Promise.all(poolConnectionsClosed);
   } finally {
     vi.restoreAllMocks();
     await postgres?.stop();

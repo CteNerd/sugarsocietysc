@@ -147,8 +147,9 @@ installation, binds only loopback on a temporary port, creates synthetic databas
 own temporary directory afterward. Normal `npm ci` runs the native package's symlink setup; if you
 installed with `--ignore-scripts`, rebuild the installed `@embedded-postgres/<platform>` package.
 It executes real SQL, migrations, locks, oversell/payment/expiry races, and rollback, but emulates
-the Data API wire response. Migration clients are explicitly closed and awaited before server shutdown
-to avoid connection-termination races on Linux CI. CI runs it without an AWS account or Docker.
+the Data API wire response. Migration clients and every pooled connection's close event are awaited
+before server shutdown to avoid connection-termination races on Linux CI; `Pool.end()` alone can
+return before sockets close. CI runs it without an AWS account or Docker.
 
 ### Approved deployment sequence
 
