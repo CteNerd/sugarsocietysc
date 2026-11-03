@@ -189,7 +189,7 @@ export class NewsletterCampaignRepository {
   async markFanoutComplete(campaignId: string, channel: NotificationChannel): Promise<void> {
     const column = channel === 'email' ? 'email_fanout_complete' : 'sms_fanout_complete';
     await this.pool.query(
-      `UPDATE newsletter_campaigns SET ${column} = true WHERE id = $1`,
+      `UPDATE newsletter_campaigns SET ${column} = true WHERE id = $1::uuid`,
       [campaignId],
     );
     await this.refreshStatus(campaignId);

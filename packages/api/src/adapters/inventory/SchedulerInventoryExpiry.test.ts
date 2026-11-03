@@ -10,7 +10,8 @@ describe('Scheduler inventory expiration', () => {
   it('creates a deterministic UTC schedule that never rounds the hold down', async () => {
     const client = new SchedulerClient({ maxAttempts: 1 });
     const send = vi.spyOn(client, 'send').mockImplementation(async () => ({ $metadata: {} }));
-    await new SchedulerInventoryExpiry('group', 'target', 'role', 'queue', client).schedule(orderId, expiresAt);
+    const signal = new AbortController().signal;
+    await new SchedulerInventoryExpiry('group', 'target', 'role', 'queue', client).schedule(orderId, expiresAt, signal);
     const command = send.mock.calls[0][0];
     expect(command).toBeInstanceOf(CreateScheduleCommand);
     if (!(command instanceof CreateScheduleCommand)) throw new Error('Unexpected scheduler command');
@@ -21,6 +22,7 @@ describe('Scheduler inventory expiration', () => {
       Target: { Arn: 'target', RoleArn: 'role', Input: JSON.stringify({ orderId }),
         DeadLetterConfig: { Arn: 'queue' } },
     });
+    expect(send.mock.calls[0][1]).toEqual({ abortSignal: signal });
   });
 
   it.each([true, false])('accepts conflicts only when the existing schedule matches: %s', async (matches) => {

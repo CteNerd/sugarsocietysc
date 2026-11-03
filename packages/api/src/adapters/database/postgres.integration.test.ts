@@ -20,6 +20,7 @@ import { OrdersService } from '../../domains/orders/orders-service';
 import { InventoryExpiryService } from '../../domains/orders/inventory-expiry-service';
 import { AuthSyncRepository } from '../../domains/auth-sync/auth-sync-repository';
 import { NewsletterRepository } from '../../domains/newsletter/newsletter-repository';
+import { NewsletterCampaignRepository } from '../../domains/newsletter/newsletter-campaign-repository';
 import { ContactRepository } from '../../domains/contact/contact-repository';
 import { seedHalloweenPresale } from '../../seed/seed-halloween-presale';
 import { SqlDatabase } from '../../ports/database/ISqlDatabase';
@@ -200,6 +201,29 @@ describe('real PostgreSQL behavior through Data API', () => {
     }
   });
 
+  it('marks newsletter campaign fanout complete through the Data API transport', async () => {
+    const user = await new AuthSyncRepository(api).upsertFromCognito({
+      cognitoSub: randomUUID(), email: `${randomUUID()}@example.test`,
+      firstName: 'Test', lastName: 'Admin', phone: '5551234567', role: 'admin',
+    });
+    const campaigns = new NewsletterCampaignRepository(api);
+    const campaign = await campaigns.createCampaign({
+      title: 'Integration campaign',
+      subject: 'Integration campaign',
+      bodyText: 'Synthetic campaign content',
+      sendEmail: true,
+      sendSms: false,
+    }, user.id);
+
+    await campaigns.markFanoutComplete(campaign.id, 'email');
+
+    const result = await api.query<{ email_fanout_complete: boolean; sms_fanout_complete: boolean }>(
+      'SELECT email_fanout_complete, sms_fanout_complete FROM newsletter_campaigns WHERE id = $1::uuid',
+      [campaign.id],
+    );
+    expect(result.rows[0]).toEqual({ email_fanout_complete: true, sms_fanout_complete: true });
+  });
+
   it('prevents overselling under concurrent checkouts and records a durable expiry task', async () => {
     const { service, catalog, design, input } = await checkoutFixture(api);
     const attempts = await Promise.allSettled([
@@ -262,6 +286,7 @@ describe('real PostgreSQL behavior through Data API', () => {
     const errorLog = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     schedule.mockImplementationOnce(async () => { throw new Error('Synthetic scheduler outage'); });
     const checkout = await service.createPresaleOrder(undefined, input);
+    expect(schedule).toHaveBeenCalledWith(checkout.order.id, expect.any(Date), expect.any(AbortSignal));
     expect(await orders.findPendingInventoryExpiryTasks(checkout.order.id)).toMatchObject([{
       orderId: checkout.order.id, dispatchedAt: null,
     }]);

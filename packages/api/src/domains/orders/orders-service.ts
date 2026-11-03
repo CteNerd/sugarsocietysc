@@ -203,7 +203,7 @@ export class OrdersService {
     });
 
     if (this.inventoryExpiry) {
-      try { await this.inventoryExpiry.dispatch(order.id); }
+      try { await this.inventoryExpiry.dispatch(order.id, AbortSignal.timeout(5_000)); }
       catch (error) {
         // The expiry task committed with the reservation. Reconciliation retries
         // delivery; a scheduler outage must not discard or replay checkout.

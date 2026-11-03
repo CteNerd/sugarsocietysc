@@ -4,7 +4,7 @@ import { OrdersRepository } from './orders-repository';
 export class InventoryExpiryService {
   constructor(private readonly repository: OrdersRepository, private readonly scheduler: IInventoryExpiryScheduler) {}
 
-  async dispatch(orderId?: string): Promise<void> {
+  async dispatch(orderId?: string, signal?: AbortSignal): Promise<void> {
     const tasks = await this.repository.findPendingInventoryExpiryTasks(orderId);
     const errors: unknown[] = [];
     for (const task of tasks) {
@@ -12,7 +12,7 @@ export class InventoryExpiryService {
         if (task.expiresAt.getTime() <= Date.now()) {
           await this.repository.expireOrderInventoryHold(task.orderId);
         } else if (!task.dispatchedAt) {
-          await this.scheduler.schedule(task.orderId, task.expiresAt);
+          await this.scheduler.schedule(task.orderId, task.expiresAt, signal);
           await this.repository.markInventoryExpiryDispatched(task.orderId);
         }
       } catch (error) {

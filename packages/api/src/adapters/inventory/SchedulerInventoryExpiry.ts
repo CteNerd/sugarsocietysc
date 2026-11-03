@@ -10,7 +10,7 @@ export class SchedulerInventoryExpiry implements IInventoryExpiryScheduler {
     private readonly client = new SchedulerClient({ maxAttempts: 1 }),
   ) {}
 
-  async schedule(orderId: string, expiresAt: Date): Promise<void> {
+  async schedule(orderId: string, expiresAt: Date, signal?: AbortSignal): Promise<void> {
     const timestamp = new Date(Math.ceil(expiresAt.getTime() / 1000) * 1000).toISOString().slice(0, 19);
     const input = {
       Name: `order-${orderId}`,
@@ -27,10 +27,13 @@ export class SchedulerInventoryExpiry implements IInventoryExpiryScheduler {
         RetryPolicy: { MaximumRetryAttempts: 10, MaximumEventAgeInSeconds: 3600 },
       },
     };
-    try { await this.client.send(new CreateScheduleCommand(input)); }
+    try { await this.client.send(new CreateScheduleCommand(input), signal ? { abortSignal: signal } : undefined); }
     catch (error) {
       if (!(error instanceof Error) || error.name !== 'ConflictException') throw error;
-      const existing = await this.client.send(new GetScheduleCommand({ Name: input.Name, GroupName: this.groupName }));
+      const existing = await this.client.send(
+        new GetScheduleCommand({ Name: input.Name, GroupName: this.groupName }),
+        signal ? { abortSignal: signal } : undefined,
+      );
       if (
         existing.ScheduleExpression !== input.ScheduleExpression
         || existing.ScheduleExpressionTimezone !== 'UTC'

@@ -427,10 +427,11 @@ function checkFutureZeroNatNetwork(config: EnvConfig, defaultNetworkTemplate: Cf
 
 checkConfigurationValidation();
 const defaultConfig = readConfig('dev', {}, true).config;
-const pollingTemplates = buildInfrastructure(defaultConfig);
+const retainedNatConfig = { ...defaultConfig, natGateways: 1 };
+const pollingTemplates = buildInfrastructure(retainedNatConfig);
 checkPollingTemplate(pollingTemplates);
 checkDataAndCompatibilityExports(pollingTemplates);
-checkFutureZeroNatNetwork({ ...defaultConfig, natGateways: 0 }, pollingTemplates.network);
+checkFutureZeroNatNetwork({ ...retainedNatConfig, natGateways: 0 }, pollingTemplates.network);
 
 const scheduledConfig = readConfig('dev', {
   inventoryExpiryMode: 'scheduled',
