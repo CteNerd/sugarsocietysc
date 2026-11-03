@@ -127,8 +127,10 @@ is still required independently of CI success.
 The [Deployed smoke tests workflow](../.github/workflows/deployed-smoke.yml) is called after successful
 deployment and can also be dispatched manually with `web_url` and `api_url` HTTPS origins to test
 already deployed code without changing AWS resources. When newly adding a workflow on a PR branch,
-GitHub may not offer manual dispatch until it exists on the default branch; the local command below
-works before merge. The workflow uses no AWS credentials or test accounts.
+GitHub will not offer its manual dispatch until it exists on the default branch. Before merge, run
+the already registered **Release CI** workflow on the PR branch, select `run_deployed_smoke`, and
+provide both origins; it runs the same smoke workflow after normal validation without deploying.
+The local command below also works before merge. The smoke workflow uses no AWS credentials or test accounts.
 
 ```bash
 npx playwright install chromium

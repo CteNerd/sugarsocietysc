@@ -5,6 +5,17 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      run_deployed_smoke:
+        description: Also run read-only smoke tests against an existing deployment
+        type: boolean
+        default: false
+      web_url:
+        description: HTTPS frontend origin (required when smoke tests are selected)
+        type: string
+      api_url:
+        description: HTTPS API origin (required when smoke tests are selected)
+        type: string
   workflow_call:
 
 permissions:
@@ -81,3 +92,11 @@ jobs:
             echo "::error::Release validation failed: API=$API_RESULT infra=$INFRA_RESULT web=$WEB_RESULT"
             exit 1
           fi
+
+  deployed-smoke:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_deployed_smoke }}
+    needs: release
+    uses: ./.github/workflows/deployed-smoke.yml
+    with:
+      web_url: ${{ inputs.web_url }}
+      api_url: ${{ inputs.api_url }}
