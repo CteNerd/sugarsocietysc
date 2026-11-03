@@ -99,7 +99,7 @@ Before the first workflow run, an AWS administrator must:
    branches.
 3. Grant the role permission to assume the environment's CDK bootstrap deployment/file-publishing
    roles, and permission to read the named CloudFormation outputs, publish to the WebStack bucket,
-   invalidate its CloudFront distribution, invoke the migration Lambda, and query its AWS account
+   create and read invalidations on its CloudFront distribution, invoke the migration Lambda, and query its AWS account
    identity. Lean-rollout preflights also require `cloudformation:ListStackResources` on the selected
    API stack and `lambda:GetFunctionConfiguration` on its functions. The CloudFormation execution
    role must support EventBridge Scheduler schedule groups and the scoped Scheduler execution role.
@@ -116,6 +116,33 @@ Before the first workflow run, an AWS administrator must:
    execution policy. Review the policy and planned stack changes before the first deployment.
 5. Confirm the imported ACM certificate is issued in `us-east-1`, covers the environment's configured
    web domain, and is valid. DNS remains externally managed.
+
+### CloudFront invalidation waiter permission
+
+The deployment role needs both `cloudfront:CreateInvalidation` and `cloudfront:GetInvalidation`
+on the environment's distribution ARN (`arn:aws:cloudfront::<account>:distribution/<distribution-id>`).
+The AWS CLI `invalidation-completed` waiter calls `GetInvalidation`; create permission alone is
+insufficient. These permissions belong to the GitHub deployment role, not only the CDK execution role.
+
+For an existing role that already creates invalidations, add this scoped read statement while
+preserving its other permissions:
+
+```json
+{
+  "Effect": "Allow",
+  "Action": "cloudfront:GetInvalidation",
+  "Resource": "arn:aws:cloudfront::<account>:distribution/<distribution-id>"
+}
+```
+
+Resolve `WebDistributionId` from the matching Web stack and verify each role can read its own
+distribution, not the other environment's. Deployment roles are provisioned outside these CDK stacks;
+merging workflow changes does not update their IAM policies.
+
+If staging fails at `Invalidate CloudFront cache` with `AccessDenied`, assets and migrations may
+already be published but deployed browser tests have not run. Fix the role permission; do not remove
+the waiter or bypass staging tests. Rerunning the deployment is a separate operator action and will
+repeat deployment/publication before testing. Production remains gated on staging success and approval.
 
 CloudWatch alarms (API 5xxs, inventory-hold-expiry errors, guest-order and contact-submission purges, newsletter worker
 errors, and the newsletter DLQ) publish to a per-environment SNS topic
