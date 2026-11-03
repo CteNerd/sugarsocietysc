@@ -4,6 +4,10 @@ on:
   pull_request:
     paths:
       - 'packages/infra/**'
+      - 'packages/api/**'
+      - 'packages/shared/**'
+      - 'package-lock.json'
+      - '.github/workflows/infra-ci.yml'
   workflow_dispatch:
 
 jobs:
@@ -23,3 +27,9 @@ jobs:
 
       - name: CDK synth (dev) — template generation only, no AWS credentials used
         run: npm run synth:dev --workspace=@sugarsocietysc/infra
+
+      - name: CDK synth (prod)
+        run: npm run synth:prod --workspace=@sugarsocietysc/infra
+
+      - name: Validate lean infrastructure safeguards
+        run: npm run validate:lean --workspace=@sugarsocietysc/infra

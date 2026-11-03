@@ -1,4 +1,5 @@
-import { Pool, PoolClient } from 'pg';
+import { SqlDatabase, SqlConnection } from '../../ports/database/ISqlDatabase';
+import { runSqlTransaction } from '../../db/sql-transaction';
 import { Order, OrderItem, OrderPackaging, OrderStatus, OrderStatusHistoryEntry, OrderWithDetails } from '@sugarsocietysc/shared';
 
 interface OrderRow {
@@ -80,6 +81,9 @@ interface OrderPackagingRow {
   price: number;
 }
 
+const orderPackagingColumns = `id, order_id, packaging_option_id,
+  to_json(add_on_option_ids) AS add_on_option_ids, quantity, price`;
+
 function toOrderPackaging(row: OrderPackagingRow): OrderPackaging {
   return {
     id: row.id,
@@ -143,30 +147,78 @@ export interface NewOrderPackagingInput {
 export type DepositPaymentResult = 'applied' | 'duplicate' | 'expired' | 'not_found';
 
 export class OrdersRepository {
-  constructor(public readonly pool: Pool) {}
+  constructor(public readonly pool: SqlDatabase) {}
+
+  async queueInventoryExpiry(client: SqlConnection, orderId: string): Promise<void> {
+    await client.query(
+      `INSERT INTO inventory_expiry_tasks (order_id, expires_at)
+       VALUES ($1::uuid, now() + interval '30 minutes')`,
+      [orderId],
+    );
+  }
+
+  async findPendingInventoryExpiryTasks(orderId?: string): Promise<Array<{
+    orderId: string; expiresAt: Date; dispatchedAt: Date | null;
+  }>> {
+    const result = await this.pool.query<{ order_id: string; expires_at: Date; dispatched_at: Date | null }>(
+      `SELECT order_id, expires_at, dispatched_at FROM inventory_expiry_tasks
+       WHERE completed_at IS NULL AND ($1::uuid IS NULL OR order_id = $1::uuid)
+         AND (dispatched_at IS NULL OR expires_at <= now())
+       ORDER BY expires_at LIMIT 100`,
+      [orderId ?? null],
+    );
+    return result.rows.map((row) => ({ orderId: row.order_id, expiresAt: row.expires_at, dispatchedAt: row.dispatched_at }));
+  }
+
+  async markInventoryExpiryDispatched(orderId: string): Promise<void> {
+    await this.pool.query('UPDATE inventory_expiry_tasks SET dispatched_at = now() WHERE order_id = $1::uuid', [orderId]);
+  }
+
+  async expireOrderInventoryHold(orderId: string): Promise<boolean> {
+    return this.withTransaction(async (client) => {
+      let expired = false;
+      const order = await client.query<{ status: OrderStatus }>(
+        'SELECT status FROM orders WHERE id = $1::uuid FOR UPDATE', [orderId],
+      );
+      if (!order.rows[0]) throw new Error('Inventory expiry order not found');
+      const task = await client.query<{ due: boolean }>(
+        'SELECT expires_at <= now() AS due FROM inventory_expiry_tasks WHERE order_id = $1::uuid FOR UPDATE', [orderId],
+      );
+      if (!task.rows[0]?.due) throw new Error('Inventory expiry task is missing or not due');
+      if (order.rows[0].status === 'received') {
+        await client.query(
+          `UPDATE order_inventory_holds SET status = 'expired'
+           WHERE order_id = $1::uuid AND status = 'held' AND expires_at <= now()`, [orderId],
+        );
+        const cancelled = await client.query(
+          `UPDATE orders SET status = 'cancelled', updated_at = now()
+           WHERE id = $1::uuid AND status = 'received'
+             AND NOT EXISTS (SELECT 1 FROM order_inventory_holds WHERE order_id = $1::uuid AND status = 'held')
+           RETURNING id`, [orderId],
+        );
+        if (cancelled.rowCount === 1) {
+          await this.recordStatusHistory(client, orderId, 'cancelled', undefined, 'Payment hold expired; inventory released');
+          expired = true;
+        } else {
+          throw new Error('Inventory hold is still active; expiration must be retried');
+        }
+      }
+      await client.query('UPDATE inventory_expiry_tasks SET completed_at = now() WHERE order_id = $1::uuid', [orderId]);
+      return expired;
+    });
+  }
 
   /** Runs `fn` inside a BEGIN/COMMIT transaction, rolling back on any error — used for order creation
    * so a failed stock reservation never leaves a partially-created order behind. */
-  async withTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
-    const client = await this.pool.connect();
-    try {
-      await client.query('BEGIN');
-      const result = await fn(client);
-      await client.query('COMMIT');
-      return result;
-    } catch (err) {
-      await client.query('ROLLBACK');
-      throw err;
-    } finally {
-      client.release();
-    }
+  async withTransaction<T>(fn: (client: SqlConnection) => Promise<T>): Promise<T> {
+    return runSqlTransaction(this.pool, fn);
   }
 
-  async createOrder(client: PoolClient, input: NewOrderInput): Promise<Order> {
+  async createOrder(client: SqlConnection, input: NewOrderInput): Promise<Order> {
     const result = await client.query<OrderRow>(
       `INSERT INTO orders
          (user_id, guest_email, guest_phone, type, status, pre_sale_event_id, pickup_date, subtotal, tax, deposit_amount, total)
-       VALUES ($1, $2, $3, 'presale', 'received', $4, $5, $6, $7, $8, $9)
+       VALUES ($1::uuid, $2, $3, 'presale', 'received', $4::uuid, $5::timestamptz, $6, $7, $8, $9)
        RETURNING *`,
       [
         input.userId ?? null,
@@ -183,11 +235,11 @@ export class OrdersRepository {
     return toOrder(result.rows[0]);
   }
 
-  async createOrderItem(client: PoolClient, orderId: string, input: NewOrderItemInput): Promise<OrderItem> {
+  async createOrderItem(client: SqlConnection, orderId: string, input: NewOrderItemInput): Promise<OrderItem> {
     const result = await client.query<OrderItemRow>(
       `INSERT INTO order_items
          (order_id, cookie_design_id, variant_id, item_name, variant_label, pack_size, quantity, unit_price, line_total)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       VALUES ($1::uuid, $2::uuid, $3::uuid, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
       [
         orderId,
@@ -205,21 +257,21 @@ export class OrdersRepository {
   }
 
   async createOrderPackaging(
-    client: PoolClient,
+    client: SqlConnection,
     orderId: string,
     input: NewOrderPackagingInput,
   ): Promise<OrderPackaging> {
     const result = await client.query<OrderPackagingRow>(
       `INSERT INTO order_packaging (order_id, packaging_option_id, add_on_option_ids, price)
-       VALUES ($1, $2, $3, $4)
-       RETURNING *`,
+       VALUES ($1::uuid, $2::uuid, $3::uuid[], $4)
+       RETURNING ${orderPackagingColumns}`,
       [orderId, input.packagingOptionId ?? null, input.addOnOptionIds, input.price],
     );
     return toOrderPackaging(result.rows[0]);
   }
 
   async recordStatusHistory(
-    client: PoolClient | Pool,
+    client: SqlConnection | SqlDatabase,
     orderId: string,
     status: OrderStatus,
     changedByAdminId?: string,
@@ -227,33 +279,33 @@ export class OrdersRepository {
   ): Promise<void> {
     await client.query(
       `INSERT INTO order_status_history (order_id, status, changed_by_admin_id, note)
-       VALUES ($1, $2, $3, $4)`,
+       VALUES ($1::uuid, $2, $3::uuid, $4)`,
       [orderId, status, changedByAdminId ?? null, note ?? null],
     );
   }
 
-  async setStripePaymentIntent(client: PoolClient | Pool, orderId: string, providerRef: string): Promise<void> {
-    await client.query('UPDATE orders SET stripe_payment_intent_id = $2, updated_at = now() WHERE id = $1', [
+  async setStripePaymentIntent(client: SqlConnection | SqlDatabase, orderId: string, providerRef: string): Promise<void> {
+    await client.query('UPDATE orders SET stripe_payment_intent_id = $2, updated_at = now() WHERE id = $1::uuid', [
       orderId,
       providerRef,
     ]);
   }
 
   async recordPaymentTransaction(
-    client: PoolClient | Pool,
+    client: SqlConnection | SqlDatabase,
     orderId: string,
     providerRef: string,
     amount: number,
   ): Promise<void> {
     await client.query(
       `INSERT INTO payment_transactions (order_id, provider, provider_ref, amount, type, status)
-       VALUES ($1, 'stripe', $2, $3, 'deposit', 'pending')`,
+       VALUES ($1::uuid, 'stripe', $2, $3, 'deposit', 'pending')`,
       [orderId, providerRef, amount],
     );
   }
 
   async findOrderById(id: string): Promise<Order | undefined> {
-    const result = await this.pool.query<OrderRow>('SELECT * FROM orders WHERE id = $1', [id]);
+    const result = await this.pool.query<OrderRow>('SELECT * FROM orders WHERE id = $1::uuid', [id]);
     return result.rows[0] ? toOrder(result.rows[0]) : undefined;
   }
 
@@ -278,13 +330,13 @@ export class OrdersRepository {
   }
 
   async listItemsForOrder(orderId: string): Promise<OrderItem[]> {
-    const result = await this.pool.query<OrderItemRow>('SELECT * FROM order_items WHERE order_id = $1', [orderId]);
+    const result = await this.pool.query<OrderItemRow>('SELECT * FROM order_items WHERE order_id = $1::uuid', [orderId]);
     return result.rows.map(toOrderItem);
   }
 
   async getPackagingForOrder(orderId: string): Promise<OrderPackaging | null> {
     const result = await this.pool.query<OrderPackagingRow>(
-      'SELECT * FROM order_packaging WHERE order_id = $1 LIMIT 1',
+      `SELECT ${orderPackagingColumns} FROM order_packaging WHERE order_id = $1::uuid LIMIT 1`,
       [orderId],
     );
     return result.rows[0] ? toOrderPackaging(result.rows[0]) : null;
@@ -292,7 +344,7 @@ export class OrdersRepository {
 
   async listStatusHistory(orderId: string): Promise<OrderStatusHistoryEntry[]> {
     const result = await this.pool.query<OrderStatusHistoryRow>(
-      'SELECT * FROM order_status_history WHERE order_id = $1 ORDER BY changed_at',
+      'SELECT * FROM order_status_history WHERE order_id = $1::uuid ORDER BY changed_at',
       [orderId],
     );
     return result.rows.map(toStatusHistory);
@@ -300,7 +352,7 @@ export class OrdersRepository {
 
   async listOrdersForUser(userId: string): Promise<Order[]> {
     const result = await this.pool.query<OrderRow>(
-      'SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC',
+      'SELECT * FROM orders WHERE user_id = $1::uuid ORDER BY created_at DESC',
       [userId],
     );
     return result.rows.map(toOrder);
@@ -315,7 +367,7 @@ export class OrdersRepository {
 
   async updateOrderStatus(orderId: string, status: OrderStatus): Promise<Order | undefined> {
     const result = await this.pool.query<OrderRow>(
-      'UPDATE orders SET status = $2, updated_at = now() WHERE id = $1 RETURNING *',
+      'UPDATE orders SET status = $2, updated_at = now() WHERE id = $1::uuid RETURNING *',
       [orderId, status],
     );
     return result.rows[0] ? toOrder(result.rows[0]) : undefined;
@@ -324,7 +376,7 @@ export class OrdersRepository {
   async markDepositPaid(orderId: string): Promise<Order | undefined> {
     const result = await this.pool.query<OrderRow>(
       `UPDATE orders SET status = 'payment_received', deposit_paid_at = now(), updated_at = now()
-       WHERE id = $1 RETURNING *`,
+       WHERE id = $1::uuid RETURNING *`,
       [orderId],
     );
     return result.rows[0] ? toOrder(result.rows[0]) : undefined;
@@ -341,13 +393,13 @@ export class OrdersRepository {
     await this.withTransaction(async (client) => {
       const result = await client.query(
         `UPDATE orders SET status = 'cancelled', updated_at = now()
-         WHERE id = $1 AND status = 'received' RETURNING id`,
+         WHERE id = $1::uuid AND status = 'received' RETURNING id`,
         [orderId],
       );
       if (result.rowCount !== 1) return;
       await client.query(
         `UPDATE order_inventory_holds SET status = 'released'
-         WHERE order_id = $1 AND status = 'held'`,
+         WHERE order_id = $1::uuid AND status = 'held'`,
         [orderId],
       );
       await this.recordStatusHistory(client, orderId, 'cancelled', undefined, note);
@@ -383,7 +435,7 @@ export class OrdersRepository {
   }
 
   async findUserById(userId: string): Promise<{ id: string; email: string } | undefined> {
-    const result = await this.pool.query<{ id: string; email: string }>('SELECT id, email FROM users WHERE id = $1', [
+    const result = await this.pool.query<{ id: string; email: string }>('SELECT id, email FROM users WHERE id = $1::uuid', [
       userId,
     ]);
     return result.rows[0];
@@ -401,7 +453,7 @@ export class OrdersRepository {
       email: string;
       phone: string;
     }>(
-      'SELECT first_name, last_name, email, phone FROM users WHERE id = $1',
+      'SELECT first_name, last_name, email, phone FROM users WHERE id = $1::uuid',
       [userId],
     );
     const row = result.rows[0];
@@ -461,7 +513,7 @@ export class OrdersRepository {
         }
         await client.query(
           `UPDATE order_inventory_holds SET status = 'released'
-           WHERE order_id = $1 AND status = 'held' AND expires_at > now()`,
+           WHERE order_id = $1::uuid AND status = 'held' AND expires_at > now()`,
           [current.id],
         );
         return 'expired';
@@ -469,18 +521,18 @@ export class OrdersRepository {
 
       await client.query(
         `UPDATE order_inventory_holds SET status = 'expired'
-         WHERE order_id = $1 AND status = 'held' AND expires_at <= now()`,
+         WHERE order_id = $1::uuid AND status = 'held' AND expires_at <= now()`,
         [current.id],
       );
       const holds = await client.query<{ cookie_design_id: string; quantity: number }>(
         `SELECT cookie_design_id, quantity FROM order_inventory_holds
-         WHERE order_id = $1 AND status = 'held' AND expires_at > now()
+         WHERE order_id = $1::uuid AND status = 'held' AND expires_at > now()
          FOR UPDATE`,
         [current.id],
       );
       const expectedItems = await client.query<{ cookie_design_id: string; quantity: number }>(
-        `SELECT cookie_design_id, SUM(quantity)::int AS quantity
-         FROM order_items WHERE order_id = $1 GROUP BY cookie_design_id`,
+        `SELECT cookie_design_id, SUM(quantity * COALESCE(pack_size, 1))::int AS quantity
+         FROM order_items WHERE order_id = $1::uuid GROUP BY cookie_design_id`,
         [current.id],
       );
       const heldQuantities = new Map<string, number>();
@@ -497,11 +549,11 @@ export class OrdersRepository {
         await client.query(
           `UPDATE order_inventory_holds
            SET status = CASE WHEN expires_at <= now() THEN 'expired' ELSE 'released' END
-           WHERE order_id = $1 AND status = 'held'`,
+           WHERE order_id = $1::uuid AND status = 'held'`,
           [current.id],
         );
         await client.query(
-          `UPDATE orders SET status = 'cancelled', updated_at = now() WHERE id = $1`,
+          `UPDATE orders SET status = 'cancelled', updated_at = now() WHERE id = $1::uuid`,
           [current.id],
         );
         const payment = await client.query(
@@ -531,7 +583,7 @@ export class OrdersRepository {
       }
       for (const [designId, quantity] of quantities) {
         const stock = await client.query(
-          'UPDATE cookie_designs SET quantity_sold = quantity_sold + $2 WHERE id = $1',
+          'UPDATE cookie_designs SET quantity_sold = quantity_sold + $2 WHERE id = $1::uuid',
           [designId, quantity],
         );
         if (stock.rowCount !== 1) throw new Error(`Cookie design ${designId} missing while finalizing hold`);
@@ -546,12 +598,12 @@ export class OrdersRepository {
       }
       await client.query(
         `UPDATE order_inventory_holds SET status = 'confirmed'
-         WHERE order_id = $1 AND status = 'held'`,
+         WHERE order_id = $1::uuid AND status = 'held'`,
         [current.id],
       );
       await client.query(
         `UPDATE orders SET status = 'payment_received', deposit_paid_at = now(), updated_at = now()
-         WHERE id = $1`,
+         WHERE id = $1::uuid`,
         [current.id],
       );
       await this.recordStatusHistory(

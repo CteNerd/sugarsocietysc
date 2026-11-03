@@ -9,3 +9,5 @@ export * from './schemas/auth-schemas';
 export * from './schemas/catalog-schemas';
 export * from './schemas/presale-order-schemas';
 export * from './schemas/contact-schemas';
+export * from './schemas/inventory-expiry-schemas';
+export * from './schemas/maintenance-schemas';

@@ -1,5 +1,5 @@
 import { Context, Hono } from 'hono';
-import { Pool } from 'pg';
+import { SqlDatabase } from '../../ports/database/ISqlDatabase';
 import { createPresaleOrderSchema, updateOrderStatusSchema } from '@sugarsocietysc/shared';
 import { AppConfig } from '../../config/env';
 import { requireAuth } from '../../auth/require-auth';
@@ -10,13 +10,18 @@ import { createPaymentProvider } from '../../adapters/payment/payment-provider-f
 import { CatalogRepository } from '../catalog/catalog-repository';
 import { OrdersRepository } from './orders-repository';
 import { OrdersError, OrdersService } from './orders-service';
+import { createInventoryExpiryScheduler } from '../../adapters/inventory/inventory-expiry-factory';
+import { InventoryExpiryService } from './inventory-expiry-service';
 
-export function ordersRoutes(pool: Pool, config: AppConfig): Hono<{ Variables: { authClaims?: AuthClaims } }> {
+export function ordersRoutes(pool: SqlDatabase, config: AppConfig): Hono<{ Variables: { authClaims?: AuthClaims } }> {
   const app = new Hono<{ Variables: { authClaims?: AuthClaims } }>();
+  const repository = new OrdersRepository(pool);
+  const scheduler = createInventoryExpiryScheduler(config);
   const service = new OrdersService(
-    new OrdersRepository(pool),
+    repository,
     new CatalogRepository(pool),
     createPaymentProvider(config),
+    scheduler ? new InventoryExpiryService(repository, scheduler) : undefined,
   );
   const auth = requireAuth(config);
   const guestOrAuth = optionalAuth(config);

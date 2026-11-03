@@ -62,7 +62,10 @@ Before the first workflow run, an AWS administrator must:
 3. Grant the role permission to assume the environment's CDK bootstrap deployment/file-publishing
    roles, and permission to read the named CloudFormation outputs, publish to the WebStack bucket,
    invalidate its CloudFront distribution, invoke the migration Lambda, and query its AWS account
-   identity. CDK bootstrap roles must trust this deploy role. Keep the production role/environment
+   identity. Lean-rollout preflights also require `cloudformation:ListStackResources` on the selected
+   API stack and `lambda:GetFunctionConfiguration` on its functions. The CloudFormation execution
+   role must support EventBridge Scheduler schedule groups and the scoped Scheduler execution role.
+   CDK bootstrap roles must trust this deploy role. Keep the production role/environment
    separately protected. The CDK CloudFormation execution policy also needs scoped service permissions
    for resources in these stacks (including SQS, Lambda, SES `SendEmail`, WAF, CloudWatch, Cognito,
    Aurora, S3, and CloudFront), plus full lifecycle permissions — not just `sns:Publish` — for the
@@ -105,6 +108,117 @@ in place and keeps the API URL and throttling settings unchanged.
 The workflow checks out code, installs dependencies, runs workspace type-check/tests/build, synthesizes
 the selected environment, assumes the role, deploys CDK, reads API/Cognito/Web outputs, builds the
 frontend with those values, syncs assets, invalidates CloudFront, and checks `/health`.
+
+## Lean Data API rollout
+
+The implementation is **not an AWS deployment**. The operating target is AWS-only hosting, one
+persistent production environment, local `pg` development, and temporary staging. Keep PostgreSQL
+repositories and SQL transactions; only the transport changes in AWS. All live changes below need
+explicit operator approval.
+
+### Validation before rollout
+
+```bash
+npm run lint
+npm run test --workspace=@sugarsocietysc/api
+npm run test:integration --workspace=@sugarsocietysc/api
+npm run validate:lean --workspace=@sugarsocietysc/infra
+npm run synth:dev --workspace=@sugarsocietysc/infra
+npm run synth:prod --workspace=@sugarsocietysc/infra
+```
+
+The integration suite downloads a platform-specific PostgreSQL 16 executable during dependency
+installation, binds only loopback on a temporary port, creates synthetic databases, and removes its
+own temporary directory afterward. Normal `npm ci` runs the native package's symlink setup; if you
+installed with `--ignore-scripts`, rebuild the installed `@embedded-postgres/<platform>` package.
+It executes real SQL, migrations, locks, oversell/payment/expiry races, and rollback, but emulates
+the Data API wire response. CI runs it without an AWS account or Docker.
+
+### Approved deployment sequence
+
+1. **Confirm recovery and alerts first.** Verify a usable production snapshot/PITR policy and test
+   restoration in staging. Verify the production SNS alarm topic has an actual confirmed subscriber
+   and delivers a test notification: the billing investigation found none despite a previously
+   successful CloudFormation subscription. Source code is not proof of delivery.
+2. **Deploy the transport without changing expiration or idle capacity.** Keep
+   `inventoryExpiryMode: "polling"`, `auroraMinCapacity: 0.5`, and `natGateways: 1` in the selected
+   CDK environment. Review the change set: enable the existing cluster's HTTP endpoint and remove
+   Lambda VPC attachment, not replace the database. Cluster, subnet, security-group, API-stage logical
+   IDs and legacy exports are preserved. AWS runtime uses `DATABASE_DRIVER=data-api`,
+   `DB_CLUSTER_ARN`, `DB_SECRET_ARN`, and `DB_NAME`; Data API authorization remains scoped to the
+   cluster and its managed secret. Existing DB host/port exports remain for staged rollback.
+3. **Apply bundled migrations and test the real runtime.** The workflow invokes the migration
+   Lambda after deploying. The Data API runner keeps the existing `pgmigrations` history, generates
+   SQL through node-pg-migrate, executes statements sequentially in one transaction, and acquires a
+   transaction-level advisory lock. Test health, catalog arrays/dates, auth/admin access, newsletter
+   persistence, contact queue delivery, guest checkout, simultaneous final-stock checkout, Stripe
+   test-mode success/duplicate/late webhook refunds, and privacy purges in temporary staging.
+   Do not switch to live payments or certify transport compatibility from local tests alone.
+4. **Enable scheduled expiry while retaining 0.5 ACU.** Change only `inventoryExpiryMode` to
+   `"scheduled"` and review/synth/deploy with approval. The workflow performs a read-only prerequisite
+   invocation of the *already deployed* migration Lambda with
+   `{"checkInventoryExpiryReady":true}`; an old Lambda or missing table blocks this deployment.
+   For manual CDK operations, perform that check yourself before deployment.
+   Checkout atomically records a durable task with its reservation. Deterministic one-time Scheduler
+   events release only the selected unpaid order; duplicate deliveries and paid orders do not
+   release sold stock. Scheduling failures are logged and left for reconciliation, not retried as
+   duplicate checkouts. Verify Scheduler creation/delivery, scoped pass-role trust, failure queues,
+   alarms, premature/duplicate events, and payment/expiration races in AWS.
+5. **Opt in to pause only after latency acceptance.** Set `auroraMinCapacity: 0`,
+   keep scheduled mode, and set `auroraAutoPauseSeconds` (300-86400; default 300). The context parser
+   rejects zero ACU with polling. Aurora PostgreSQL 16.13 is configured; verify the deployed engine
+   and region still support zero ACU. Measure actual pause periods, cold API latency, resume
+   rejections, checkout/webhook behavior, and queue redelivery after resume. Accept the measured UX
+   and alarm behavior before production. Keep 0.5 ACU if cold latency is unacceptable.
+6. **Remove NAT independently.** Only after every deployed Lambda has no VPC attachment and legacy
+   private-subnet/security-group imports are no longer consumed, set that environment's
+   `natGateways: 0`. The workflow checks every currently deployed API Lambda has no VPC and selects
+   Data API before allowing this change. Review an explicitly approved Network-only change set/deployment; do not combine
+   this with the first transport rollout. Existing subnet logical IDs/exports remain, while the NAT
+   and its public IPv4 are removed. This is the first guaranteed idle-network saving.
+7. **Retire permanent dev deliberately.** Export or preserve any wanted dev data/configuration,
+   test rebuilding temporary staging, and approve its teardown separately. Dev removal policies
+   may destroy its database; never use a blanket destroy as an unreviewed cost fix. Keep prod
+   deletion protection, backups, privacy retention, secrets, queues and alarms. WAF removal is not
+   part of this change.
+
+### Timing, scaling and migration limits
+
+- Scheduler has minute-level precision, not exact-second expiry. SQL timestamps remain authoritative:
+  expired reservations stop reducing available stock even if an order's status cleanup lags.
+- Hourly reconciliation wakes Aurora; daily privacy purges and normal traffic also prevent continuous
+  sleep. Reconciliation processes up to 100 pending tasks per invocation and performs the legacy
+  expiry sweep. During a scheduling/delivery outage, cleanup may lag by an hour or longer with a
+  backlog; monitor failures and run an approved dispatcher invocation to drain/recover tasks.
+- Accepted expiry Lambda failures and exhausted Scheduler delivery failures reach a 14-day failure
+  queue with an alarm. The durable SQL task also enables reconciliation when no Lambda invocation
+  was accepted. Queued contact/newsletter workloads and privacy retention remain unchanged.
+- Data API reads use the writer, responses must stay within 1 MiB and 64 KiB per row, and each query
+  needs an HTTP round trip. Add pagination for growing administrative datasets. Large reports,
+  streaming/COPY, session-level settings, and read-replica routing require a separate execution path.
+- Calls on one transaction are serialized. Transactions expire after three minutes of inactivity;
+  migrations are also bounded by the 60-second migration Lambda timeout. Keep migration batches
+  short. Nontransactional migrations and builders requiring a live `pg` session are rejected,
+  rather than silently applied partially; approve a dedicated runner for those migrations.
+- SDK retries are disabled for Data API. Only explicit `DatabaseResumingException` rejections retry,
+  up to five waits totalling 15 seconds. Ambiguous network errors and commits are not blindly replayed.
+  Application/Stripe idempotency and live latency checks remain essential.
+- SQL stays parameterized with explicit UUID/array/timestamp casts. UUID-looking Cognito subjects and
+  Stripe references remain text. Vendor-specific transport is confined to the database adapter;
+  future domain endpoints retain PostgreSQL relationships and transactions.
+
+### Rollback and cost confirmation
+
+Before NAT removal, rollback can restore the previous VPC/`pg` runtime because subnet/secret/endpoint
+exports are retained. Do not undo migration history or drop the outbox during runtime rollback.
+If reverting after NAT removal, restore the Network NAT first before restoring any VPC-attached
+Lambda. Disable pause by restoring minimum 0.5 ACU; restore polling only after pausing is disabled.
+If scheduled processing fails, alert, invoke the expiry sweep/dispatcher with operator approval,
+and confirm held stock, paid orders, late refunds and durable tasks reconcile.
+
+After approved changes, compare tagged Cost Explorer service/usage charges and Aurora pause metrics
+over representative idle and ordering periods. No savings are claimed by this PR. Keep the detailed
+billing investigation locally as historical evidence, not a deployed-state record.
 
 ## DNS (Squarespace, not Route53)
 

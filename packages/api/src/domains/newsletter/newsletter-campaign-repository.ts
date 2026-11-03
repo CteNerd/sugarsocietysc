@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { SqlDatabase } from '../../ports/database/ISqlDatabase';
 import {
   CreateNewsletterCampaignRequest,
   NewsletterCampaign,
@@ -72,7 +72,7 @@ function toCampaign(row: CampaignRow): NewsletterCampaign {
 }
 
 export class NewsletterCampaignRepository {
-  constructor(private readonly pool: Pool) {}
+  constructor(private readonly pool: SqlDatabase) {}
 
   async findAdminUserId(cognitoSub: string): Promise<string | undefined> {
     const result = await this.pool.query<{ id: string }>(
@@ -94,7 +94,7 @@ export class NewsletterCampaignRepository {
       `INSERT INTO newsletter_campaigns
          (title, subject, body_text, sms_body, send_email, send_sms,
           email_fanout_complete, sms_fanout_complete, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::uuid)
        RETURNING *`,
       [
         input.title,
@@ -113,7 +113,7 @@ export class NewsletterCampaignRepository {
 
   async findCampaign(campaignId: string): Promise<NewsletterCampaign | undefined> {
     const result = await this.pool.query<CampaignRow>(
-      'SELECT * FROM newsletter_campaigns WHERE id = $1',
+      'SELECT * FROM newsletter_campaigns WHERE id = $1::uuid',
       [campaignId],
     );
     return result.rows[0] ? toCampaign(result.rows[0]) : undefined;
@@ -122,7 +122,7 @@ export class NewsletterCampaignRepository {
   async listSendLogs(campaignId: string): Promise<NewsletterSendLog[]> {
     const result = await this.pool.query<SendLogRow>(
       `SELECT id, campaign_id, subscriber_id, channel, status, error_message, created_at, sent_at
-       FROM newsletter_send_logs WHERE campaign_id = $1 ORDER BY created_at DESC`,
+       FROM newsletter_send_logs WHERE campaign_id = $1::uuid ORDER BY created_at DESC`,
       [campaignId],
     );
     return result.rows.map((row) => ({
@@ -141,7 +141,7 @@ export class NewsletterCampaignRepository {
     const result = await this.pool.query<CampaignRow>(
       `UPDATE newsletter_campaigns
        SET status = 'sending', sent_at = NULL
-       WHERE id = $1 AND status IN ('draft', 'failed')
+       WHERE id = $1::uuid AND status IN ('draft', 'failed')
        RETURNING *`,
       [campaignId],
     );
@@ -150,7 +150,7 @@ export class NewsletterCampaignRepository {
 
   async markQueueFailure(campaignId: string): Promise<void> {
     await this.pool.query(
-      `UPDATE newsletter_campaigns SET status = 'failed' WHERE id = $1 AND status = 'sending'`,
+      `UPDATE newsletter_campaigns SET status = 'failed' WHERE id = $1::uuid AND status = 'sending'`,
       [campaignId],
     );
   }
@@ -178,7 +178,7 @@ export class NewsletterCampaignRepository {
   async enqueueSendLog(campaignId: string, subscriberId: string, channel: NotificationChannel): Promise<void> {
     await this.pool.query(
       `INSERT INTO newsletter_send_logs (campaign_id, subscriber_id, channel, status)
-       VALUES ($1, $2, $3, 'queued')
+       VALUES ($1::uuid, $2::uuid, $3, 'queued')
        ON CONFLICT (campaign_id, subscriber_id, channel) DO UPDATE
          SET status = 'queued', error_message = NULL, updated_at = now()
          WHERE newsletter_send_logs.status IN ('queued', 'failed')`,
@@ -204,8 +204,8 @@ export class NewsletterCampaignRepository {
       `SELECT c.*, s.id AS subscriber_id, s.unsubscribe_token, s.email, s.phone,
               s.email_opt_in, s.sms_opt_in, s.unsubscribed_at
        FROM newsletter_campaigns c
-       JOIN newsletter_subscribers s ON s.id = $2
-       WHERE c.id = $1`,
+       JOIN newsletter_subscribers s ON s.id = $2::uuid
+       WHERE c.id = $1::uuid`,
       [campaignId, subscriberId],
     );
     const row = result.rows[0];
@@ -217,7 +217,7 @@ export class NewsletterCampaignRepository {
     const result = await this.pool.query(
       `UPDATE newsletter_send_logs
        SET status = 'sending', updated_at = now(), error_message = NULL
-       WHERE campaign_id = $1 AND subscriber_id = $2 AND channel = $3
+       WHERE campaign_id = $1::uuid AND subscriber_id = $2::uuid AND channel = $3
          AND (
            status IN ('queued', 'failed')
            OR (status = 'sending' AND updated_at < now() - interval '5 minutes')
@@ -232,7 +232,7 @@ export class NewsletterCampaignRepository {
     await this.pool.query(
       `UPDATE newsletter_send_logs
        SET status = 'sent', sent_at = now(), updated_at = now(), error_message = NULL
-       WHERE campaign_id = $1 AND subscriber_id = $2 AND channel = $3`,
+       WHERE campaign_id = $1::uuid AND subscriber_id = $2::uuid AND channel = $3`,
       [campaignId, subscriberId, channel],
     );
     await this.refreshStatus(campaignId);
@@ -242,7 +242,7 @@ export class NewsletterCampaignRepository {
     await this.pool.query(
       `UPDATE newsletter_send_logs
        SET status = 'skipped', updated_at = now()
-       WHERE campaign_id = $1 AND subscriber_id = $2 AND channel = $3`,
+       WHERE campaign_id = $1::uuid AND subscriber_id = $2::uuid AND channel = $3`,
       [campaignId, subscriberId, channel],
     );
     await this.refreshStatus(campaignId);
@@ -257,7 +257,7 @@ export class NewsletterCampaignRepository {
     await this.pool.query(
       `UPDATE newsletter_send_logs
        SET status = 'failed', error_message = $4, updated_at = now()
-       WHERE campaign_id = $1 AND subscriber_id = $2 AND channel = $3`,
+       WHERE campaign_id = $1::uuid AND subscriber_id = $2::uuid AND channel = $3`,
       [campaignId, subscriberId, channel, error.slice(0, 1000)],
     );
     await this.refreshStatus(campaignId);
@@ -284,7 +284,7 @@ export class NewsletterCampaignRepository {
              ) THEN NULL
              ELSE COALESCE(c.sent_at, now())
            END
-       WHERE c.id = $1 AND c.status IN ('sending', 'failed')
+       WHERE c.id = $1::uuid AND c.status IN ('sending', 'failed')
          AND c.email_fanout_complete = true AND c.sms_fanout_complete = true`,
       [campaignId],
     );

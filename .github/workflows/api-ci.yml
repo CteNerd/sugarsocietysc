@@ -5,6 +5,8 @@ on:
     paths:
       - 'packages/api/**'
       - 'packages/shared/**'
+      - 'package-lock.json'
+      - '.github/workflows/api-ci.yml'
   workflow_dispatch:
 
 jobs:
@@ -27,3 +29,6 @@ jobs:
 
       - name: Test
         run: npm run test --workspace=@sugarsocietysc/api
+
+      - name: Test PostgreSQL transport and migrations
+        run: npm run test:integration --workspace=@sugarsocietysc/api

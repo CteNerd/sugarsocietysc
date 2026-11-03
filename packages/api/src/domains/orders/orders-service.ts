@@ -10,6 +10,7 @@ import { AuthClaims } from '../../auth/verify-jwt';
 import { IPaymentProvider, PaymentIntentResult } from '../../ports/payment/IPaymentProvider';
 import { CatalogRepository } from '../catalog/catalog-repository';
 import { OrdersRepository } from './orders-repository';
+import { InventoryExpiryService } from './inventory-expiry-service';
 
 const MAX_DATABASE_INTEGER = 2_147_483_647;
 
@@ -73,6 +74,7 @@ export class OrdersService {
     private readonly repository: OrdersRepository,
     private readonly catalogRepository: CatalogRepository,
     private readonly paymentProvider: IPaymentProvider,
+    private readonly inventoryExpiry?: InventoryExpiryService,
   ) {}
 
   /** Computes all prices from the database, validates event assignments, and atomically reserves stock. */
@@ -196,8 +198,20 @@ export class OrdersService {
             })
           : null;
       await this.repository.recordStatusHistory(client, createdOrder.id, 'received');
+      if (this.inventoryExpiry) await this.repository.queueInventoryExpiry(client, createdOrder.id);
       return { order: createdOrder, items: createdItems, packaging: createdPackaging };
     });
+
+    if (this.inventoryExpiry) {
+      try { await this.inventoryExpiry.dispatch(order.id); }
+      catch (error) {
+        // The expiry task committed with the reservation. Reconciliation retries
+        // delivery; a scheduler outage must not discard or replay checkout.
+        console.error('Inventory expiry scheduling deferred to reconciliation', {
+          orderId: order.id, errorType: error instanceof Error ? error.name : 'Error',
+        });
+      }
+    }
 
     let paymentIntent: PaymentIntentResult;
     try {

@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { SqlDatabase } from '../../ports/database/ISqlDatabase';
 import { User } from '@sugarsocietysc/shared';
 
 interface UserRow {
@@ -43,7 +43,7 @@ export interface UpsertUserInput {
 }
 
 export class AuthSyncRepository {
-  constructor(private readonly pool: Pool) {}
+  constructor(private readonly pool: SqlDatabase) {}
 
   async upsertFromCognito(input: UpsertUserInput): Promise<User> {
     const result = await this.pool.query<UserRow>(

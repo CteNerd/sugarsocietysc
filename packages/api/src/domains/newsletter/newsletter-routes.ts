@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { Pool } from 'pg';
+import { SqlDatabase } from '../../ports/database/ISqlDatabase';
 import {
   createNewsletterCampaignSchema,
   newsletterPreferencesSchema,
@@ -19,7 +19,7 @@ import { createEmailProvider } from '../../adapters/notification/email-provider-
 import { createSmsProvider } from '../../adapters/notification/sms-provider-factory';
 import { INewsletterQueue } from '../../ports/notification/INewsletterQueue';
 
-export function newsletterRoutes(pool: Pool, config: AppConfig): Hono<{ Variables: { authClaims: AuthClaims } }> {
+export function newsletterRoutes(pool: SqlDatabase, config: AppConfig): Hono<{ Variables: { authClaims: AuthClaims } }> {
   const app = new Hono<{ Variables: { authClaims: AuthClaims } }>();
   const service = new NewsletterService(new NewsletterRepository(pool));
   const campaignRepository = new NewsletterCampaignRepository(pool);

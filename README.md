@@ -10,19 +10,19 @@ Monorepo (npm workspaces):
 ```
 packages/
   web/      React (CRA) frontend
-  api/      Node/TypeScript Lambda backend (hono), raw SQL via pg (no ORM)
+  api/      Node/TypeScript Lambda backend (hono), parameterized PostgreSQL (no ORM)
   infra/    AWS CDK (TypeScript) — Network/Data/Auth/Api/Web stacks
   shared/   Shared TS types + zod schemas used by both web and api
 ```
 
 The backend uses a ports-and-adapters design for every external integration (SMS, email, payments,
-storage) so vendors can be swapped (e.g. SNS -> Twilio) by adding one adapter class, never by touching
+storage, database transport) so vendors can be swapped (e.g. SNS -> Twilio) by adding one adapter class, never by touching
 business logic. See [.github/copilot-instructions.md](.github/copilot-instructions.md) for full
 conventions, `.github/instructions/*.instructions.md` for per-package rules, and
 [docs/ROADMAP.md](docs/ROADMAP.md) for the full scope, decisions, data model, and phase-by-phase status.
 
 Auth is Amazon Cognito (with OAuth/social login support), the database is Aurora Serverless v2
-(PostgreSQL), and hosting is S3 + CloudFront (replacing the previous GitHub Pages deployment once the
+(PostgreSQL through Data API in AWS, `pg` locally), and hosting is S3 + CloudFront (replacing the previous GitHub Pages deployment once the
 cutover is complete).
 
 Pre-Sales support concurrent seasonal events. Each event owns its order window, pickup date, deposit
@@ -89,6 +89,8 @@ registration and deployed secret configuration steps.
 npm run build                                          # build all workspaces
 npm test                                                # test all workspaces
 npm run migrate --workspace=@sugarsocietysc/api         # run DB migrations
+npm run test:integration --workspace=@sugarsocietysc/api # isolated PostgreSQL 16; no Docker/AWS needed
+npm run validate:lean --workspace=@sugarsocietysc/infra  # polling, scheduled, pause and IAM assertions
 npm run synth:dev --workspace=@sugarsocietysc/infra     # CDK synth (template generation, no AWS calls)
 npm run diff:dev --workspace=@sugarsocietysc/infra      # CDK diff against the dev environment
 CI=true npm test --workspace=@sugarsocietysc/web -- --watchAll=false --runInBand
@@ -109,6 +111,34 @@ Contact queue initialization is deferred until notification delivery is requeste
 queue initialization, so `/health` and other domains do not require `CONTACT_QUEUE_URL` or contact
 queue permissions. Contact submissions still require configured reCAPTCHA verification and a queue;
 missing configuration is surfaced as an error, not a successful submission.
+
+### Lean AWS architecture and rollout status
+
+The detailed billing investigation stays local; the public
+[rollout and rollback plan](docs/AWS-DEPLOYMENT.md#lean-data-api-rollout) documents the implementation.
+AWS Lambdas use parameterized PostgreSQL through Aurora Data API without VPC
+attachment; local development keeps `DATABASE_DRIVER=pg` (the default) and `DATABASE_URL`.
+AWS uses `DATABASE_DRIVER=data-api`, `DB_CLUSTER_ARN`, `DB_SECRET_ARN`, and `DB_NAME`; it does not
+bootstrap a TCP connection or read database credentials into application memory.
+
+Optional scheduled inventory expiry writes a durable task in the checkout transaction, then creates
+a one-time EventBridge Scheduler event. Hourly reconciliation recovers missed scheduling and legacy
+holds; timestamps and row locks remain authoritative. Payment finalization compares cookie quantities
+(`packs * pack_size`), rather than comparing packs to reserved cookies.
+
+**Implemented, not deployed:** the default CDK rollout keeps five-minute polling, 0.5 minimum ACU,
+and one NAT per environment. Scheduled mode and zero-ACU pause are explicit follow-up configuration
+changes; the deployment workflow refuses scheduled mode until the existing migration Lambda confirms
+the expiry-task table exists. NAT removal is a separately approved Network-only update after
+non-VPC runtime verification. Managed secrets, privacy purges, backups, deletion protection, WAF,
+queues, and alarms remain.
+
+The operating target is one persistent production environment with local development and temporary
+staging. Existing dev resources must be preserved/exported and explicitly approved for teardown;
+this PR neither deletes them nor certifies live AWS compatibility, resume latency, or savings.
+See the [staged rollout and rollback checklist](docs/AWS-DEPLOYMENT.md#lean-data-api-rollout).
+The integration suite uses real isolated PostgreSQL with an emulated Data API wire transport; it
+does not replace managed AWS and Stripe test-mode smoke tests.
 
 ## Deployment
 

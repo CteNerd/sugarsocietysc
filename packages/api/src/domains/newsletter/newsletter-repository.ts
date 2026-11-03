@@ -1,4 +1,5 @@
-import { Pool, PoolClient } from 'pg';
+import { SqlDatabase, SqlConnection } from '../../ports/database/ISqlDatabase';
+import { runSqlTransaction } from '../../db/sql-transaction';
 import { NewsletterSubscriber } from '@sugarsocietysc/shared';
 
 interface NewsletterSubscriberRow {
@@ -37,13 +38,13 @@ export interface UpsertSubscriberInput {
 }
 
 export class NewsletterRepository {
-  constructor(private readonly pool: Pool) {}
+  constructor(private readonly pool: SqlDatabase) {}
 
-  async upsertSubscriber(input: UpsertSubscriberInput, client: Pool | PoolClient = this.pool): Promise<NewsletterSubscriber> {
+  async upsertSubscriber(input: UpsertSubscriberInput, client: SqlDatabase | SqlConnection = this.pool): Promise<NewsletterSubscriber> {
     const result = await client.query<NewsletterSubscriberRow>(
       `INSERT INTO newsletter_subscribers
          (email, phone, user_id, email_opt_in, sms_opt_in, source)
-       VALUES ($1, $2, $3, $4, $5, $6)
+       VALUES ($1, $2, $3::uuid, $4, $5, $6)
        ON CONFLICT (email) DO UPDATE SET
          phone = COALESCE(EXCLUDED.phone, newsletter_subscribers.phone),
          user_id = COALESCE(EXCLUDED.user_id, newsletter_subscribers.user_id),
@@ -58,31 +59,23 @@ export class NewsletterRepository {
   }
 
   async unsubscribeByToken(token: string): Promise<NewsletterSubscriber | undefined> {
-    const client = await this.pool.connect();
-    try {
-      await client.query('BEGIN');
+    return runSqlTransaction(this.pool, async (client) => {
       const result = await client.query<NewsletterSubscriberRow>(
         `UPDATE newsletter_subscribers
          SET email_opt_in = false, sms_opt_in = false, unsubscribed_at = now()
-         WHERE unsubscribe_token = $1
+         WHERE unsubscribe_token = $1::uuid
          RETURNING *`,
         [token],
       );
       const row = result.rows[0];
       if (row?.user_id) {
         await client.query(
-          `UPDATE users SET newsletter_opt_in_email = false, newsletter_opt_in_sms = false WHERE id = $1`,
+          `UPDATE users SET newsletter_opt_in_email = false, newsletter_opt_in_sms = false WHERE id = $1::uuid`,
           [row.user_id],
         );
       }
-      await client.query('COMMIT');
       return row ? toSubscriber(row) : undefined;
-    } catch (err) {
-      await client.query('ROLLBACK');
-      throw err;
-    } finally {
-      client.release();
-    }
+    });
   }
 
   async findByEmail(email: string): Promise<NewsletterSubscriber | undefined> {
@@ -98,20 +91,17 @@ export class NewsletterRepository {
     emailOptIn: boolean,
     smsOptIn: boolean,
   ): Promise<NewsletterSubscriber | undefined> {
-    const client = await this.pool.connect();
-    try {
-      await client.query('BEGIN');
+    return runSqlTransaction(this.pool, async (client) => {
       const result = await client.query<{ id: string; email: string; phone: string }>(
         'SELECT id, email, phone FROM users WHERE cognito_sub = $1 FOR UPDATE',
         [cognitoSub],
       );
       const user = result.rows[0];
       if (!user) {
-        await client.query('COMMIT');
         return undefined;
       }
       await client.query(
-        `UPDATE users SET newsletter_opt_in_email = $2, newsletter_opt_in_sms = $3 WHERE id = $1`,
+        `UPDATE users SET newsletter_opt_in_email = $2, newsletter_opt_in_sms = $3 WHERE id = $1::uuid`,
         [user.id, emailOptIn, smsOptIn],
       );
       const subscriber = await this.upsertSubscriber({
@@ -122,13 +112,7 @@ export class NewsletterRepository {
         smsOptIn,
         source: 'account',
       }, client);
-      await client.query('COMMIT');
       return subscriber;
-    } catch (err) {
-      await client.query('ROLLBACK');
-      throw err;
-    } finally {
-      client.release();
-    }
+    });
   }
 }

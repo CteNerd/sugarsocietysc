@@ -53,6 +53,12 @@ jobs:
       - name: Test
         run: npm run test --workspace=@sugarsocietysc/api
 
+      - name: Test PostgreSQL transport and migrations
+        run: npm run test:integration --workspace=@sugarsocietysc/api
+
+      - name: Validate lean infrastructure safeguards
+        run: npm run validate:lean --workspace=@sugarsocietysc/infra
+
       - name: Build workspaces
         run: npm run build
 
@@ -87,6 +93,47 @@ jobs:
           if [[ "$actual_account" != "$AWS_ACCOUNT_ID" ]]; then
             echo "::error::Authenticated AWS account does not match AWS_ACCOUNT_ID."
             exit 1
+          fi
+
+      - name: Check NAT-removal runtime prerequisite
+        shell: bash
+        run: |
+          set -euo pipefail
+          nat_count="$(node -p "require('./packages/infra/cdk.json').context.environments[process.env.DEPLOY_ENV].natGateways")"
+          if [[ "$nat_count" == "0" ]]; then
+            functions="$(aws cloudformation list-stack-resources \
+              --stack-name "SugarSocietySc-${DEPLOY_ENV}-Api" \
+              --query "StackResourceSummaries[?ResourceType=='AWS::Lambda::Function'].PhysicalResourceId" \
+              --output text)"
+            if [[ -z "$functions" || "$functions" == "None" ]]; then
+              echo "::error::Deploy and verify Data API with NAT retained before removing NAT."
+              exit 1
+            fi
+            for function_name in $functions; do
+              aws lambda get-function-configuration \
+                --function-name "$function_name" \
+                --query '{vpcId:VpcConfig.VpcId,driver:Environment.Variables.DATABASE_DRIVER}' \
+                --output json > nat-runtime-readiness.json
+              node -e "const c=JSON.parse(require('fs').readFileSync('nat-runtime-readiness.json')); if(c.vpcId || c.driver !== 'data-api') { console.error('Every deployed API Lambda must be non-VPC and use Data API before NAT removal'); process.exit(1); }"
+            done
+          fi
+
+      - name: Check scheduled-expiry migration prerequisite
+        shell: bash
+        run: |
+          set -euo pipefail
+          mode="$(node -p "require('./packages/infra/cdk.json').context.environments[process.env.DEPLOY_ENV].inventoryExpiryMode || 'polling'")"
+          if [[ "$mode" == "scheduled" ]]; then
+            migrate_arn="$(aws cloudformation describe-stacks \
+              --stack-name "SugarSocietySc-${DEPLOY_ENV}-Api" \
+              --query "Stacks[0].Outputs[?OutputKey=='MigrateFunctionArn'].OutputValue | [0]" \
+              --output text)"
+            aws lambda invoke \
+              --function-name "$migrate_arn" \
+              --cli-binary-format raw-in-base64-out \
+              --payload '{"checkInventoryExpiryReady":true}' \
+              expiry-readiness.json > expiry-readiness-metadata.json
+            node -e "const fs=require('fs'); const meta=JSON.parse(fs.readFileSync('expiry-readiness-metadata.json')); const result=JSON.parse(fs.readFileSync('expiry-readiness.json')); if(meta.FunctionError || result.inventoryExpiryReady !== true) { console.error('Deploy in polling mode and apply migrations before enabling scheduled expiry'); process.exit(1); }"
           fi
 
       - name: Deploy CDK stacks

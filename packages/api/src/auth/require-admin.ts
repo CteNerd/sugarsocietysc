@@ -1,5 +1,5 @@
 import { createMiddleware } from 'hono/factory';
-import { Pool } from 'pg';
+import { SqlDatabase } from '../ports/database/ISqlDatabase';
 import { AuthClaims } from './verify-jwt';
 import { AppConfig } from '../config/env';
 import { AuthSyncRepository } from '../domains/auth-sync/auth-sync-repository';
@@ -11,7 +11,7 @@ import { AuthSyncService } from '../domains/auth-sync/auth-sync-service';
  * themselves — this is the actual enforcement point (see web.instructions.md).
  */
 export function requireAdminRole(
-  pool: Pool,
+  pool: SqlDatabase,
   config: Pick<AppConfig, 'adminEmails' | 'adminEmailDomain'>,
 ) {
   const service = new AuthSyncService(new AuthSyncRepository(pool), config);

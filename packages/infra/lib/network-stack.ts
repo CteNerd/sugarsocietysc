@@ -3,7 +3,7 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import { Construct } from 'constructs';
 import { EnvConfig } from './env-config';
 
-/** Shared VPC: isolated subnets for Aurora, private-with-egress subnets for Lambda. */
+/** Shared VPC: isolated Aurora subnets and private-egress subnet IDs retained for compatibility. */
 export class NetworkStack extends Stack {
   public readonly vpc: ec2.Vpc;
 

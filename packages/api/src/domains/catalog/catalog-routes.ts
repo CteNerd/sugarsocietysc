@@ -1,6 +1,6 @@
 import { Context, Hono } from 'hono';
 import { randomUUID } from 'node:crypto';
-import { Pool } from 'pg';
+import { SqlDatabase } from '../../ports/database/ISqlDatabase';
 import {
   createMenuItemImageUploadSchema,
   createCookieDesignSchema,
@@ -25,7 +25,7 @@ import { CatalogError, CatalogService, CatalogValidationError } from './catalog-
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export function catalogRoutes(pool: Pool, config: AppConfig): Hono<{ Variables: { authClaims: AuthClaims } }> {
+export function catalogRoutes(pool: SqlDatabase, config: AppConfig): Hono<{ Variables: { authClaims: AuthClaims } }> {
   const app = new Hono<{ Variables: { authClaims: AuthClaims } }>();
   const service = new CatalogService(new CatalogRepository(pool));
   const storage = createStorageProvider(config);

@@ -1,10 +1,15 @@
 import { GetSecretValueCommand, SecretsManagerClient } from '@aws-sdk/client-secrets-manager';
+import { databaseDriver, dataApiConfig } from './env';
 
 let resolved: Promise<void> | undefined;
 
 /** Builds DATABASE_URL from Secrets Manager + DB_HOST/PORT/NAME at cold start (deployed Lambda only —
  * local dev sets DATABASE_URL directly in .env.local, so this is a no-op there). */
 export function resolveDatabaseUrl(): Promise<void> {
+  if (databaseDriver() === 'data-api') {
+    dataApiConfig();
+    return Promise.resolve();
+  }
   if (process.env.DATABASE_URL) {
     return Promise.resolve();
   }
