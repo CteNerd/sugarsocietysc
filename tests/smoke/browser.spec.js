@@ -1,11 +1,15 @@
 const { test: base, expect } = require('@playwright/test');
 
 const test = base.extend({
-  page: async ({ page }, use) => {
+  page: async ({ page }, use, testInfo) => {
     const blockedWrites = [];
     // These deployed-environment tests must never submit forms or mutate remote state.
     await page.route('**/*', (route) => {
       const method = route.request().method();
+      if (testInfo.project.metadata.fixtureCatalog && method === 'GET' &&
+          route.request().url() === new URL('/catalog/presale/events', process.env.SMOKE_API_URL).href) {
+        return route.fulfill({ json: [] });
+      }
       if (['GET', 'HEAD', 'OPTIONS'].includes(method)) return route.continue();
       blockedWrites.push(`${method} ${new URL(route.request().url()).origin}`);
       return route.abort('blockedbyclient');
@@ -28,7 +32,7 @@ test('home renders and navigation reaches the contact form', async ({ page, isMo
   await expect(page.getByRole('main').locator('form')).toBeVisible();
 });
 
-test('pre-sale page uses the expected deployed API and renders its real catalog', async ({ page }) => {
+test('pre-sale page uses the configured API and renders its catalog', async ({ page }) => {
   const catalog = page.waitForResponse((response) =>
     response.url() === new URL('/catalog/presale/events', process.env.SMOKE_API_URL).href);
   await page.goto('/pre-sale', { waitUntil: 'domcontentloaded' });

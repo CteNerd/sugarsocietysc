@@ -14,6 +14,7 @@
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "test:smoke": "playwright test",
+    "test:browser:pr": "playwright test --config playwright.pr.config.js",
     "migrate": "npm run migrate --workspace=@sugarsocietysc/api",
     "cdk": "npm run cdk --workspace=@sugarsocietysc/infra"
   },

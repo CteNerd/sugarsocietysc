@@ -1,17 +1,48 @@
 # AWS Deployment Setup
 
-The `Deploy to AWS` GitHub Actions workflow is manual-only. It deploys to the selected `dev` or `prod`
-GitHub Environment, then publishes the CRA build to the private S3 bucket and invalidates CloudFront.
-It first calls the same `Release CI` validation used for PRs/main, without AWS credentials. Only the
-deployment job requests an OIDC token; production dispatches must select `main`.
-Production should be configured with required reviewers in GitHub Environment protection rules before
-using the workflow.
+The [Deploy to AWS workflow](../.github/workflows/deploy-aws.yml) validates each push to `main`,
+automatically deploys that commit to dev/staging, and runs deployed smoke tests. Only successful
+staging validation unlocks production Environment approval. Production deploys and tests the same
+commit after approval, refusing stale promotion if main has advanced.
+
+PR previews remain manual: dispatch `Deploy to AWS` on the PR branch with `environment: dev`.
+Non-main production requests fail before validation or deployment. Manual `prod` dispatches on main
+repeat validation, staging deployment and staging tests before requesting approval; they cannot skip
+staging. Manual `dev` dispatches, including on main, stop after staging.
+
+The [single-environment reusable workflow](../.github/workflows/deploy-environment.yml) deploys CDK,
+applies migrations, publishes the CRA build, waits for CloudFront invalidation and runs the same
+API/desktop/mobile tests in one job. All checkouts are pinned to the triggering SHA, not a moving
+branch. Only deployment jobs request OIDC; initial validation and standalone smoke tests do not.
 
 ## GitHub configuration
 
 Create `dev` and `prod` GitHub Environments under Settings → Environments. Configure these **variables**
 in each environment. Require reviewers for `prod` and restrict its deployment branches to `main`;
 restrict `dev` to the branches your team intends to deploy.
+
+Production currently has required review and a main-only branch policy; preserve both. The workflow
+does not create these GitHub protection rules, so retain them even when changing pipeline YAML.
+Merging authorizes automatic staging, not automatic production approval.
+
+### Release sequencing and shared staging
+
+The orchestrator holds the `aws-release` concurrency group across validation, staging deployment/tests,
+production approval and production deployment/tests. PR previews use the same group. This deliberately
+blocks other releases and previews while a production approval is pending; approve, reject or cancel
+the pending run to free staging. Running deployments are never automatically cancelled.
+
+GitHub concurrency keeps one running and one pending run; a newer request can replace an older
+pending run, and ordering is not guaranteed. This is a latest-pending-release policy, not a FIFO queue.
+After approval, production compares the triggering SHA with current main and fails before assuming
+AWS credentials if it is stale. Resume the newest main release instead; do not approve an old run
+expecting it to deploy current source. Direct CLI deployments bypass this workflow lock and must not
+be run concurrently.
+
+Production artifacts are rebuilt for production-specific configuration from the exact staging-tested
+source SHA; they are not byte-identical copies of the staging frontend/CDK assembly. Initial CI tests
+and read-only staging smoke tests do not prove all business acceptance criteria: reviewers must still
+check the outstanding checkout, authentication and operational acceptance gates before approval.
 
 Configure branch protection/rulesets for `main` to require **Release gate** from
 [Release CI](../.github/workflows/ci.yml), and require branches to be up to date before merging.
@@ -114,7 +145,9 @@ in place and keeps the API URL and throttling settings unchanged.
 
 The shared Node 22 release checks cover API/shared types and builds, API unit and PostgreSQL integration
 tests, infrastructure types/assertions and dev/prod synth, and frontend tests plus a strict production
-build. A failed, skipped, or cancelled job fails the release gate and blocks the manual deployment.
+build. The frontend job also runs six desktop/mobile Playwright checks against that local production
+build, so browser failures block the required PR Release gate. Main repeats the same checks before
+deployment. A failed, skipped, or cancelled validation job fails the release gate and blocks deployment.
 After validation, the deployment job synthesizes the selected environment once, validates settings,
 assumes the role, checks rollout prerequisites, and deploys that exact cloud assembly. It requires
 nonempty API/Cognito/Web outputs and a successful migration response, checks `/health` before frontend
@@ -124,8 +157,33 @@ is still required independently of CI success.
 
 ### Deployed-environment smoke tests
 
-The [Deployed smoke tests workflow](../.github/workflows/deployed-smoke.yml) is called after successful
-deployment and can also be dispatched manually with `web_url` and `api_url` HTTPS origins to test
+#### PR browser gate (no deployment)
+
+Every PR runs the browser scenarios against a loopback-only server for the actual CRA production
+build. The catalog GET is fulfilled with a controlled empty fixture; synthetic Cognito configuration
+allows anonymous routes to initialize without contacting a real user pool. This checks rendering,
+desktop/mobile navigation, deep-link serving, empty-catalog UI and login redirects, not backend or
+authenticated behavior. No staging access or credentials are required. The same browser test source
+is used after deployment with fixtures disabled and actual API requests.
+
+```bash
+CI=true \
+REACT_APP_API_BASE_URL=http://127.0.0.1:4174 \
+REACT_APP_COGNITO_USER_POOL_ID=us-east-1_browserfixture \
+REACT_APP_COGNITO_CLIENT_ID=browser-fixture-client \
+npm run build --workspace=@sugarsocietysc/web
+npx playwright install chromium
+npm run test:browser:pr
+```
+
+The PR test server is started and stopped by Playwright and refuses to reuse an existing server.
+Reports and failure screenshots/traces are uploaded from the required frontend job for seven days.
+
+#### Real deployed checks
+
+Each environment deployment runs the smoke suite before it is considered successful.
+The [Deployed smoke tests workflow](../.github/workflows/deployed-smoke.yml) can be dispatched
+manually with `web_url` and `api_url` HTTPS origins to test
 already deployed code without changing AWS resources. When newly adding a workflow on a PR branch,
 GitHub will not offer its manual dispatch until it exists on the default branch. Before merge, run
 the already registered **Release CI** workflow on the PR branch, select `run_deployed_smoke`, and

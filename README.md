@@ -101,23 +101,30 @@ billing/resources and require explicit human approval.
 
 ### AWS deployment via GitHub Actions
 
-The [Release CI workflow](.github/workflows/ci.yml) runs on every PR and push to `main`, using Node 22.
+The [Release CI workflow](.github/workflows/ci.yml) runs on every PR and is reused by the release
+pipeline for pushes to `main`, using Node 22 (without a duplicate standalone main validation run).
 It checks API/shared types, unit and isolated PostgreSQL integration tests, API/shared builds,
-infrastructure types/assertions and dev/prod synth, plus frontend tests and a strict production build.
+infrastructure types/assertions and dev/prod synth, plus frontend unit tests, a strict production build
+and required desktop/mobile Playwright checks of that build using controlled catalog fixtures.
 The always-present **Release gate** fails if any validation job fails or is skipped/cancelled; configure
 it as a required status check in branch protection (workflow code alone does not enforce merging).
 
-The manual-only `Deploy to AWS` workflow uses GitHub OIDC, deploys CDK and publishes the frontend to
-S3 + CloudFront only after reusing the same release validation. Production requires the `main` ref
-and should require GitHub Environment approval. Configure environment-specific GitHub variables and
+The [Deploy to AWS workflow](.github/workflows/deploy-aws.yml) automatically validates main commits,
+deploys them to dev/staging, and verifies deployed API/browser smoke tests before requesting production
+Environment approval. Production requires the same commit, the `main` ref, and a still-current main
+head. Manual `dev` dispatches preview any branch without a production path; manual `prod` dispatches
+on main must first repeat staging deployment and tests. A shared lock spans deployment, tests and
+production approval so previews cannot overwrite staging mid-validation. Configure GitHub variables and
 AWS OIDC/CDK bootstrap first. See [docs/AWS-DEPLOYMENT.md](docs/AWS-DEPLOYMENT.md)
 for the exact setup and rollback/cutover checklist. Runtime credentials remain in AWS Secrets Manager.
 
-After publication and completed CloudFront invalidation, deployment must also pass read-only
-[deployed smoke tests](.github/workflows/deployed-smoke.yml): real database health/catalog reads,
+After publication and completed CloudFront invalidation, each environment deployment must pass read-only
+[smoke tests](tests/smoke/): real database health/catalog reads,
 anonymous admin rejection, and desktop/mobile Chromium navigation, catalog rendering and login
 redirects. Reports and failure screenshots/traces are retained for seven days. The same workflow can
 test an existing environment without redeploying; see [commands and coverage limits](docs/AWS-DEPLOYMENT.md#deployed-environment-smoke-tests).
+PR browser checks run locally on CI, not against shared staging; main repeats them before deploying,
+then verifies the actual staging API/frontend before production approval.
 
 API Lambdas share the app composition root but receive domain-specific configuration and IAM grants.
 Contact queue initialization is deferred until notification delivery is requested, like newsletter
@@ -162,7 +169,7 @@ does not replace managed AWS and Stripe test-mode smoke tests.
   deployment workflow and cutover are verified.
 - **Backend/Infra**: successful Google OAuth sign-in confirms the Cognito Hosted UI path has been used;
   deployment state of the remaining stacks is not assumed. `packages/infra` defines `dev` and `prod`
-  environments; Release CI runs `cdk synth` for both on every PR and push to `main`. The manual AWS
+  environments; Release CI runs `cdk synth` for both on every PR and through the main release pipeline. The AWS
   workflow is documented in [docs/AWS-DEPLOYMENT.md](docs/AWS-DEPLOYMENT.md).
 
 ### Stripe test-mode setup (required for Phase 6 deposit payments)

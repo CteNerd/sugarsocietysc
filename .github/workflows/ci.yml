@@ -2,8 +2,6 @@ name: Release CI
 
 on:
   pull_request:
-  push:
-    branches: [main]
   workflow_dispatch:
     inputs:
       run_deployed_smoke:
@@ -74,6 +72,22 @@ jobs:
           SMOKE_WEB_URL: https://web.example.invalid
           SMOKE_API_URL: https://api.example.invalid
       - run: npm run build --workspace=@sugarsocietysc/web
+        env:
+          REACT_APP_API_BASE_URL: http://127.0.0.1:4174
+          REACT_APP_COGNITO_USER_POOL_ID: us-east-1_browserfixture
+          REACT_APP_COGNITO_CLIENT_ID: browser-fixture-client
+      - run: npx playwright install --with-deps chromium
+      - name: Test production frontend in desktop and mobile browsers
+        run: npm run test:browser:pr
+      - name: Save PR browser report and failure evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-browser-${{ github.run_attempt }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
 
   release:
     name: Release gate
