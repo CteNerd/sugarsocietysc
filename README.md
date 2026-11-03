@@ -117,6 +117,8 @@ on main must first repeat staging deployment and tests. A shared lock spans depl
 production approval so previews cannot overwrite staging mid-validation. Configure GitHub variables and
 AWS OIDC/CDK bootstrap first. See [docs/AWS-DEPLOYMENT.md](docs/AWS-DEPLOYMENT.md)
 for the exact setup and rollback/cutover checklist. Runtime credentials remain in AWS Secrets Manager.
+Deployment roles need scoped CloudFront create **and read** invalidation permissions so the cache
+completion waiter can run before browser tests; see the [IAM prerequisite](docs/AWS-DEPLOYMENT.md#cloudfront-invalidation-waiter-permission).
 
 After publication and completed CloudFront invalidation, each environment deployment must pass read-only
 [smoke tests](tests/smoke/): real database health/catalog reads,
